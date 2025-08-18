@@ -16,37 +16,37 @@ Production-ready REST API framework with comprehensive JWT authentication system
 ## 📚 Complete Documentation Structure
 
 ### 🎯 **Main Documentation Hub**
-**[`docs/README.md`](docs/README.md)** - **Complete documentation index and navigation guide**
+**[`doc/README.md`](doc/README.md)** - **Complete documentation index and navigation guide**
 
 ### 🔐 **JWT Authentication System (v0.0.2)**
-- **[`docs/15-jwt-validation-system.md`](docs/15-jwt-validation-system.md)** - **Complete JWT system specification**
-- **[`docs/16-jwt-quick-start.md`](docs/16-jwt-quick-start.md)** - **Fast JWT setup guide**
+- **[`doc/15-jwt-validation-system.md`](doc/15-jwt-validation-system.md)** - **Complete JWT system specification**
+- **[`doc/16-jwt-quick-start.md`](doc/16-jwt-quick-start.md)** - **Fast JWT setup guide**
 
 ### 🚀 **Getting Started**
-- [`docs/01-setup.md`](docs/01-setup.md) - Project setup and installation
-- [`docs/02-first-controller.md`](docs/02-first-controller.md) - First API controller
-- [`docs/03-get-requests.md`](docs/03-get-requests.md) - GET request handling
+- [`doc/01-setup.md`](doc/01-setup.md) - Project setup and installation
+- [`doc/02-first-controller.md`](doc/02-first-controller.md) - First API controller
+- [`doc/03-get-requests.md`](doc/03-get-requests.md) - GET request handling
 
 ### 📝 **HTTP Methods**
-- [`docs/04-post-requests.md`](docs/04-post-requests.md) - POST request handling
-- [`docs/05-put-requests.md`](docs/05-put-requests.md) - PUT request handling
-- [`docs/06-patch-requests.md`](docs/06-patch-requests.md) - PATCH request handling
-- [`docs/07-delete-requests.md`](docs/07-delete-requests.md) - DELETE request handling
+- [`doc/04-post-requests.md`](doc/04-post-requests.md) - POST request handling
+- [`doc/05-put-requests.md`](doc/05-put-requests.md) - PUT request handling
+- [`doc/06-patch-requests.md`](doc/06-patch-requests.md) - PATCH request handling
+- [`doc/07-delete-requests.md`](doc/07-delete-requests.md) - DELETE request handling
 
 ### 🔧 **Advanced Features**
-- [`docs/08-query-parameters.md`](docs/08-query-parameters.md) - Query parameter handling
-- [`docs/09-middlewares.md`](docs/09-middlewares.md) - Custom middleware
-- [`docs/11-error-handling.md`](docs/11-error-handling.md) - Error handling patterns
+- [`doc/08-query-parameters.md`](doc/08-query-parameters.md) - Query parameter handling
+- [`doc/09-middlewares.md`](doc/09-middlewares.md) - Custom middleware
+- [`doc/11-error-handling.md`](doc/11-error-handling.md) - Error handling patterns
 
 ### 🧪 **Testing & Deployment**
-- [`docs/12-testing.md`](docs/12-testing.md) - Testing strategies
-- [`docs/13-deployment.md`](docs/13-deployment.md) - Production deployment
-- [`docs/14-examples.md`](docs/14-examples.md) - Complete examples
+- [`doc/12-testing.md`](doc/12-testing.md) - Testing strategies
+- [`doc/13-deployment.md`](doc/13-deployment.md) - Production deployment
+- [`doc/14-examples.md`](doc/14-examples.md) - Complete examples
 
 ### 📋 **Reference & Information**
-- [`docs/17-version-info.md`](docs/17-version-info.md) - Version 0.0.2 information
-- [`docs/18-api-reference.md`](docs/18-api-reference.md) - Complete API reference
-- [`docs/19-changelog.md`](docs/19-changelog.md) - Version history
+- [`doc/17-version-info.md`](doc/17-version-info.md) - Version 0.0.2 information
+- [`doc/18-api-reference.md`](doc/18-api-reference.md) - Complete API reference
+- [`doc/19-changelog.md`](doc/19-changelog.md) - Version history
 
 ## 🔐 JWT System Overview
 
@@ -255,8 +255,8 @@ ServerConfig(
 
 ## 🎯 Development Workflow
 
-1. **Read Documentation**: Start with [`docs/README.md`](docs/README.md) for complete guidance
-2. **Setup JWT**: Follow [`docs/16-jwt-quick-start.md`](docs/16-jwt-quick-start.md) for authentication
+1. **Read Documentation**: Start with [`doc/README.md`](doc/README.md) for complete guidance
+2. **Setup JWT**: Follow [`doc/16-jwt-quick-start.md`](doc/16-jwt-quick-start.md) for authentication
 3. **Create Custom Validators**: Extend `JWTValidatorBase` for your business logic
 4. **Annotate Controllers**: Use `@JWTController` and `@JWTEndpoint` as needed
 5. **Mark Public Endpoints**: Use `@JWTPublic()` for open endpoints
@@ -268,7 +268,7 @@ ServerConfig(
 - **Complete JWT Authentication System** with custom validators
 - **Token Blacklisting** for secure logout and token management  
 - **Production-Ready Testing** with 139/139 tests passing
-- **Comprehensive Documentation** reorganized in `docs/` directory
+- **Comprehensive Documentation** reorganized in `doc/` directory
 - **Real-World Examples** for immediate implementation
 - **Enterprise Security Features** ready for production use
 
@@ -277,6 +277,6 @@ ServerConfig(
 **🚀 Ready for production with enterprise-grade JWT authentication system!**
 
 **Next Steps**: 
-- **Beginners**: [`docs/01-setup.md`](docs/01-setup.md)
-- **JWT Setup**: [`docs/16-jwt-quick-start.md`](docs/16-jwt-quick-start.md)
-- **Full Documentation**: [`docs/README.md`](docs/README.md)
+- **Beginners**: [`doc/01-setup.md`](doc/01-setup.md)
+- **JWT Setup**: [`doc/16-jwt-quick-start.md`](doc/16-jwt-quick-start.md)
+- **Full Documentation**: [`doc/README.md`](doc/README.md)

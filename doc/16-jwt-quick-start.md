@@ -126,7 +126,7 @@ Ver `lib/src/examples/jwt_example_usage.dart` para un ejemplo completo funcionan
 
 ## 📖 Documentación Completa
 
-Ver `docs/15-jwt-validation-system.md` para documentación detallada del sistema.
+Ver `doc/15-jwt-validation-system.md` para documentación detallada del sistema.
 
 ---
 

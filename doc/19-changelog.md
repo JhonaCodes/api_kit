@@ -68,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### **Documentation Files**
 - **Enhanced README.md**: Production-ready examples and comprehensive API documentation
-- **JWT Quick Start Guide**: Complete authentication setup in `docs/15-jwt-validation-system.md`
+- **JWT Quick Start Guide**: Complete authentication setup in `doc/15-jwt-validation-system.md`
 
 ### 🏗️ Architecture Enhancements
 

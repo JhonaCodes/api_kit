@@ -1,0 +1,8 @@
+# Claude Code settings
+.claude/
+
+# Demo files (for development only, not for publication)
+demo/
+
+# Development and testing files
+test/

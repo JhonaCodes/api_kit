@@ -197,8 +197,8 @@ http {
         }
 
         # Documentation
-        location /docs/ {
-            alias /usr/share/nginx/html/docs/;
+        location /doc/ {
+            alias /usr/share/nginx/html/doc/;
             index index.html;
         }
     }

@@ -67,7 +67,7 @@ class PublicController extends BaseController {
       jsonEncode({
         'name': 'api_kit JWT System',
         'version': '1.0.0',
-        'documentation': 'See docs/15-jwt-validation-system.md',
+        'documentation': 'See doc/15-jwt-validation-system.md',
       }),
     );
   }
@@ -325,7 +325,7 @@ Support User (for support tickets):
 ✅ Hierarchical validation: endpoint overrides controller
 
 🔧 The system works exactly as documented in:
-   docs/15-jwt-validation-system.md
+   doc/15-jwt-validation-system.md
 
 🚀 Server ready for testing with JWT validation!
 
