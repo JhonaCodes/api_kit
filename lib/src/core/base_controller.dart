@@ -18,9 +18,7 @@ abstract class BaseController {
   /// Builds and caches the router for this controller asynchronously.
   /// This method supports JWT middleware integration.
   Future<Router> buildRouter() async {
-    if (_cachedRouter == null) {
-      _cachedRouter = await RouterBuilder.buildFromController(this);
-    }
+    _cachedRouter ??= await RouterBuilder.buildFromController(this);
     return _cachedRouter!;
   }
 
@@ -48,7 +46,11 @@ abstract class BaseController {
   }
 
   /// Extracts an optional query parameter from the request.
-  String? getOptionalQueryParam(Request request, String name, [String? defaultValue]) {
+  String? getOptionalQueryParam(
+    Request request,
+    String name, [
+    String? defaultValue,
+  ]) {
     return request.url.queryParameters[name] ?? defaultValue;
   }
 
@@ -67,7 +69,11 @@ abstract class BaseController {
   }
 
   /// Extracts an optional header from the request.
-  String? getOptionalHeader(Request request, String name, [String? defaultValue]) {
+  String? getOptionalHeader(
+    Request request,
+    String name, [
+    String? defaultValue,
+  ]) {
     return request.headers[name.toLowerCase()] ?? defaultValue;
   }
 
@@ -93,13 +99,7 @@ abstract class BaseController {
   }
 
   /// Creates an error response.
-  Response errorResponse(
-    String message, {
-    int statusCode = 500,
-  }) {
-    return jsonResponse(
-      '{"error": "$message"}',
-      statusCode: statusCode,
-    );
+  Response errorResponse(String message, {int statusCode = 500}) {
+    return jsonResponse('{"error": "$message"}', statusCode: statusCode);
   }
 }

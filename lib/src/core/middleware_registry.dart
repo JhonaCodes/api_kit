@@ -31,7 +31,7 @@ class MiddlewareRegistry {
 /// Built-in middleware creators for common use cases.
 class BuiltInMiddleware {
   /// Creates JWT authentication middleware.
-  /// 
+  ///
   /// For production use, integrate with a real JWT library like dart_jsonwebtoken.
   /// This implementation provides the structure for JWT validation.
   static Middleware Function() jwt({
@@ -44,51 +44,67 @@ class BuiltInMiddleware {
         // Extract JWT from Authorization header
         final authHeader = request.headers['authorization'];
         if (authHeader == null || !authHeader.startsWith('Bearer ')) {
-          return Response(401, 
-            body: '{"success": false, "error": {"code": "UNAUTHORIZED", "message": "Missing or invalid token"}}',
-            headers: {'content-type': 'application/json'});
+          return Response(
+            401,
+            body:
+                '{"success": false, "error": {"code": "UNAUTHORIZED", "message": "Missing or invalid token"}}',
+            headers: {'content-type': 'application/json'},
+          );
         }
 
         final token = authHeader.substring(7);
-        
+
         // Basic token validation (extend with real JWT library)
         if (token.isEmpty) {
-          return Response(401, 
-            body: '{"success": false, "error": {"code": "UNAUTHORIZED", "message": "Invalid token"}}',
-            headers: {'content-type': 'application/json'});
+          return Response(
+            401,
+            body:
+                '{"success": false, "error": {"code": "UNAUTHORIZED", "message": "Invalid token"}}',
+            headers: {'content-type': 'application/json'},
+          );
         }
 
         // TODO: Validate JWT signature and expiration with real JWT library
         // For now, we parse a mock payload - replace with real JWT validation
         final mockPayload = _parseTokenMock(token);
-        
+
         if (mockPayload == null) {
-          return Response(401,
-            body: '{"success": false, "error": {"code": "UNAUTHORIZED", "message": "Invalid token format"}}',
-            headers: {'content-type': 'application/json'});
+          return Response(
+            401,
+            body:
+                '{"success": false, "error": {"code": "UNAUTHORIZED", "message": "Invalid token format"}}',
+            headers: {'content-type': 'application/json'},
+          );
         }
 
         // Check required roles if specified
         if (requiredRoles.isNotEmpty) {
           final userRoles = (mockPayload['roles'] as List<dynamic>?) ?? [];
-          final hasRequiredRole = requiredRoles.any((role) => userRoles.contains(role));
-          
+          final hasRequiredRole = requiredRoles.any(
+            (role) => userRoles.contains(role),
+          );
+
           if (!hasRequiredRole) {
-            return Response(403,
-              body: '{"success": false, "error": {"code": "FORBIDDEN", "message": "Insufficient permissions"}}',
-              headers: {'content-type': 'application/json'});
+            return Response(
+              403,
+              body:
+                  '{"success": false, "error": {"code": "FORBIDDEN", "message": "Insufficient permissions"}}',
+              headers: {'content-type': 'application/json'},
+            );
           }
         }
 
         // Add JWT payload to request context for downstream handlers
-        final updatedRequest = request.change(context: {
-          ...request.context,
-          'jwt_payload': mockPayload,
-          'user_id': mockPayload['user_id'],
-          'user_email': mockPayload['email'],
-          'user_roles': mockPayload['roles'] ?? [],
-          'token': token,
-        });
+        final updatedRequest = request.change(
+          context: {
+            ...request.context,
+            'jwt_payload': mockPayload,
+            'user_id': mockPayload['user_id'],
+            'user_email': mockPayload['email'],
+            'user_roles': mockPayload['roles'] ?? [],
+            'token': token,
+          },
+        );
 
         return handler(updatedRequest);
       };
@@ -104,7 +120,9 @@ class BuiltInMiddleware {
         'user_id': 'user123',
         'email': 'user@example.com',
         'roles': ['user'],
-        'exp': DateTime.now().add(Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000,
+        'exp':
+            DateTime.now().add(Duration(hours: 1)).millisecondsSinceEpoch ~/
+            1000,
       };
     } catch (e) {
       return null;
@@ -117,8 +135,11 @@ class BuiltInMiddleware {
       return (Request request) async {
         final apiKey = request.headers['x-api-key'];
         if (apiKey != validKey) {
-          return Response(401, body: '{"error": "Invalid API key"}',
-              headers: {'content-type': 'application/json'});
+          return Response(
+            401,
+            body: '{"error": "Invalid API key"}',
+            headers: {'content-type': 'application/json'},
+          );
         }
         return handler(request);
       };
@@ -130,23 +151,25 @@ class BuiltInMiddleware {
     required int maxRequests,
     required Duration window,
   }) {
-    final Map<String, List<DateTime>> _requests = {};
-    
+    final Map<String, List<DateTime>> requests = {};
+
     return () => (Handler handler) {
       return (Request request) async {
         final key = request.requestedUri.path;
         final now = DateTime.now();
-        
-        _requests[key] ??= [];
-        _requests[key]!.removeWhere((time) => now.difference(time) > window);
-        
-        if (_requests[key]!.length >= maxRequests) {
-          return Response(429, 
-              body: '{"error": "Rate limit exceeded"}',
-              headers: {'content-type': 'application/json'});
+
+        requests[key] ??= [];
+        requests[key]!.removeWhere((time) => now.difference(time) > window);
+
+        if (requests[key]!.length >= maxRequests) {
+          return Response(
+            429,
+            body: '{"error": "Rate limit exceeded"}',
+            headers: {'content-type': 'application/json'},
+          );
         }
-        
-        _requests[key]!.add(now);
+
+        requests[key]!.add(now);
         return handler(request);
       };
     };

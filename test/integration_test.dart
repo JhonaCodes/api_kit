@@ -12,8 +12,6 @@ class TestController extends BaseController {
     {'id': '2', 'name': 'Test Item 2', 'value': 200},
   ];
 
-
-
   @GET('/')
   Future<Response> getAll(Request request) async {
     logRequest(request, 'Getting all items');
@@ -25,13 +23,13 @@ class TestController extends BaseController {
   Future<Response> getById(Request request) async {
     final id = getRequiredParam(request, 'id');
     logRequest(request, 'Getting item $id');
-    
+
     final item = _data.firstWhere((i) => i['id'] == id, orElse: () => {});
-    
-    final response = item.isEmpty 
+
+    final response = item.isEmpty
         ? ApiResponse.notFound('Item not found')
         : ApiResponse.success(item);
-    
+
     final statusCode = item.isEmpty ? 404 : 200;
     return jsonResponse(response.toJson(), statusCode: statusCode);
   }
@@ -39,13 +37,13 @@ class TestController extends BaseController {
   @POST('/')
   Future<Response> create(Request request) async {
     logRequest(request, 'Creating new item');
-    
+
     final body = await request.readAsString();
     if (body.isEmpty) {
       final response = ApiResponse.badRequest('Request body is required');
       return jsonResponse(response.toJson(), statusCode: 400);
     }
-    
+
     try {
       final data = jsonDecode(body);
       final newItem = {
@@ -53,10 +51,13 @@ class TestController extends BaseController {
         'name': data['name'] ?? 'New Item',
         'value': data['value'] ?? 0,
       };
-      
+
       _data.add(newItem);
-      
-      final response = ApiResponse.success(newItem, 'Item created successfully');
+
+      final response = ApiResponse.success(
+        newItem,
+        'Item created successfully',
+      );
       return jsonResponse(response.toJson(), statusCode: 201);
     } catch (e) {
       final response = ApiResponse.badRequest('Invalid JSON format');
@@ -68,13 +69,13 @@ class TestController extends BaseController {
   Future<Response> update(Request request) async {
     final id = getRequiredParam(request, 'id');
     logRequest(request, 'Updating item $id');
-    
+
     final itemIndex = _data.indexWhere((i) => i['id'] == id);
     if (itemIndex == -1) {
       final response = ApiResponse.notFound('Item not found');
       return jsonResponse(response.toJson(), statusCode: 404);
     }
-    
+
     final body = await request.readAsString();
     if (body.isNotEmpty) {
       try {
@@ -86,8 +87,11 @@ class TestController extends BaseController {
         return jsonResponse(response.toJson(), statusCode: 400);
       }
     }
-    
-    final response = ApiResponse.success(_data[itemIndex], 'Item updated successfully');
+
+    final response = ApiResponse.success(
+      _data[itemIndex],
+      'Item updated successfully',
+    );
     return jsonResponse(response.toJson());
   }
 
@@ -95,15 +99,15 @@ class TestController extends BaseController {
   Future<Response> delete(Request request) async {
     final id = getRequiredParam(request, 'id');
     logRequest(request, 'Deleting item $id');
-    
+
     final itemIndex = _data.indexWhere((i) => i['id'] == id);
     if (itemIndex == -1) {
       final response = ApiResponse.notFound('Item not found');
       return jsonResponse(response.toJson(), statusCode: 404);
     }
-    
+
     _data.removeAt(itemIndex);
-    
+
     final response = ApiResponse.success(null, 'Item deleted successfully');
     return jsonResponse(response.toJson());
   }
@@ -115,7 +119,7 @@ class TestController extends BaseController {
     final response = {
       'status': 'healthy',
       'timestamp': DateTime.now().toIso8601String(),
-      'version': '0.0.1'
+      'version': '0.0.1',
     };
     return jsonResponse(jsonEncode(response));
   }
@@ -123,20 +127,22 @@ class TestController extends BaseController {
   @GET('/search')
   Future<Response> search(Request request) async {
     logRequest(request, 'Search with query parameters');
-    
+
     // Get query parameters
     final query = getOptionalQueryParam(request, 'q', 'all');
     final limit = getOptionalQueryParam(request, 'limit', '10');
     final offset = getOptionalQueryParam(request, 'offset', '0');
     final sortBy = getOptionalQueryParam(request, 'sort_by', 'name');
     final order = getOptionalQueryParam(request, 'order', 'asc');
-    
+
     // Filter data based on query
     var filteredData = _data.where((item) {
       if (query == 'all') return true;
-      return item['name'].toString().toLowerCase().contains(query?.toLowerCase() ?? '');
+      return item['name'].toString().toLowerCase().contains(
+        query?.toLowerCase() ?? '',
+      );
     }).toList();
-    
+
     // Apply sorting
     filteredData.sort((a, b) {
       final aValue = a[sortBy] ?? '';
@@ -144,12 +150,12 @@ class TestController extends BaseController {
       final result = aValue.toString().compareTo(bValue.toString());
       return order == 'desc' ? -result : result;
     });
-    
+
     // Apply pagination
     final limitInt = int.tryParse(limit ?? '10') ?? 10;
     final offsetInt = int.tryParse(offset ?? '0') ?? 0;
     final paginatedData = filteredData.skip(offsetInt).take(limitInt).toList();
-    
+
     final response = ApiResponse.success({
       'items': paginatedData,
       'total': filteredData.length,
@@ -159,23 +165,23 @@ class TestController extends BaseController {
       'sort_by': sortBy,
       'order': order,
     }, 'Search completed successfully');
-    
+
     return jsonResponse(response.toJson());
   }
 
   @GET('/filter')
   Future<Response> filter(Request request) async {
     logRequest(request, 'Filter with multiple query parameters');
-    
+
     // Get all query parameters
     final allParams = getAllQueryParams(request);
-    
+
     // Extract specific filters
     final minValue = getOptionalQueryParam(request, 'min_value');
     final maxValue = getOptionalQueryParam(request, 'max_value');
     final name = getOptionalQueryParam(request, 'name');
     final hasValue = getOptionalQueryParam(request, 'has_value');
-    
+
     // Apply filters
     var filteredData = _data.where((item) {
       // Filter by min value
@@ -184,20 +190,20 @@ class TestController extends BaseController {
         final min = int.tryParse(minValue) ?? 0;
         if (itemValue < min) return false;
       }
-      
+
       // Filter by max value
       if (maxValue != null) {
         final itemValue = item['value'] as int? ?? 0;
         final max = int.tryParse(maxValue) ?? 999999;
         if (itemValue > max) return false;
       }
-      
+
       // Filter by name (partial match)
       if (name != null) {
         final itemName = item['name'].toString().toLowerCase();
         if (!itemName.contains(name.toLowerCase())) return false;
       }
-      
+
       // Filter by has_value (boolean)
       if (hasValue != null) {
         final shouldHaveValue = hasValue.toLowerCase() == 'true';
@@ -205,35 +211,39 @@ class TestController extends BaseController {
         if (shouldHaveValue && itemValue == 0) return false;
         if (!shouldHaveValue && itemValue != 0) return false;
       }
-      
+
       return true;
     }).toList();
-    
+
     final response = ApiResponse.success({
       'items': filteredData,
       'total': filteredData.length,
       'filters_applied': allParams,
       'available_filters': {
         'min_value': 'number',
-        'max_value': 'number', 
+        'max_value': 'number',
         'name': 'string (partial match)',
-        'has_value': 'boolean'
-      }
+        'has_value': 'boolean',
+      },
     }, 'Filter applied successfully');
-    
+
     return jsonResponse(response.toJson());
   }
 
   @GET('/headers-test')
   Future<Response> headersTest(Request request) async {
     logRequest(request, 'Testing header extraction');
-    
+
     // Extract headers
     final userAgent = getOptionalHeader(request, 'user-agent', 'unknown');
     final contentType = getOptionalHeader(request, 'content-type', 'not-set');
-    final customHeader = getOptionalHeader(request, 'x-custom-header', 'not-provided');
+    final customHeader = getOptionalHeader(
+      request,
+      'x-custom-header',
+      'not-provided',
+    );
     final authorization = getOptionalHeader(request, 'authorization');
-    
+
     final response = ApiResponse.success({
       'user_agent': userAgent,
       'content_type': contentType,
@@ -241,7 +251,7 @@ class TestController extends BaseController {
       'has_authorization': authorization != null,
       'all_headers': request.headers.keys.toList(),
     }, 'Headers extracted successfully');
-    
+
     return jsonResponse(response.toJson());
   }
 }
@@ -250,20 +260,20 @@ void main() {
   group('API Kit Integration Tests', () {
     late HttpServer server;
     late String baseUrl;
-    
+
     setUpAll(() async {
       // Start the server
       final apiServer = ApiServer(config: ServerConfig.development());
-      
+
       // Debug: Check if reflection is available
       print('Reflection available: ${ReflectionHelper.isReflectionAvailable}');
-      
+
       final result = await apiServer.start(
         host: 'localhost',
         port: 0, // Use any available port
         controllerList: [TestController()],
       );
-      
+
       result.when(
         ok: (httpServer) {
           server = httpServer;
@@ -286,19 +296,19 @@ void main() {
         // Test multiple possible URLs to debug the routing
         print('Testing health endpoint at: $baseUrl/api/test/health');
         final response = await http.get(Uri.parse('$baseUrl/api/test/health'));
-        
+
         if (response.statusCode != 200) {
           print('Health check failed with status: ${response.statusCode}');
           print('Response body: ${response.body}');
-          
+
           // Try alternative URL
           print('Trying alternative: $baseUrl/health');
           final altResponse = await http.get(Uri.parse('$baseUrl/health'));
           print('Alternative response: ${altResponse.statusCode}');
         }
-        
+
         expect(response.statusCode, equals(200));
-        
+
         final data = jsonDecode(response.body);
         expect(data['status'], equals('healthy'));
         expect(data['version'], equals('0.0.1'));
@@ -309,10 +319,10 @@ void main() {
     group('GET Endpoints', () {
       test('should get all items', () async {
         final response = await http.get(Uri.parse('$baseUrl/api/test/'));
-        
+
         expect(response.statusCode, equals(200));
         expect(response.headers['content-type'], contains('application/json'));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isTrue);
         expect(data['data'], isList);
@@ -322,9 +332,9 @@ void main() {
 
       test('should get item by id', () async {
         final response = await http.get(Uri.parse('$baseUrl/api/test/1'));
-        
+
         expect(response.statusCode, equals(200));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isTrue);
         expect(data['data']['id'], equals('1'));
@@ -333,9 +343,9 @@ void main() {
 
       test('should return 404 for non-existent item', () async {
         final response = await http.get(Uri.parse('$baseUrl/api/test/999'));
-        
+
         expect(response.statusCode, equals(404));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isFalse);
         expect(data['error'], equals('Item not found'));
@@ -345,15 +355,15 @@ void main() {
     group('POST Endpoints', () {
       test('should create new item', () async {
         final newItem = {'name': 'Test Item 3', 'value': 300};
-        
+
         final response = await http.post(
           Uri.parse('$baseUrl/api/test/'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(newItem),
         );
-        
+
         expect(response.statusCode, equals(201));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isTrue);
         expect(data['data']['name'], equals('Test Item 3'));
@@ -363,9 +373,9 @@ void main() {
 
       test('should return 400 for empty body', () async {
         final response = await http.post(Uri.parse('$baseUrl/api/test/'));
-        
+
         expect(response.statusCode, equals(400));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isFalse);
         expect(data['error'], equals('Request body is required'));
@@ -375,15 +385,15 @@ void main() {
     group('PUT Endpoints', () {
       test('should update existing item', () async {
         final updateData = {'name': 'Updated Item 1', 'value': 150};
-        
+
         final response = await http.put(
           Uri.parse('$baseUrl/api/test/1'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(updateData),
         );
-        
+
         expect(response.statusCode, equals(200));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isTrue);
         expect(data['data']['name'], equals('Updated Item 1'));
@@ -393,15 +403,15 @@ void main() {
 
       test('should return 404 for non-existent item update', () async {
         final updateData = {'name': 'Updated Item 999'};
-        
+
         final response = await http.put(
           Uri.parse('$baseUrl/api/test/999'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(updateData),
         );
-        
+
         expect(response.statusCode, equals(404));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isFalse);
         expect(data['error'], equals('Item not found'));
@@ -411,13 +421,13 @@ void main() {
     group('DELETE Endpoints', () {
       test('should delete existing item', () async {
         final response = await http.delete(Uri.parse('$baseUrl/api/test/2'));
-        
+
         expect(response.statusCode, equals(200));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isTrue);
         expect(data['message'], equals('Item deleted successfully'));
-        
+
         // Verify item is actually deleted
         final getResponse = await http.get(Uri.parse('$baseUrl/api/test/2'));
         expect(getResponse.statusCode, equals(404));
@@ -425,9 +435,9 @@ void main() {
 
       test('should return 404 for non-existent item deletion', () async {
         final response = await http.delete(Uri.parse('$baseUrl/api/test/999'));
-        
+
         expect(response.statusCode, equals(404));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isFalse);
         expect(data['error'], equals('Item not found'));
@@ -437,7 +447,7 @@ void main() {
     group('Security Features', () {
       test('should include security headers', () async {
         final response = await http.get(Uri.parse('$baseUrl/api/test/health'));
-        
+
         expect(response.headers['x-frame-options'], isNotNull);
         expect(response.headers['x-content-type-options'], isNotNull);
         expect(response.headers['x-request-id'], isNotNull);
@@ -445,13 +455,13 @@ void main() {
 
       test('should handle request size limits', () async {
         final largeBody = 'x' * (60 * 1024 * 1024); // 60MB - exceeds dev limit
-        
+
         final response = await http.post(
           Uri.parse('$baseUrl/api/test/'),
           headers: {'Content-Type': 'application/json'},
           body: largeBody,
         );
-        
+
         expect(response.statusCode, equals(413)); // Request Entity Too Large
       });
     });
@@ -459,11 +469,13 @@ void main() {
     group('Query Parameters', () {
       test('should handle search with query parameters', () async {
         final response = await http.get(
-          Uri.parse('$baseUrl/api/test/search?q=test&limit=5&offset=0&sort_by=name&order=asc'),
+          Uri.parse(
+            '$baseUrl/api/test/search?q=test&limit=5&offset=0&sort_by=name&order=asc',
+          ),
         );
-        
+
         expect(response.statusCode, equals(200));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isTrue);
         expect(data['data']['query'], equals('test'));
@@ -477,9 +489,9 @@ void main() {
 
       test('should handle search with default parameters', () async {
         final response = await http.get(Uri.parse('$baseUrl/api/test/search'));
-        
+
         expect(response.statusCode, equals(200));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isTrue);
         expect(data['data']['query'], equals('all'));
@@ -491,11 +503,13 @@ void main() {
 
       test('should handle multiple filter parameters', () async {
         final response = await http.get(
-          Uri.parse('$baseUrl/api/test/filter?min_value=50&max_value=250&name=test&has_value=true'),
+          Uri.parse(
+            '$baseUrl/api/test/filter?min_value=50&max_value=250&name=test&has_value=true',
+          ),
         );
-        
+
         expect(response.statusCode, equals(200));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isTrue);
         expect(data['data']['filters_applied']['min_value'], equals('50'));
@@ -509,9 +523,9 @@ void main() {
         final response = await http.get(
           Uri.parse('$baseUrl/api/test/filter?min_value=100'),
         );
-        
+
         expect(response.statusCode, equals(200));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isTrue);
         expect(data['data']['filters_applied']['min_value'], equals('100'));
@@ -520,9 +534,9 @@ void main() {
 
       test('should handle no query parameters', () async {
         final response = await http.get(Uri.parse('$baseUrl/api/test/filter'));
-        
+
         expect(response.statusCode, equals(200));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isTrue);
         expect(data['data']['filters_applied'], isEmpty);
@@ -540,9 +554,9 @@ void main() {
             'Content-Type': 'application/json',
           },
         );
-        
+
         expect(response.statusCode, equals(200));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isTrue);
         expect(data['data']['custom_header'], equals('test-value'));
@@ -553,15 +567,20 @@ void main() {
       });
 
       test('should handle missing headers with defaults', () async {
-        final response = await http.get(Uri.parse('$baseUrl/api/test/headers-test'));
-        
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/test/headers-test'),
+        );
+
         expect(response.statusCode, equals(200));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isTrue);
         expect(data['data']['custom_header'], equals('not-provided'));
         expect(data['data']['has_authorization'], isFalse);
-        expect(data['data']['user_agent'], isNot(equals('unknown'))); // http package sets user-agent
+        expect(
+          data['data']['user_agent'],
+          isNot(equals('unknown')),
+        ); // http package sets user-agent
       });
     });
 
@@ -576,11 +595,11 @@ void main() {
             'order': 'desc',
           },
         );
-        
+
         final response = await http.get(uri);
-        
+
         expect(response.statusCode, equals(200));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isTrue);
         expect(data['data']['items'], hasLength(1));
@@ -591,11 +610,13 @@ void main() {
 
       test('should handle URL encoded query parameters', () async {
         final response = await http.get(
-          Uri.parse('$baseUrl/api/test/search?q=Test%20Item&sort_by=name&order=asc'),
+          Uri.parse(
+            '$baseUrl/api/test/search?q=Test%20Item&sort_by=name&order=asc',
+          ),
         );
-        
+
         expect(response.statusCode, equals(200));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isTrue);
         expect(data['data']['query'], equals('Test Item'));
@@ -609,10 +630,10 @@ void main() {
           headers: {'Content-Type': 'application/json'},
           body: '{invalid json}',
         );
-        
+
         // Should return 400 Bad Request for invalid JSON
         expect(response.statusCode, equals(400));
-        
+
         final data = jsonDecode(response.body);
         expect(data['success'], isFalse);
         expect(data['error'], equals('Invalid JSON format'));
@@ -620,7 +641,7 @@ void main() {
 
       test('should return 404 for non-existent routes', () async {
         final response = await http.get(Uri.parse('$baseUrl/non-existent'));
-        
+
         expect(response.statusCode, equals(404));
       });
     });

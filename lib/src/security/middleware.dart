@@ -11,15 +11,12 @@ Middleware requestIdMiddleware() {
   return (Handler handler) {
     return (Request request) async {
       final requestId = _generateRequestId();
-      final updatedRequest = request.change(
-        context: {'request_id': requestId},
-      );
-      
+      final updatedRequest = request.change(context: {'request_id': requestId});
+
       final response = await handler(updatedRequest);
-      return response.change(headers: {
-        ...response.headers,
-        'X-Request-ID': requestId,
-      });
+      return response.change(
+        headers: {...response.headers, 'X-Request-ID': requestId},
+      );
     };
   };
 }
@@ -29,16 +26,18 @@ Middleware securityHeadersMiddleware() {
   return (Handler handler) {
     return (Request request) async {
       final response = await handler(request);
-      return response.change(headers: {
-        ...response.headers,
-        'X-Frame-Options': 'DENY',
-        'X-Content-Type-Options': 'nosniff',
-        'X-XSS-Protection': '1; mode=block',
-        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-        'Content-Security-Policy': 'default-src \'self\'',
-        'Referrer-Policy': 'strict-origin-when-cross-origin',
-        'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
-      });
+      return response.change(
+        headers: {
+          ...response.headers,
+          'X-Frame-Options': 'DENY',
+          'X-Content-Type-Options': 'nosniff',
+          'X-XSS-Protection': '1; mode=block',
+          'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+          'Content-Security-Policy': 'default-src \'self\'',
+          'Referrer-Policy': 'strict-origin-when-cross-origin',
+          'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
+        },
+      );
     };
   };
 }
@@ -73,12 +72,11 @@ Middleware corsMiddleware(CorsConfig config) {
       if (request.method == 'OPTIONS') {
         return Response.ok('', headers: _getCorsHeaders(config));
       }
-      
+
       final response = await handler(request);
-      return response.change(headers: {
-        ...response.headers,
-        ..._getCorsHeaders(config),
-      });
+      return response.change(
+        headers: {...response.headers, ..._getCorsHeaders(config)},
+      );
     };
   };
 }
@@ -89,22 +87,27 @@ Middleware loggingMiddleware() {
     return (Request request) async {
       final requestId = request.context['request_id'] ?? 'unknown';
       final start = DateTime.now();
-      
+
       Log.i('${request.method} ${request.url.path} [ID: $requestId]');
-      
+
       try {
         final response = await handler(request);
         final duration = DateTime.now().difference(start);
-        
-        Log.i('${request.method} ${request.url.path} [ID: $requestId] '
-              '${response.statusCode} ${duration.inMilliseconds}ms');
-        
+
+        Log.i(
+          '${request.method} ${request.url.path} [ID: $requestId] '
+          '${response.statusCode} ${duration.inMilliseconds}ms',
+        );
+
         return response;
       } catch (e, stackTrace) {
         final duration = DateTime.now().difference(start);
-        Log.e('${request.method} ${request.url.path} [ID: $requestId] '
-              'ERROR ${duration.inMilliseconds}ms', 
-              error: e, stackTrace: stackTrace);
+        Log.e(
+          '${request.method} ${request.url.path} [ID: $requestId] '
+          'ERROR ${duration.inMilliseconds}ms',
+          error: e,
+          stackTrace: stackTrace,
+        );
         rethrow;
       }
     };
@@ -119,8 +122,12 @@ Middleware errorHandlingMiddleware() {
         return await handler(request);
       } catch (e, stackTrace) {
         final requestId = request.context['request_id'] ?? 'unknown';
-        Log.e('Unhandled error [ID: $requestId]', error: e, stackTrace: stackTrace);
-        
+        Log.e(
+          'Unhandled error [ID: $requestId]',
+          error: e,
+          stackTrace: stackTrace,
+        );
+
         // Don't leak error details in production
         return Response.internalServerError(
           body: jsonEncode({
@@ -138,7 +145,10 @@ Middleware errorHandlingMiddleware() {
 String _generateRequestId() {
   final random = Random();
   final chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  return List.generate(12, (index) => chars[random.nextInt(chars.length)]).join();
+  return List.generate(
+    12,
+    (index) => chars[random.nextInt(chars.length)],
+  ).join();
 }
 
 /// Gets CORS headers based on configuration.

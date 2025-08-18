@@ -14,7 +14,7 @@ class _RouteInfo {
   final Symbol methodName;
   final Handler handler;
   final Type controllerType;
-  
+
   _RouteInfo({
     required this.httpMethod,
     required this.path,
@@ -22,7 +22,7 @@ class _RouteInfo {
     required this.handler,
     required this.controllerType,
   });
-  
+
   /// Static routes have higher priority than parameterized routes
   int get specificity => path.contains('<') && path.contains('>') ? 1 : 0;
 }
@@ -31,7 +31,7 @@ class _RouteInfo {
 class ReflectionHelper {
   static const _httpAnnotations = {
     GET: 'GET',
-    POST: 'POST', 
+    POST: 'POST',
     PUT: 'PUT',
     DELETE: 'DELETE',
     PATCH: 'PATCH',
@@ -59,30 +59,34 @@ class ReflectionHelper {
       Log.i('Building routes from annotations...');
       final router = Router();
       final routes = _extractRoutes(controller);
-      
+
       // Sort by specificity (static routes first)
       routes.sort((a, b) => a.specificity.compareTo(b.specificity));
-      
+
       // Register routes in router with JWT middleware
       for (final route in routes) {
         await _registerRoute(router, route);
       }
-      
+
       Log.i('Successfully registered ${routes.length} routes');
       return router;
     } catch (e, stackTrace) {
-      Log.e('Error building routes with reflection', error: e, stackTrace: stackTrace);
+      Log.e(
+        'Error building routes with reflection',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return null;
     }
   }
-  
+
   /// Extract controller path from @Controller annotation
   static String? extractControllerPath(Object controller) {
     if (!isReflectionAvailable) return null;
 
     try {
       final classMirror = mirrors.reflect(controller).type;
-      
+
       for (final metadata in classMirror.metadata) {
         if (metadata.reflectee is Controller) {
           return (metadata.reflectee as Controller).path;
@@ -99,15 +103,21 @@ class ReflectionHelper {
     final routes = <_RouteInfo>[];
     final controllerMirror = mirrors.reflect(controller);
     final classMirror = controllerMirror.type;
-    
+
     Log.d('Scanning ${classMirror.simpleName} for annotated methods');
 
     for (final declaration in classMirror.declarations.entries) {
       final methodMirror = declaration.value;
-      
-      if (_isValidMethod(methodMirror) && methodMirror is mirrors.MethodMirror) {
+
+      if (_isValidMethod(methodMirror) &&
+          methodMirror is mirrors.MethodMirror) {
         final methodName = declaration.key;
-        final routeInfo = _processMethod(controllerMirror, methodName, methodMirror, controller.runtimeType);
+        final routeInfo = _processMethod(
+          controllerMirror,
+          methodName,
+          methodMirror,
+          controller.runtimeType,
+        );
         if (routeInfo != null) {
           routes.add(routeInfo);
         }
@@ -119,30 +129,35 @@ class ReflectionHelper {
 
   /// Check if method is valid for route processing
   static bool _isValidMethod(mirrors.DeclarationMirror methodMirror) {
-    return methodMirror is mirrors.MethodMirror && 
-           !methodMirror.isConstructor && 
-           !methodMirror.isGetter && 
-           !methodMirror.isSetter;
+    return methodMirror is mirrors.MethodMirror &&
+        !methodMirror.isConstructor &&
+        !methodMirror.isGetter &&
+        !methodMirror.isSetter;
   }
 
   /// Process method annotations to create route info
   static _RouteInfo? _processMethod(
     mirrors.InstanceMirror controllerMirror,
-    Symbol methodName, 
+    Symbol methodName,
     mirrors.MethodMirror methodMirror,
     Type controllerType,
   ) {
     for (final metadata in methodMirror.metadata) {
       final annotation = metadata.reflectee;
-      
+
       for (final entry in _httpAnnotations.entries) {
         if (annotation.runtimeType == entry.key) {
           final httpMethod = entry.value;
           final path = _getAnnotationPath(annotation);
-          final handler = _createHandler(controllerMirror, methodName, httpMethod, path);
-          
+          final handler = _createHandler(
+            controllerMirror,
+            methodName,
+            httpMethod,
+            path,
+          );
+
           Log.d('Found route: $httpMethod $path -> $methodName');
-          
+
           return _RouteInfo(
             httpMethod: httpMethod,
             path: path.isEmpty ? '/' : path,
@@ -176,14 +191,14 @@ class ReflectionHelper {
     return (Request request) async {
       try {
         final result = controllerMirror.invoke(methodName, [request]);
-        
+
         // Handle both sync and async methods
         if (result.reflectee is Future) {
           return await result.reflectee as Response;
         } else {
           return result.reflectee as Response;
         }
-      } catch (e, stackTrace) {
+      } catch (e) {
         Log.e('Error in $httpMethod $path handler: $e');
         return Response.internalServerError(
           body: '{"error": "Internal server error"}',
@@ -195,17 +210,20 @@ class ReflectionHelper {
 
   /// Register route in router with JWT middleware support
   static Future<void> _registerRoute(Router router, _RouteInfo route) async {
-    Log.d('Registering: ${route.httpMethod} ${route.path} -> ${route.methodName}');
-    
-    // Obtener middleware JWT para esta ruta
-    final jwtMiddlewares = await EnhancedReflectionHelper.createJWTValidationMiddleware(
-      route.controllerType, 
-      route.methodName.toString()
+    Log.d(
+      'Registering: ${route.httpMethod} ${route.path} -> ${route.methodName}',
     );
-    
+
+    // Obtener middleware JWT para esta ruta
+    final jwtMiddlewares =
+        await EnhancedReflectionHelper.createJWTValidationMiddleware(
+          route.controllerType,
+          route.methodName.toString(),
+        );
+
     // Crear handler con middleware JWT aplicado
     Handler finalHandler = route.handler;
-    
+
     if (jwtMiddlewares.isNotEmpty) {
       Log.d('   Applying JWT middleware to ${route.httpMethod} ${route.path}');
       // Aplicar middleware JWT en orden inverso (último middleware aplicado primero)
@@ -213,7 +231,7 @@ class ReflectionHelper {
         finalHandler = middleware(finalHandler);
       }
     }
-    
+
     switch (route.httpMethod) {
       case 'GET':
         router.get(route.path, finalHandler);

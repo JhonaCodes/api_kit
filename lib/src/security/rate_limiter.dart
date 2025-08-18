@@ -13,7 +13,7 @@ class RateLimiter {
     return (Handler handler) {
       return (Request request) async {
         final ip = _getClientIp(request);
-        
+
         // Check blacklist
         if (_blacklist.containsKey(ip)) {
           final bannedUntil = _blacklist[ip]!;
@@ -36,14 +36,16 @@ class RateLimiter {
         // Check rate limit
         if (_requests[ip]!.length >= config.maxRequests) {
           Log.w('Rate limit exceeded for IP: $ip');
-          
+
           // Ban IP for repeated violations
           final violations = _requests['${ip}_violations'] ??= [];
           violations.add(now);
-          
+
           if (violations.length >= 5) {
             // Ban for 1 hour
-            _blacklist[ip] = now.add(const Duration(hours: 1)).millisecondsSinceEpoch;
+            _blacklist[ip] = now
+                .add(const Duration(hours: 1))
+                .millisecondsSinceEpoch;
             Log.w('IP banned for 1 hour: $ip');
             return Response(429, body: 'IP banned for 1 hour');
           }
@@ -54,7 +56,8 @@ class RateLimiter {
               'Retry-After': '${config.window.inSeconds}',
               'X-RateLimit-Limit': '${config.maxRequests}',
               'X-RateLimit-Remaining': '0',
-              'X-RateLimit-Reset': '${now.add(config.window).millisecondsSinceEpoch}',
+              'X-RateLimit-Reset':
+                  '${now.add(config.window).millisecondsSinceEpoch}',
             },
             body: 'Rate limit exceeded',
           );
@@ -64,11 +67,14 @@ class RateLimiter {
 
         // Add rate limit headers to response
         final response = await handler(request);
-        return response.change(headers: {
-          ...response.headers,
-          'X-RateLimit-Limit': '${config.maxRequests}',
-          'X-RateLimit-Remaining': '${config.maxRequests - _requests[ip]!.length}',
-        });
+        return response.change(
+          headers: {
+            ...response.headers,
+            'X-RateLimit-Limit': '${config.maxRequests}',
+            'X-RateLimit-Remaining':
+                '${config.maxRequests - _requests[ip]!.length}',
+          },
+        );
       };
     };
   }

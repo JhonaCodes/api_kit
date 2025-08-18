@@ -14,10 +14,7 @@ class SecureServer {
   final Router router;
   late final Pipeline pipeline;
 
-  SecureServer({
-    required this.config,
-    required this.router,
-  }) {
+  SecureServer({required this.config, required this.router}) {
     pipeline = _buildSecurePipeline();
   }
 
@@ -26,22 +23,16 @@ class SecureServer {
     return Pipeline()
         // Request ID for tracing
         .addMiddleware(requestIdMiddleware())
-        
         // Security headers (OWASP)
         .addMiddleware(securityHeadersMiddleware())
-        
         // Rate limiting (DDoS protection)
         .addMiddleware(rateLimitMiddleware(config.rateLimit))
-        
         // Request size limit
         .addMiddleware(requestSizeLimitMiddleware(config.maxBodySize))
-        
         // CORS configuration
         .addMiddleware(corsMiddleware(config.cors))
-        
         // Request logging
         .addMiddleware(loggingMiddleware())
-        
         // Error handling (secure error responses)
         .addMiddleware(errorHandlingMiddleware());
   }
@@ -53,20 +44,22 @@ class SecureServer {
   }) async {
     try {
       Log.i('Starting secure server on $host:$port');
-      
-      final handler = pipeline.addHandler(router);
+
+      final handler = pipeline.addHandler(router.call);
       final server = await io.serve(handler, host, port);
-      
+
       Log.i('Server started successfully');
       return ApiResult.ok(server);
     } catch (e, stackTrace) {
       Log.e('Failed to start server', error: e, stackTrace: stackTrace);
-      return ApiResult.err(ApiErr(
-        title: 'Server Start Failed',
-        msm: 'Failed to start server: $e',
-        exception: e,
-        stackTrace: stackTrace,
-      ));
+      return ApiResult.err(
+        ApiErr(
+          title: 'Server Start Failed',
+          msm: 'Failed to start server: $e',
+          exception: e,
+          stackTrace: stackTrace,
+        ),
+      );
     }
   }
 

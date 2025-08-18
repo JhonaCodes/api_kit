@@ -1,9 +1,8 @@
 import 'dart:convert';
-import 'package:shelf/shelf.dart';
 import 'package:api_kit/api_kit.dart';
 
 /// Ejemplo completo del sistema JWT de api_kit
-/// 
+///
 /// Demuestra exactamente lo especificado en la documentación:
 /// - @JWTController([validadores], requireAll: true/false)
 /// - @JWTEndpoint([validadores], requireAll: true/false)
@@ -14,17 +13,17 @@ import 'package:api_kit/api_kit.dart';
 void main() async {
   // 1. Crear servidor
   final server = ApiServer(config: ServerConfig.development());
-  
+
   // 2. Configurar JWT authentication
   server.configureJWTAuth(
     jwtSecret: 'your-super-secret-jwt-key-min-32-chars',
     excludePaths: [
-      '/api/public',  // Rutas públicas
-      '/api/auth',    // Endpoints de autenticación
-      '/health',      // Health checks
+      '/api/public', // Rutas públicas
+      '/api/auth', // Endpoints de autenticación
+      '/health', // Health checks
     ],
   );
-  
+
   // 3. Iniciar servidor con controladores
   final result = await server.start(
     host: '0.0.0.0',
@@ -36,7 +35,7 @@ void main() async {
       SupportController(),
     ],
   );
-  
+
   result.when(
     ok: (httpServer) {
       print('🚀 JWT Example Server running on http://localhost:8080');
@@ -49,25 +48,28 @@ void main() async {
 /// Controlador público (sin JWT)
 @Controller('/api/public')
 class PublicController extends BaseController {
-  
   @GET('/health')
-  @JWTPublic()  // Endpoint público explícito
+  @JWTPublic() // Endpoint público explícito
   Future<Response> healthCheck(Request request) async {
-    return jsonResponse(jsonEncode({
-      'status': 'healthy',
-      'timestamp': DateTime.now().toIso8601String(),
-      'jwt_system': 'active',
-    }));
+    return jsonResponse(
+      jsonEncode({
+        'status': 'healthy',
+        'timestamp': DateTime.now().toIso8601String(),
+        'jwt_system': 'active',
+      }),
+    );
   }
-  
+
   @GET('/info')
-  @JWTPublic()  // Endpoint público explícito
+  @JWTPublic() // Endpoint público explícito
   Future<Response> publicInfo(Request request) async {
-    return jsonResponse(jsonEncode({
-      'name': 'api_kit JWT System',
-      'version': '1.0.0',
-      'documentation': 'See docs/15-jwt-validation-system.md',
-    }));
+    return jsonResponse(
+      jsonEncode({
+        'name': 'api_kit JWT System',
+        'version': '1.0.0',
+        'documentation': 'See docs/15-jwt-validation-system.md',
+      }),
+    );
   }
 }
 
@@ -79,7 +81,6 @@ class PublicController extends BaseController {
   MyBusinessHoursValidator(startHour: 8, endHour: 18),
 ], requireAll: true)
 class AdminController extends BaseController {
-  
   // Este endpoint hereda la validación del controlador
   @GET('/users')
   Future<Response> getAllUsers(Request request) async {
@@ -88,24 +89,28 @@ class AdminController extends BaseController {
       {'id': '1', 'email': 'user1@example.com', 'role': 'user'},
       {'id': '2', 'email': 'admin@example.com', 'role': 'admin'},
     ];
-    
-    return jsonResponse(jsonEncode({
-      'success': true,
-      'data': users,
-      'message': 'Admin access granted',
-    }));
+
+    return jsonResponse(
+      jsonEncode({
+        'success': true,
+        'data': users,
+        'message': 'Admin access granted',
+      }),
+    );
   }
-  
+
   // Este endpoint también hereda la validación del controlador
   @DELETE('/users/<id>')
   Future<Response> deleteUser(Request request) async {
     final userId = getRequiredParam(request, 'id');
-    
-    return jsonResponse(jsonEncode({
-      'success': true,
-      'message': 'User $userId deleted by admin',
-      'timestamp': DateTime.now().toIso8601String(),
-    }));
+
+    return jsonResponse(
+      jsonEncode({
+        'success': true,
+        'message': 'User $userId deleted by admin',
+        'timestamp': DateTime.now().toIso8601String(),
+      }),
+    );
   }
 }
 
@@ -118,7 +123,6 @@ class AdminController extends BaseController {
   ),
 ])
 class FinanceController extends BaseController {
-  
   // Usa validación del controlador (departamento finance/accounting)
   @GET('/reports')
   Future<Response> getReports(Request request) async {
@@ -126,14 +130,16 @@ class FinanceController extends BaseController {
       {'id': '1', 'name': 'Monthly Report', 'type': 'financial'},
       {'id': '2', 'name': 'Quarterly Summary', 'type': 'summary'},
     ];
-    
-    return jsonResponse(jsonEncode({
-      'success': true,
-      'data': reports,
-      'message': 'Financial reports accessed',
-    }));
+
+    return jsonResponse(
+      jsonEncode({
+        'success': true,
+        'data': reports,
+        'message': 'Financial reports accessed',
+      }),
+    );
   }
-  
+
   // SOBRESCRIBE validación del controlador con validadores específicos
   @POST('/transactions')
   @JWTEndpoint([
@@ -148,30 +154,35 @@ class FinanceController extends BaseController {
     // 1. MyFinancialValidator (certificación + nivel + límite $10k)
     // 2. MyDepartmentValidator (solo finance + nivel manager)
     // AMBOS deben pasar (requireAll: true)
-    
+
     final body = await request.readAsString();
     final transactionData = jsonDecode(body) as Map<String, dynamic>;
-    
-    return jsonResponse(jsonEncode({
-      'success': true,
-      'message': 'High-value transaction created',
-      'transaction_id': 'TXN-${DateTime.now().millisecondsSinceEpoch}',
-      'amount': transactionData['amount'],
-    }), statusCode: 201);
+
+    return jsonResponse(
+      jsonEncode({
+        'success': true,
+        'message': 'High-value transaction created',
+        'transaction_id': 'TXN-${DateTime.now().millisecondsSinceEpoch}',
+        'amount': transactionData['amount'],
+      }),
+      statusCode: 201,
+    );
   }
-  
+
   // Endpoint público que SOBRESCRIBE cualquier validación
   @GET('/balance')
   @JWTPublic()
   Future<Response> getPublicBalance(Request request) async {
     // Sin validación JWT - acceso público
-    return jsonResponse(jsonEncode({
-      'success': true,
-      'data': {
-        'public_balance': 'Available for consultation',
-        'transparency': 'Public access enabled',
-      }
-    }));
+    return jsonResponse(
+      jsonEncode({
+        'success': true,
+        'data': {
+          'public_balance': 'Available for consultation',
+          'transparency': 'Public access enabled',
+        },
+      }),
+    );
   }
 }
 
@@ -181,9 +192,8 @@ class FinanceController extends BaseController {
 @JWTController([
   MyAdminValidator(),
   MyDepartmentValidator(allowedDepartments: ['support', 'customer_service']),
-], requireAll: false)  // Lógica OR: al menos uno debe pasar
+], requireAll: false) // Lógica OR: al menos uno debe pasar
 class SupportController extends BaseController {
-  
   // Requiere ser admin OR departamento support/customer_service
   @GET('/tickets')
   Future<Response> getTickets(Request request) async {
@@ -191,27 +201,31 @@ class SupportController extends BaseController {
       {'id': '1', 'title': 'Login Issue', 'status': 'open'},
       {'id': '2', 'title': 'Password Reset', 'status': 'closed'},
     ];
-    
-    return jsonResponse(jsonEncode({
-      'success': true,
-      'data': tickets,
-      'message': 'Support tickets accessed',
-    }));
+
+    return jsonResponse(
+      jsonEncode({
+        'success': true,
+        'data': tickets,
+        'message': 'Support tickets accessed',
+      }),
+    );
   }
-  
+
   // Endpoint con validación específica que SOBRESCRIBE la del controlador
   @PUT('/tickets/<id>')
   @JWTEndpoint([
-    MyAdminValidator(),  // Solo administradores pueden modificar tickets
+    MyAdminValidator(), // Solo administradores pueden modificar tickets
   ])
   Future<Response> updateTicket(Request request) async {
     final ticketId = getRequiredParam(request, 'id');
-    
-    return jsonResponse(jsonEncode({
-      'success': true,
-      'message': 'Ticket $ticketId updated by admin',
-      'timestamp': DateTime.now().toIso8601String(),
-    }));
+
+    return jsonResponse(
+      jsonEncode({
+        'success': true,
+        'message': 'Ticket $ticketId updated by admin',
+        'timestamp': DateTime.now().toIso8601String(),
+      }),
+    );
   }
 }
 
@@ -322,7 +336,7 @@ Support User (for support tickets):
 /// NOTA: En producción usar dart_jsonwebtoken
 class ExampleJWTs {
   // Estos son tokens de ejemplo - en producción usar firma real
-  
+
   static String adminToken() {
     final payload = {
       'user_id': 'admin123',
@@ -333,12 +347,13 @@ class ExampleJWTs {
       'permissions': ['admin_access', 'read', 'write'],
       'after_hours_access': true,
       'iat': DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      'exp': DateTime.now().add(Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000,
+      'exp':
+          DateTime.now().add(Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000,
     };
-    
+
     return _createMockJWT(payload);
   }
-  
+
   static String financeManagerToken() {
     final payload = {
       'user_id': 'fin123',
@@ -352,12 +367,13 @@ class ExampleJWTs {
       'certifications': ['financial_ops_certified'],
       'max_transaction_amount': 100000.0,
       'iat': DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      'exp': DateTime.now().add(Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000,
+      'exp':
+          DateTime.now().add(Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000,
     };
-    
+
     return _createMockJWT(payload);
   }
-  
+
   static String supportUserToken() {
     final payload = {
       'user_id': 'sup123',
@@ -367,19 +383,20 @@ class ExampleJWTs {
       'active': true,
       'department': 'support',
       'iat': DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      'exp': DateTime.now().add(Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000,
+      'exp':
+          DateTime.now().add(Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000,
     };
-    
+
     return _createMockJWT(payload);
   }
-  
+
   static String _createMockJWT(Map<String, dynamic> payload) {
     // Crear JWT mock para testing (NO usar en producción)
     final header = {'alg': 'HS256', 'typ': 'JWT'};
     final encodedHeader = base64Url.encode(utf8.encode(jsonEncode(header)));
     final encodedPayload = base64Url.encode(utf8.encode(jsonEncode(payload)));
     final signature = 'mock-signature-use-real-crypto-in-production';
-    
+
     return '$encodedHeader.$encodedPayload.$signature';
   }
 }

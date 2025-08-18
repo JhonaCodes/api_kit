@@ -46,11 +46,7 @@ class ApiResponse<T> {
 
   /// Creates a bad request response.
   factory ApiResponse.badRequest(String error) {
-    return ApiResponse<T>(
-      success: false,
-      error: error,
-      statusCode: 400,
-    );
+    return ApiResponse<T>(success: false, error: error, statusCode: 400);
   }
 
   /// Creates an unauthorized response.
@@ -73,9 +69,7 @@ class ApiResponse<T> {
 
   /// Converts the response to JSON.
   String toJson() {
-    final Map<String, dynamic> json = {
-      'success': success,
-    };
+    final Map<String, dynamic> json = {'success': success};
 
     if (data != null) json['data'] = data;
     if (error != null) json['error'] = error;
