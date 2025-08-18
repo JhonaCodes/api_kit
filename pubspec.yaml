@@ -8,15 +8,10 @@ documentation: https://github.com/jhonacode/api_kit/blob/main/README.md
 
 topics:
   - api
-  - framework
-  - rest
   - server
   - http
   - jwt
   - middleware
-  - annotations
-  - routing
-  - web
 
 platforms:
   linux:
