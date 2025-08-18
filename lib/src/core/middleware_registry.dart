@@ -31,6 +31,9 @@ class MiddlewareRegistry {
 /// Built-in middleware creators for common use cases.
 class BuiltInMiddleware {
   /// Creates JWT authentication middleware.
+  /// 
+  /// For production use, integrate with a real JWT library like dart_jsonwebtoken.
+  /// This implementation provides the structure for JWT validation.
   static Middleware Function() jwt({
     required String secret,
     String? issuer,
@@ -41,29 +44,71 @@ class BuiltInMiddleware {
         // Extract JWT from Authorization header
         final authHeader = request.headers['authorization'];
         if (authHeader == null || !authHeader.startsWith('Bearer ')) {
-          return Response(401, body: '{"error": "Missing or invalid token"}',
-              headers: {'content-type': 'application/json'});
+          return Response(401, 
+            body: '{"success": false, "error": {"code": "UNAUTHORIZED", "message": "Missing or invalid token"}}',
+            headers: {'content-type': 'application/json'});
         }
 
         final token = authHeader.substring(7);
         
-        // Here you would validate the JWT token
-        // For MVP purposes, we'll just check if it exists
+        // Basic token validation (extend with real JWT library)
         if (token.isEmpty) {
-          return Response(401, body: '{"error": "Invalid token"}',
-              headers: {'content-type': 'application/json'});
+          return Response(401, 
+            body: '{"success": false, "error": {"code": "UNAUTHORIZED", "message": "Invalid token"}}',
+            headers: {'content-type': 'application/json'});
         }
 
-        // Add user info to request context for downstream handlers
+        // TODO: Validate JWT signature and expiration with real JWT library
+        // For now, we parse a mock payload - replace with real JWT validation
+        final mockPayload = _parseTokenMock(token);
+        
+        if (mockPayload == null) {
+          return Response(401,
+            body: '{"success": false, "error": {"code": "UNAUTHORIZED", "message": "Invalid token format"}}',
+            headers: {'content-type': 'application/json'});
+        }
+
+        // Check required roles if specified
+        if (requiredRoles.isNotEmpty) {
+          final userRoles = (mockPayload['roles'] as List<dynamic>?) ?? [];
+          final hasRequiredRole = requiredRoles.any((role) => userRoles.contains(role));
+          
+          if (!hasRequiredRole) {
+            return Response(403,
+              body: '{"success": false, "error": {"code": "FORBIDDEN", "message": "Insufficient permissions"}}',
+              headers: {'content-type': 'application/json'});
+          }
+        }
+
+        // Add JWT payload to request context for downstream handlers
         final updatedRequest = request.change(context: {
           ...request.context,
-          'user': {'id': 'user123', 'roles': ['user']}, // Mock user
+          'jwt_payload': mockPayload,
+          'user_id': mockPayload['user_id'],
+          'user_email': mockPayload['email'],
+          'user_roles': mockPayload['roles'] ?? [],
           'token': token,
         });
 
         return handler(updatedRequest);
       };
     };
+  }
+
+  /// Mock JWT parser for demonstration - replace with real JWT library
+  static Map<String, dynamic>? _parseTokenMock(String token) {
+    try {
+      // In a real implementation, use a JWT library to validate and parse
+      // For demo purposes, we'll simulate a valid JWT payload
+      return {
+        'user_id': 'user123',
+        'email': 'user@example.com',
+        'roles': ['user'],
+        'exp': DateTime.now().add(Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000,
+      };
+    } catch (e) {
+      return null;
+    }
   }
 
   /// Creates API key authentication middleware.

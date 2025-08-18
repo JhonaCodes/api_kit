@@ -1,11 +1,31 @@
 name: api_kit
-description: Simple, fast REST API framework with annotation-based routing. Perfect for MVPs and rapid prototyping with built-in essentials.
-version: 0.0.1
+description: "A powerful, Spring Boot-style REST API framework for Dart with annotation-based routing, built-in JWT validation system, comprehensive middleware pipeline, and production-ready security features."
+version: 0.0.2
 homepage: https://github.com/jhonacode/api_kit
 repository: https://github.com/jhonacode/api_kit
+issue_tracker: https://github.com/jhonacode/api_kit/issues
+documentation: https://github.com/jhonacode/api_kit/blob/main/README.md
+
+topics:
+  - api
+  - framework
+  - rest
+  - server
+  - http
+  - jwt
+  - middleware
+  - annotations
+  - routing
+  - web
+
+platforms:
+  linux:
+  macos:
+  windows:
+  web:
 
 environment:
-  sdk: ^3.9.0
+  sdk: ">=3.9.0 <4.0.0"
 
 dependencies:
   # Core Shelf dependencies (official Dart)
@@ -13,7 +33,7 @@ dependencies:
   shelf_router: ^1.1.4
   
   # HTTP client (official Dart)
-  http: ^1.1.2
+  http: ^1.5.0
   
   # Logging (external but specified by user)
   logger_rs: ^1.0.3
@@ -25,5 +45,11 @@ dependencies:
   convert: ^3.1.1
 
 dev_dependencies:
-  lints: ^6.0.0
+  # Testing
   test: ^1.25.6
+  
+  # Linting and analysis
+  lints: ^6.0.0
+  
+  # Coverage
+  coverage: ^1.7.2

@@ -7,9 +7,9 @@ import 'reflection_helper.dart';
 /// Builds routes automatically from controller annotations.
 class RouterBuilder {
   /// Builds a router from a controller using annotations when possible.
-  static Router buildFromController(Object controller) {
+  static Future<Router> buildFromController(Object controller) async {
     // Try to use reflection first
-    final reflectionRouter = ReflectionHelper.buildRoutesWithReflection(controller);
+    final reflectionRouter = await ReflectionHelper.buildRoutesWithReflection(controller);
     
     if (reflectionRouter != null) {
       Log.i('Routes built successfully using reflection');

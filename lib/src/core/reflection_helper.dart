@@ -5,6 +5,7 @@ import 'package:shelf_router/shelf_router.dart';
 import 'package:logger_rs/logger_rs.dart';
 
 import '../annotations/controller_annotations.dart';
+import 'enhanced_reflection_helper.dart';
 
 /// Route information for sorting and registration
 class _RouteInfo {
@@ -12,12 +13,14 @@ class _RouteInfo {
   final String path;
   final Symbol methodName;
   final Handler handler;
+  final Type controllerType;
   
   _RouteInfo({
     required this.httpMethod,
     required this.path,
     required this.methodName,
     required this.handler,
+    required this.controllerType,
   });
   
   /// Static routes have higher priority than parameterized routes
@@ -46,7 +49,7 @@ class ReflectionHelper {
   }
 
   /// Build router from controller annotations (Spring Boot style)
-  static Router? buildRoutesWithReflection(Object controller) {
+  static Future<Router?> buildRoutesWithReflection(Object controller) async {
     if (!isReflectionAvailable) {
       Log.w('Reflection not available. Use manual route registration.');
       return null;
@@ -60,9 +63,9 @@ class ReflectionHelper {
       // Sort by specificity (static routes first)
       routes.sort((a, b) => a.specificity.compareTo(b.specificity));
       
-      // Register routes in router
+      // Register routes in router with JWT middleware
       for (final route in routes) {
-        _registerRoute(router, route);
+        await _registerRoute(router, route);
       }
       
       Log.i('Successfully registered ${routes.length} routes');
@@ -104,7 +107,7 @@ class ReflectionHelper {
       
       if (_isValidMethod(methodMirror) && methodMirror is mirrors.MethodMirror) {
         final methodName = declaration.key;
-        final routeInfo = _processMethod(controllerMirror, methodName, methodMirror);
+        final routeInfo = _processMethod(controllerMirror, methodName, methodMirror, controller.runtimeType);
         if (routeInfo != null) {
           routes.add(routeInfo);
         }
@@ -127,6 +130,7 @@ class ReflectionHelper {
     mirrors.InstanceMirror controllerMirror,
     Symbol methodName, 
     mirrors.MethodMirror methodMirror,
+    Type controllerType,
   ) {
     for (final metadata in methodMirror.metadata) {
       final annotation = metadata.reflectee;
@@ -144,6 +148,7 @@ class ReflectionHelper {
             path: path.isEmpty ? '/' : path,
             methodName: methodName,
             handler: handler,
+            controllerType: controllerType,
           );
         }
       }
@@ -179,7 +184,7 @@ class ReflectionHelper {
           return result.reflectee as Response;
         }
       } catch (e, stackTrace) {
-        Log.e('Error in $httpMethod $path handler', error: e, stackTrace: stackTrace);
+        Log.e('Error in $httpMethod $path handler: $e');
         return Response.internalServerError(
           body: '{"error": "Internal server error"}',
           headers: {'content-type': 'application/json'},
@@ -188,25 +193,42 @@ class ReflectionHelper {
     };
   }
 
-  /// Register route in router
-  static void _registerRoute(Router router, _RouteInfo route) {
+  /// Register route in router with JWT middleware support
+  static Future<void> _registerRoute(Router router, _RouteInfo route) async {
     Log.d('Registering: ${route.httpMethod} ${route.path} -> ${route.methodName}');
+    
+    // Obtener middleware JWT para esta ruta
+    final jwtMiddlewares = await EnhancedReflectionHelper.createJWTValidationMiddleware(
+      route.controllerType, 
+      route.methodName.toString()
+    );
+    
+    // Crear handler con middleware JWT aplicado
+    Handler finalHandler = route.handler;
+    
+    if (jwtMiddlewares.isNotEmpty) {
+      Log.d('   Applying JWT middleware to ${route.httpMethod} ${route.path}');
+      // Aplicar middleware JWT en orden inverso (último middleware aplicado primero)
+      for (final middleware in jwtMiddlewares.reversed) {
+        finalHandler = middleware(finalHandler);
+      }
+    }
     
     switch (route.httpMethod) {
       case 'GET':
-        router.get(route.path, route.handler);
+        router.get(route.path, finalHandler);
         break;
       case 'POST':
-        router.post(route.path, route.handler);
+        router.post(route.path, finalHandler);
         break;
       case 'PUT':
-        router.put(route.path, route.handler);
+        router.put(route.path, finalHandler);
         break;
       case 'DELETE':
-        router.delete(route.path, route.handler);
+        router.delete(route.path, finalHandler);
         break;
       case 'PATCH':
-        router.patch(route.path, route.handler);
+        router.patch(route.path, finalHandler);
         break;
       default:
         Log.w('Unsupported HTTP method: ${route.httpMethod}');

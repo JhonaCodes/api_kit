@@ -10,7 +10,17 @@ abstract class BaseController {
 
   /// Returns the router for this controller, built automatically from annotations.
   Router get router {
-    _cachedRouter ??= RouterBuilder.buildFromController(this);
+    // For backward compatibility, return cached router or empty router
+    // The actual router building now happens in buildRouter() method
+    return _cachedRouter ?? Router();
+  }
+
+  /// Builds and caches the router for this controller asynchronously.
+  /// This method supports JWT middleware integration.
+  Future<Router> buildRouter() async {
+    if (_cachedRouter == null) {
+      _cachedRouter = await RouterBuilder.buildFromController(this);
+    }
     return _cachedRouter!;
   }
 
