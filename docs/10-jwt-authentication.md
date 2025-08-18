@@ -1,0 +1,107 @@
+# 🔐 JWT Authentication
+
+**JSON Web Tokens (JWT)** son el estándar para autenticación stateless en APIs modernas. Permiten verificar la identidad del usuario sin necesidad de sesiones en el servidor.
+
+## 🎯 Conceptos Clave de JWT
+
+### 1. **Header** - Algoritmo y tipo de token
+### 2. **Payload** - Claims (datos del usuario)
+### 3. **Signature** - Verificación de integridad
+### 4. **Stateless** - No requiere almacenamiento en servidor
+### 5. **Portable** - Funciona entre servicios
+
+---
+
+## 🔑 1. Sistema de Autenticación Completo
+
+```dart
+@Controller('/api/auth')
+class AuthController extends BaseController {
+  
+  // Base de datos simulada de usuarios
+  static final List<Map<String, dynamic>> _users = [
+    {
+      'id': '1',
+      'email': 'admin@example.com',
+      'password_hash': r'$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/6hVtTQj9.Q3K3vZ5G', // password123
+      'role': 'admin',
+      'name': 'Admin User',
+      'active': true,
+      'created_at': '2024-01-01T00:00:00Z',
+      'last_login': null,
+    },
+    {
+      'id': '2',
+      'email': 'user@example.com',
+      'password_hash': r'$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/6hVtTQj9.Q3K3vZ5G', // password123
+      'role': 'user',
+      'name': 'Regular User',
+      'active': true,
+      'created_at': '2024-01-02T00:00:00Z',
+      'last_login': null,
+    },
+  ];
+  
+  // Refresh tokens activos
+  static final Set<String> _activeRefreshTokens = <String>{};
+  
+  // POST /api/auth/login
+  @POST('/login')
+  Future<Response> login(Request request) async {
+    logRequest(request, 'User login attempt');
+    
+    try {
+      final body = await request.readAsString();
+      if (body.isEmpty) {
+        return _authErrorResponse('Request body is required', 400);
+      }
+      
+      final data = jsonDecode(body) as Map<String, dynamic>;
+      
+      // Validar campos requeridos
+      if (!data.containsKey('email') || !data.containsKey('password')) {
+        return _authErrorResponse('Email and password are required', 400);
+      }
+      
+      final email = data['email'].toString().trim().toLowerCase();
+      final password = data['password'].toString();
+      
+      // Validar formato de email
+      if (!_isValidEmail(email)) {
+        return _authErrorResponse('Invalid email format', 400);
+      }
+      
+      // Buscar usuario
+      final user = _users.firstWhere(
+        (u) => u['email'] == email,
+        orElse: () => {},
+      );
+      
+      if (user.isEmpty) {
+        print('🔐 Login failed: User not found - $email');
+        return _authErrorResponse('Invalid credentials', 401);
+      }
+      
+      // Verificar que el usuario esté activo
+      if (user['active'] != true) {
+        print('🔐 Login failed: Account inactive - $email');
+        return _authErrorResponse('Account is deactivated', 401);
+      }
+      
+      // Verificar contraseña (en producción usar bcrypt)
+      if (!_verifyPassword(password, user['password_hash'])) {
+        print('🔐 Login failed: Invalid password - $email');
+        return _authErrorResponse('Invalid credentials', 401);
+      }
+      
+      // Generar tokens
+      final accessToken = _generateAccessToken(user);
+      final refreshToken = _generateRefreshToken(user);
+      
+      // Guardar refresh token
+      _activeRefreshTokens.add(refreshToken);
+      
+      // Actualizar último login
+      user['last_login'] = DateTime.now().toIso8601String();
+      
+      print('✅ Login successful: ${user['name']} (${user['email']})');\n      \n      final response = ApiResponse.success({\n        'user': {\n          'id': user['id'],\n          'email': user['email'],\n          'name': user['name'],\n          'role': user['role'],\n          'last_login': user['last_login'],\n        },\n        'tokens': {\n          'access_token': accessToken,\n          'refresh_token': refreshToken,\n          'token_type': 'Bearer',\n          'expires_in': 3600, // 1 hora\n        },\n        'permissions': _getUserPermissions(user['role']),\n      }, 'Login successful');\n      \n      return jsonResponse(response.toJson());\n      \n    } catch (e) {\n      print('❌ Login error: $e');\n      return _authErrorResponse('Authentication failed', 500);\n    }\n  }\n  \n  // POST /api/auth/register\n  @POST('/register')\n  Future<Response> register(Request request) async {\n    logRequest(request, 'User registration attempt');\n    \n    try {\n      final body = await request.readAsString();\n      final data = jsonDecode(body) as Map<String, dynamic>;\n      \n      // Validar datos de registro\n      final validation = _validateRegistrationData(data);\n      if (!validation.isValid) {\n        return _authErrorResponse(validation.errors.join(', '), 400);\n      }\n      \n      final email = data['email'].toString().trim().toLowerCase();\n      final password = data['password'].toString();\n      final name = data['name'].toString().trim();\n      \n      // Verificar que el email no exista\n      if (_users.any((u) => u['email'] == email)) {\n        return _authErrorResponse('Email already registered', 409);\n      }\n      \n      // Crear nuevo usuario\n      final newUser = {\n        'id': DateTime.now().millisecondsSinceEpoch.toString(),\n        'email': email,\n        'password_hash': _hashPassword(password),\n        'name': name,\n        'role': 'user', // Por defecto\n        'active': true,\n        'created_at': DateTime.now().toIso8601String(),\n        'last_login': null,\n      };\n      \n      _users.add(newUser);\n      \n      // Generar tokens para el nuevo usuario\n      final accessToken = _generateAccessToken(newUser);\n      final refreshToken = _generateRefreshToken(newUser);\n      _activeRefreshTokens.add(refreshToken);\n      \n      print('✅ User registered: ${newUser['name']} (${newUser['email']})');\n      \n      final response = ApiResponse.success({\n        'user': {\n          'id': newUser['id'],\n          'email': newUser['email'],\n          'name': newUser['name'],\n          'role': newUser['role'],\n          'created_at': newUser['created_at'],\n        },\n        'tokens': {\n          'access_token': accessToken,\n          'refresh_token': refreshToken,\n          'token_type': 'Bearer',\n          'expires_in': 3600,\n        },\n        'permissions': _getUserPermissions(newUser['role']),\n      }, 'Registration successful');\n      \n      return jsonResponse(response.toJson(), statusCode: 201);\n      \n    } catch (e) {\n      print('❌ Registration error: $e');\n      return _authErrorResponse('Registration failed', 500);\n    }\n  }\n  \n  // POST /api/auth/refresh\n  @POST('/refresh')\n  Future<Response> refreshToken(Request request) async {\n    logRequest(request, 'Token refresh attempt');\n    \n    try {\n      final body = await request.readAsString();\n      final data = jsonDecode(body) as Map<String, dynamic>;\n      \n      if (!data.containsKey('refresh_token')) {\n        return _authErrorResponse('Refresh token is required', 400);\n      }\n      \n      final refreshToken = data['refresh_token'].toString();\n      \n      // Verificar que el refresh token esté activo\n      if (!_activeRefreshTokens.contains(refreshToken)) {\n        return _authErrorResponse('Invalid or expired refresh token', 401);\n      }\n      \n      // Validar y decodificar refresh token\n      final payload = _validateRefreshToken(refreshToken);\n      if (payload == null) {\n        _activeRefreshTokens.remove(refreshToken);\n        return _authErrorResponse('Invalid refresh token', 401);\n      }\n      \n      // Encontrar usuario\n      final user = _users.firstWhere(\n        (u) => u['id'] == payload['user_id'],\n        orElse: () => {},\n      );\n      \n      if (user.isEmpty || user['active'] != true) {\n        _activeRefreshTokens.remove(refreshToken);\n        return _authErrorResponse('User not found or inactive', 401);\n      }\n      \n      // Generar nuevos tokens\n      final newAccessToken = _generateAccessToken(user);\n      final newRefreshToken = _generateRefreshToken(user);\n      \n      // Rotar refresh token (eliminar el viejo, agregar el nuevo)\n      _activeRefreshTokens.remove(refreshToken);\n      _activeRefreshTokens.add(newRefreshToken);\n      \n      print('🔄 Tokens refreshed for user: ${user['email']}');\n      \n      final response = ApiResponse.success({\n        'tokens': {\n          'access_token': newAccessToken,\n          'refresh_token': newRefreshToken,\n          'token_type': 'Bearer',\n          'expires_in': 3600,\n        },\n        'user': {\n          'id': user['id'],\n          'email': user['email'],\n          'name': user['name'],\n          'role': user['role'],\n        },\n      }, 'Tokens refreshed successfully');\n      \n      return jsonResponse(response.toJson());\n      \n    } catch (e) {\n      print('❌ Token refresh error: $e');\n      return _authErrorResponse('Token refresh failed', 500);\n    }\n  }\n  \n  // POST /api/auth/logout\n  @POST('/logout')\n  Future<Response> logout(Request request) async {\n    logRequest(request, 'User logout');\n    \n    try {\n      final body = await request.readAsString();\n      \n      if (body.isNotEmpty) {\n        final data = jsonDecode(body) as Map<String, dynamic>;\n        final refreshToken = data['refresh_token'];\n        \n        if (refreshToken != null) {\n          _activeRefreshTokens.remove(refreshToken);\n          print('🔓 Refresh token revoked');\n        }\n      }\n      \n      // También podrías agregar el access token a una blacklist\n      final authHeader = request.headers['authorization'];\n      if (authHeader != null && authHeader.startsWith('Bearer ')) {\n        final accessToken = authHeader.substring(7);\n        // En producción: agregar a blacklist de tokens\n        print('🔓 Access token invalidated: ${accessToken.substring(0, 20)}...');\n      }\n      \n      final response = ApiResponse.success(\n        {'logged_out': true}, \n        'Logout successful'\n      );\n      \n      return jsonResponse(response.toJson());\n      \n    } catch (e) {\n      print('❌ Logout error: $e');\n      return _authErrorResponse('Logout failed', 500);\n    }\n  }\n  \n  // POST /api/auth/change-password\n  @POST('/change-password')\n  Future<Response> changePassword(Request request) async {\n    logRequest(request, 'Password change attempt');\n    \n    try {\n      // Verificar autenticación\n      final userId = request.context['user_id'] as String?;\n      if (userId == null) {\n        return _authErrorResponse('Authentication required', 401);\n      }\n      \n      final body = await request.readAsString();\n      final data = jsonDecode(body) as Map<String, dynamic>;\n      \n      if (!data.containsKey('current_password') || !data.containsKey('new_password')) {\n        return _authErrorResponse('Current password and new password are required', 400);\n      }\n      \n      final currentPassword = data['current_password'].toString();\n      final newPassword = data['new_password'].toString();\n      \n      // Validar nueva contraseña\n      final passwordValidation = _validatePassword(newPassword);\n      if (!passwordValidation.isValid) {\n        return _authErrorResponse(passwordValidation.errors.join(', '), 400);\n      }\n      \n      // Encontrar usuario\n      final userIndex = _users.indexWhere((u) => u['id'] == userId);\n      if (userIndex == -1) {\n        return _authErrorResponse('User not found', 404);\n      }\n      \n      final user = _users[userIndex];\n      \n      // Verificar contraseña actual\n      if (!_verifyPassword(currentPassword, user['password_hash'])) {\n        return _authErrorResponse('Current password is incorrect', 401);\n      }\n      \n      // Actualizar contraseña\n      user['password_hash'] = _hashPassword(newPassword);\n      user['password_changed_at'] = DateTime.now().toIso8601String();\n      user['updated_at'] = DateTime.now().toIso8601String();\n      \n      // Revocar todos los refresh tokens del usuario para forzar re-login\n      _activeRefreshTokens.removeWhere((token) {\n        final payload = _validateRefreshToken(token);\n        return payload != null && payload['user_id'] == userId;\n      });\n      \n      print('🔐 Password changed for user: ${user['email']}');\n      \n      final response = ApiResponse.success(\n        {'password_changed': true},\n        'Password changed successfully. Please login again.'\n      );\n      \n      return jsonResponse(response.toJson());\n      \n    } catch (e) {\n      print('❌ Password change error: $e');\n      return _authErrorResponse('Password change failed', 500);\n    }\n  }\n  \n  // GET /api/auth/me\n  @GET('/me')\n  Future<Response> getCurrentUser(Request request) async {\n    logRequest(request, 'Get current user info');\n    \n    final userId = request.context['user_id'] as String?;\n    if (userId == null) {\n      return _authErrorResponse('Authentication required', 401);\n    }\n    \n    final user = _users.firstWhere(\n      (u) => u['id'] == userId,\n      orElse: () => {},\n    );\n    \n    if (user.isEmpty) {\n      return _authErrorResponse('User not found', 404);\n    }\n    \n    final response = ApiResponse.success({\n      'user': {\n        'id': user['id'],\n        'email': user['email'],\n        'name': user['name'],\n        'role': user['role'],\n        'created_at': user['created_at'],\n        'last_login': user['last_login'],\n      },\n      'permissions': _getUserPermissions(user['role']),\n    }, 'User info retrieved successfully');\n    \n    return jsonResponse(response.toJson());\n  }\n  \n  // Validación de datos de registro\n  ValidationResult _validateRegistrationData(Map<String, dynamic> data) {\n    final errors = <String>[];\n    \n    // Email\n    if (!data.containsKey('email') || data['email'].toString().trim().isEmpty) {\n      errors.add('Email is required');\n    } else if (!_isValidEmail(data['email'])) {\n      errors.add('Invalid email format');\n    }\n    \n    // Password\n    if (!data.containsKey('password') || data['password'].toString().isEmpty) {\n      errors.add('Password is required');\n    } else {\n      final passwordValidation = _validatePassword(data['password']);\n      if (!passwordValidation.isValid) {\n        errors.addAll(passwordValidation.errors);\n      }\n    }\n    \n    // Name\n    if (!data.containsKey('name') || data['name'].toString().trim().isEmpty) {\n      errors.add('Name is required');\n    } else if (data['name'].toString().trim().length < 2) {\n      errors.add('Name must be at least 2 characters');\n    }\n    \n    return ValidationResult(errors.isEmpty, errors);\n  }\n  \n  // Validación de contraseña\n  ValidationResult _validatePassword(String password) {\n    final errors = <String>[];\n    \n    if (password.length < 8) {\n      errors.add('Password must be at least 8 characters long');\n    }\n    \n    if (!password.contains(RegExp(r'[A-Z]'))) {\n      errors.add('Password must contain at least one uppercase letter');\n    }\n    \n    if (!password.contains(RegExp(r'[a-z]'))) {\n      errors.add('Password must contain at least one lowercase letter');\n    }\n    \n    if (!password.contains(RegExp(r'[0-9]'))) {\n      errors.add('Password must contain at least one number');\n    }\n    \n    if (!password.contains(RegExp(r'[!@#$%^&*(),.?\":{}|<>]'))) {\n      errors.add('Password must contain at least one special character');\n    }\n    \n    return ValidationResult(errors.isEmpty, errors);\n  }\n  \n  // Generar access token (JWT)\n  String _generateAccessToken(Map<String, dynamic> user) {\n    final header = {\n      'alg': 'HS256',\n      'typ': 'JWT',\n    };\n    \n    final payload = {\n      'user_id': user['id'],\n      'email': user['email'],\n      'name': user['name'],\n      'role': user['role'],\n      'iat': DateTime.now().millisecondsSinceEpoch ~/ 1000,\n      'exp': DateTime.now().add(Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000,\n      'type': 'access',\n    };\n    \n    // En producción usar una librería JWT real como dart_jsonwebtoken\n    return 'jwt.access.${base64Encode(utf8.encode(jsonEncode(payload)))}';\n  }\n  \n  // Generar refresh token\n  String _generateRefreshToken(Map<String, dynamic> user) {\n    final payload = {\n      'user_id': user['id'],\n      'email': user['email'],\n      'iat': DateTime.now().millisecondsSinceEpoch ~/ 1000,\n      'exp': DateTime.now().add(Duration(days: 30)).millisecondsSinceEpoch ~/ 1000,\n      'type': 'refresh',\n    };\n    \n    return 'jwt.refresh.${base64Encode(utf8.encode(jsonEncode(payload)))}';\n  }\n  \n  // Validar refresh token\n  Map<String, dynamic>? _validateRefreshToken(String token) {\n    try {\n      if (!token.startsWith('jwt.refresh.')) return null;\n      \n      final payloadPart = token.substring(12);\n      final decoded = utf8.decode(base64Decode(payloadPart));\n      final payload = jsonDecode(decoded) as Map<String, dynamic>;\n      \n      // Verificar expiración\n      final exp = payload['exp'] as int;\n      final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;\n      \n      if (now > exp) return null;\n      \n      return payload;\n    } catch (e) {\n      return null;\n    }\n  }\n  \n  // Helpers\n  bool _isValidEmail(String email) {\n    return RegExp(r'^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$').hasMatch(email);\n  }\n  \n  String _hashPassword(String password) {\n    // En producción usar bcrypt\n    return 'hashed_$password';\n  }\n  \n  bool _verifyPassword(String password, String hash) {\n    // En producción usar bcrypt.verify\n    return hash == 'hashed_$password';\n  }\n  \n  List<String> _getUserPermissions(String role) {\n    switch (role) {\n      case 'admin':\n        return ['read', 'write', 'delete', 'admin'];\n      case 'moderator':\n        return ['read', 'write', 'moderate'];\n      case 'user':\n      default:\n        return ['read'];\n    }\n  }\n  \n  Response _authErrorResponse(String message, int statusCode) {\n    final response = ApiResponse.error(message);\n    return jsonResponse(response.toJson(), statusCode: statusCode);\n  }\n}\n\nclass ValidationResult {\n  final bool isValid;\n  final List<String> errors;\n  \n  ValidationResult(this.isValid, this.errors);\n}\n```\n\n**Tests de autenticación:**\n```bash\n# Registro de usuario\ncurl -X POST http://localhost:8080/api/auth/register \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"SecurePass123!\"\n  }'\n\n# Login\ncurl -X POST http://localhost:8080/api/auth/login \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"email\": \"john@example.com\",\n    \"password\": \"SecurePass123!\"\n  }'\n\n# Obtener información del usuario actual\ncurl -X GET http://localhost:8080/api/auth/me \\\n  -H \"Authorization: Bearer jwt.access.eyJ1c2VyX2lkIjoiMSIsImVtYWlsIjoi...\"\n\n# Refresh token\ncurl -X POST http://localhost:8080/api/auth/refresh \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"refresh_token\": \"jwt.refresh.eyJ1c2VyX2lkIjoiMSIsImVtYWlsIjoi...\"\n  }'\n\n# Cambiar contraseña\ncurl -X POST http://localhost:8080/api/auth/change-password \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Authorization: Bearer jwt.access.eyJ1c2VyX2lkIjoiMSIsImVtYWlsIjoi...\" \\\n  -d '{\n    \"current_password\": \"SecurePass123!\",\n    \"new_password\": \"NewSecurePass456!\"\n  }'\n\n# Logout\ncurl -X POST http://localhost:8080/api/auth/logout \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Authorization: Bearer jwt.access.eyJ1c2VyX2lkIjoiMSIsImVtYWlsIjoi...\" \\\n  -d '{\n    \"refresh_token\": \"jwt.refresh.eyJ1c2VyX2lkIjoiMSIsImVtYWlsIjoi...\"\n  }'\n```\n\n---\n\n## 🏆 Mejores Prácticas para JWT\n\n### ✅ **DO's**\n- ✅ Usar HTTPS siempre en producción\n- ✅ Implementar refresh token rotation\n- ✅ Validar todos los claims del JWT\n- ✅ Usar tiempos de expiración cortos para access tokens\n- ✅ Implementar blacklist para tokens revocados\n- ✅ Hashear contraseñas con bcrypt\n\n### ❌ **DON'Ts**\n- ❌ Almacenar datos sensibles en el payload del JWT\n- ❌ Usar tokens sin expiración\n- ❌ Enviar tokens en query parameters\n- ❌ Usar claves débiles para firmar tokens\n- ❌ Ignorar validación de tokens en middleware\n\n### 🔒 Seguridad Adicional\n```dart\n// Rate limiting para endpoints de auth\napp.use('/api/auth/login', rateLimitMiddleware(5, Duration(minutes: 15)));\napp.use('/api/auth/register', rateLimitMiddleware(3, Duration(hours: 1)));\n\n// CORS específico para auth\napp.use('/api/auth', corsMiddleware(allowCredentials: false));\n\n// Headers de seguridad\napp.use(securityHeadersMiddleware());\n```\n\n### 📊 JWT Claims Recomendados\n```json\n{\n  \"iss\": \"your-app-name\",      // Issuer\n  \"aud\": \"your-app-users\",     // Audience\n  \"sub\": \"user-id\",            // Subject\n  \"iat\": 1234567890,           // Issued at\n  \"exp\": 1234571490,           // Expires at\n  \"jti\": \"unique-token-id\",    // JWT ID\n  \"user_id\": \"123\",\n  \"email\": \"user@example.com\",\n  \"role\": \"user\",\n  \"permissions\": [\"read\"],\n  \"session_id\": \"session-123\"\n}\n```\n\n---\n\n**👉 [Siguiente: Error Handling →](11-error-handling.md)**

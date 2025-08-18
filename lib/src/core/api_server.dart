@@ -68,17 +68,17 @@ class ApiServer {
         mainRouter.mount('/', additionalRoutes);
       }
       
-      // Add health check endpoint
-      mainRouter.get('/health', (Request request) {
-        return Response.ok('{"status": "healthy", "timestamp": "${DateTime.now().toIso8601String()}"}',
-            headers: {'content-type': 'application/json'});
-      });
+      // Health check endpoint is optional - controllers can provide their own
+      // mainRouter.get('/health', (Request request) {
+      //   return Response.ok('{"status": "healthy", "timestamp": "${DateTime.now().toIso8601String()}"}',
+      //       headers: {'content-type': 'application/json'});
+      // });
       
       final handler = pipeline.addHandler(mainRouter);
       final server = await io.serve(handler, host, port);
       
       Log.i('Server started successfully with ${controllerList.length} controllers');
-      Log.i('Health check available at: http://$host:$port/health');
+      Log.i('Controllers registered with their respective endpoints');
       
       return ApiResult.ok(server);
     } catch (e, stackTrace) {

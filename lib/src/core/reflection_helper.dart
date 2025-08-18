@@ -6,12 +6,37 @@ import 'package:logger_rs/logger_rs.dart';
 
 import '../annotations/controller_annotations.dart';
 
-/// Helper class to handle reflection-based route building.
+/// Route information for sorting and registration
+class _RouteInfo {
+  final String httpMethod;
+  final String path;
+  final Symbol methodName;
+  final Handler handler;
+  
+  _RouteInfo({
+    required this.httpMethod,
+    required this.path,
+    required this.methodName,
+    required this.handler,
+  });
+  
+  /// Static routes have higher priority than parameterized routes
+  int get specificity => path.contains('<') && path.contains('>') ? 1 : 0;
+}
+
+/// Spring Boot-style reflection helper for annotation-based routing
 class ReflectionHelper {
-  /// Indicates if mirrors are available in the current environment.
+  static const _httpAnnotations = {
+    GET: 'GET',
+    POST: 'POST', 
+    PUT: 'PUT',
+    DELETE: 'DELETE',
+    PATCH: 'PATCH',
+  };
+
+  /// Check if reflection (mirrors) is available
   static bool get isReflectionAvailable {
     try {
-      // Try to actually use mirrors API with a simple test
       mirrors.reflect('test');
       return true;
     } catch (e) {
@@ -20,121 +45,27 @@ class ReflectionHelper {
     }
   }
 
-  /// Builds routes using reflection if available.
+  /// Build router from controller annotations (Spring Boot style)
   static Router? buildRoutesWithReflection(Object controller) {
-    Log.i('Checking reflection availability...');
     if (!isReflectionAvailable) {
       Log.w('Reflection not available. Use manual route registration.');
       return null;
     }
 
-    Log.i('Reflection available, building routes...');
     try {
+      Log.i('Building routes from annotations...');
       final router = Router();
-      final controllerMirror = mirrors.reflect(controller);
-      final classMirror = controllerMirror.type;
-      Log.d('Controller type: ${classMirror.simpleName}');
+      final routes = _extractRoutes(controller);
       
-      // Get base path from @Controller annotation
-      String basePath = '';
-      for (final metadata in classMirror.metadata) {
-        if (metadata.reflectee is Controller) {
-          basePath = (metadata.reflectee as Controller).path;
-          Log.d('Found controller with base path: $basePath');
-          break;
-        }
+      // Sort by specificity (static routes first)
+      routes.sort((a, b) => a.specificity.compareTo(b.specificity));
+      
+      // Register routes in router
+      for (final route in routes) {
+        _registerRoute(router, route);
       }
       
-      // Process all methods looking for HTTP annotations
-      Log.d('Processing ${classMirror.declarations.length} declarations...');
-      int routeCount = 0;
-      for (final declaration in classMirror.declarations.entries) {
-        final methodMirror = declaration.value;
-        
-        if (methodMirror is mirrors.MethodMirror && 
-            !methodMirror.isConstructor && 
-            !methodMirror.isGetter && 
-            !methodMirror.isSetter) {
-          final methodName = declaration.key;
-          
-          // Check for HTTP method annotations
-          for (final metadata in methodMirror.metadata) {
-            final annotation = metadata.reflectee;
-            String? httpMethod;
-            String routePath = '';
-            
-            if (annotation is GET) {
-              httpMethod = 'GET';
-              routePath = annotation.path;
-            } else if (annotation is POST) {
-              httpMethod = 'POST';
-              routePath = annotation.path;
-            } else if (annotation is PUT) {
-              httpMethod = 'PUT';
-              routePath = annotation.path;
-            } else if (annotation is DELETE) {
-              httpMethod = 'DELETE';
-              routePath = annotation.path;
-            } else if (annotation is PATCH) {
-              httpMethod = 'PATCH';
-              routePath = annotation.path;
-            }
-            
-            if (httpMethod != null) {
-              final fullPath = basePath + routePath;
-              final normalizedPath = routePath.isEmpty ? '/' : routePath;
-              
-              Log.d('Registering route: $httpMethod $fullPath -> $methodName');
-              Log.d('  routePath: "$routePath"');
-              Log.d('  normalizedPath: "$normalizedPath"');
-              Log.d('  basePath: "$basePath"');
-              
-              // Create handler that calls the controller method
-              Handler handler = (Request request) async {
-                try {
-                  final result = controllerMirror.invoke(methodName, [request]);
-                  
-                  // Handle both sync and async methods
-                  if (result.reflectee is Future) {
-                    return await result.reflectee as Response;
-                  } else {
-                    return result.reflectee as Response;
-                  }
-                } catch (e, stackTrace) {
-                  Log.e('Error in route handler $httpMethod $fullPath', 
-                        error: e, stackTrace: stackTrace);
-                  return Response.internalServerError(
-                    body: '{"error": "Internal server error"}',
-                    headers: {'content-type': 'application/json'},
-                  );
-                }
-              };
-              
-              // Register the route
-              switch (httpMethod) {
-                case 'GET':
-                  router.get(normalizedPath, handler);
-                  break;
-                case 'POST':
-                  router.post(normalizedPath, handler);
-                  break;
-                case 'PUT':
-                  router.put(normalizedPath, handler);
-                  break;
-                case 'DELETE':
-                  router.delete(normalizedPath, handler);
-                  break;
-                case 'PATCH':
-                  router.patch(normalizedPath, handler);
-                  break;
-              }
-              routeCount++;
-            }
-          }
-        }
-      }
-      
-      Log.i('Successfully registered $routeCount routes using reflection');
+      Log.i('Successfully registered ${routes.length} routes');
       return router;
     } catch (e, stackTrace) {
       Log.e('Error building routes with reflection', error: e, stackTrace: stackTrace);
@@ -142,26 +73,143 @@ class ReflectionHelper {
     }
   }
   
-  /// Extracts the controller path from @Controller annotation.
+  /// Extract controller path from @Controller annotation
   static String? extractControllerPath(Object controller) {
-    if (!isReflectionAvailable) {
-      return null;
-    }
+    if (!isReflectionAvailable) return null;
 
     try {
-      final controllerMirror = mirrors.reflect(controller);
-      final classMirror = controllerMirror.type;
+      final classMirror = mirrors.reflect(controller).type;
       
-      // Get base path from @Controller annotation
       for (final metadata in classMirror.metadata) {
         if (metadata.reflectee is Controller) {
           return (metadata.reflectee as Controller).path;
         }
       }
-      
       return null;
     } catch (e) {
       return null;
+    }
+  }
+
+  /// Extract all routes from controller methods
+  static List<_RouteInfo> _extractRoutes(Object controller) {
+    final routes = <_RouteInfo>[];
+    final controllerMirror = mirrors.reflect(controller);
+    final classMirror = controllerMirror.type;
+    
+    Log.d('Scanning ${classMirror.simpleName} for annotated methods');
+
+    for (final declaration in classMirror.declarations.entries) {
+      final methodMirror = declaration.value;
+      
+      if (_isValidMethod(methodMirror) && methodMirror is mirrors.MethodMirror) {
+        final methodName = declaration.key;
+        final routeInfo = _processMethod(controllerMirror, methodName, methodMirror);
+        if (routeInfo != null) {
+          routes.add(routeInfo);
+        }
+      }
+    }
+
+    return routes;
+  }
+
+  /// Check if method is valid for route processing
+  static bool _isValidMethod(mirrors.DeclarationMirror methodMirror) {
+    return methodMirror is mirrors.MethodMirror && 
+           !methodMirror.isConstructor && 
+           !methodMirror.isGetter && 
+           !methodMirror.isSetter;
+  }
+
+  /// Process method annotations to create route info
+  static _RouteInfo? _processMethod(
+    mirrors.InstanceMirror controllerMirror,
+    Symbol methodName, 
+    mirrors.MethodMirror methodMirror,
+  ) {
+    for (final metadata in methodMirror.metadata) {
+      final annotation = metadata.reflectee;
+      
+      for (final entry in _httpAnnotations.entries) {
+        if (annotation.runtimeType == entry.key) {
+          final httpMethod = entry.value;
+          final path = _getAnnotationPath(annotation);
+          final handler = _createHandler(controllerMirror, methodName, httpMethod, path);
+          
+          Log.d('Found route: $httpMethod $path -> $methodName');
+          
+          return _RouteInfo(
+            httpMethod: httpMethod,
+            path: path.isEmpty ? '/' : path,
+            methodName: methodName,
+            handler: handler,
+          );
+        }
+      }
+    }
+    return null;
+  }
+
+  /// Get path from annotation
+  static String _getAnnotationPath(dynamic annotation) {
+    if (annotation is GET) return annotation.path;
+    if (annotation is POST) return annotation.path;
+    if (annotation is PUT) return annotation.path;
+    if (annotation is DELETE) return annotation.path;
+    if (annotation is PATCH) return annotation.path;
+    return '';
+  }
+
+  /// Create handler for method invocation
+  static Handler _createHandler(
+    mirrors.InstanceMirror controllerMirror,
+    Symbol methodName,
+    String httpMethod,
+    String path,
+  ) {
+    return (Request request) async {
+      try {
+        final result = controllerMirror.invoke(methodName, [request]);
+        
+        // Handle both sync and async methods
+        if (result.reflectee is Future) {
+          return await result.reflectee as Response;
+        } else {
+          return result.reflectee as Response;
+        }
+      } catch (e, stackTrace) {
+        Log.e('Error in $httpMethod $path handler', error: e, stackTrace: stackTrace);
+        return Response.internalServerError(
+          body: '{"error": "Internal server error"}',
+          headers: {'content-type': 'application/json'},
+        );
+      }
+    };
+  }
+
+  /// Register route in router
+  static void _registerRoute(Router router, _RouteInfo route) {
+    Log.d('Registering: ${route.httpMethod} ${route.path} -> ${route.methodName}');
+    
+    switch (route.httpMethod) {
+      case 'GET':
+        router.get(route.path, route.handler);
+        break;
+      case 'POST':
+        router.post(route.path, route.handler);
+        break;
+      case 'PUT':
+        router.put(route.path, route.handler);
+        break;
+      case 'DELETE':
+        router.delete(route.path, route.handler);
+        break;
+      case 'PATCH':
+        router.patch(route.path, route.handler);
+        break;
+      default:
+        Log.w('Unsupported HTTP method: ${route.httpMethod}');
     }
   }
 }

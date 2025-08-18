@@ -28,6 +28,39 @@ abstract class BaseController {
     return request.params[name];
   }
 
+  /// Extracts a required query parameter from the request.
+  String getRequiredQueryParam(Request request, String name) {
+    final value = request.url.queryParameters[name];
+    if (value == null || value.isEmpty) {
+      throw ArgumentError('Required query parameter "$name" is missing');
+    }
+    return value;
+  }
+
+  /// Extracts an optional query parameter from the request.
+  String? getOptionalQueryParam(Request request, String name, [String? defaultValue]) {
+    return request.url.queryParameters[name] ?? defaultValue;
+  }
+
+  /// Extracts all query parameters as a map.
+  Map<String, String> getAllQueryParams(Request request) {
+    return request.url.queryParameters;
+  }
+
+  /// Extracts a required header from the request.
+  String getRequiredHeader(Request request, String name) {
+    final value = request.headers[name.toLowerCase()];
+    if (value == null || value.isEmpty) {
+      throw ArgumentError('Required header "$name" is missing');
+    }
+    return value;
+  }
+
+  /// Extracts an optional header from the request.
+  String? getOptionalHeader(Request request, String name, [String? defaultValue]) {
+    return request.headers[name.toLowerCase()] ?? defaultValue;
+  }
+
   /// Logs request information.
   void logRequest(Request request, String action) {
     Log.i('${request.method} ${request.url.path} - $action');

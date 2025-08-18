@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Kit Demo Tester</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .endpoint { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background: #f9f9f9; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        .result { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; margin-top: 10px; white-space: pre-wrap; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto; }
+        input { padding: 5px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; }
+        .title { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🚀 API Kit Demo Tester</h1>
+        <p>Test your API endpoints directly from the browser!</p>
+        
+        <div class="endpoint">
+            <h3>📊 Health Check</h3>
+            <button onclick="testEndpoint('GET', '/api/demo/health')">GET Health</button>
+            <div id="health-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>📦 Get All Products</h3>
+            <button onclick="testEndpoint('GET', '/api/demo/')">GET All Products</button>
+            <div id="products-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>🔍 Search Products</h3>
+            <div>
+                <input type="text" id="search-query" placeholder="Search query" value="laptop">
+                <input type="text" id="search-category" placeholder="Category" value="electronics">
+                <input type="text" id="search-min-price" placeholder="Min price" value="100">
+                <input type="text" id="search-limit" placeholder="Limit" value="5">
+                <button onclick="searchProducts()">Search</button>
+            </div>
+            <div id="search-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>🎯 Get Product by ID</h3>
+            <input type="text" id="product-id" placeholder="Product ID" value="1">
+            <button onclick="getProduct()">Get Product</button>
+            <div id="product-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>➕ Create Product</h3>
+            <div>
+                <input type="text" id="new-name" placeholder="Product name" value="Test Product">
+                <input type="number" id="new-price" placeholder="Price" value="29.99">
+                <input type="text" id="new-category" placeholder="Category" value="test">
+                <input type="number" id="new-stock" placeholder="Stock" value="10">
+                <button onclick="createProduct()">Create Product</button>
+            </div>
+            <div id="create-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>📈 Statistics</h3>
+            <button onclick="testEndpoint('GET', '/api/demo/stats', { 'X-API-Token': 'browser-test-token', 'Accept-Language': 'en-US' })">GET Stats</button>
+            <div id="stats-result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = 'http://localhost:8080';
+
+        async function testEndpoint(method, path, headers = {}) {
+            const resultId = path.replace(/[^a-zA-Z]/g, '') + '-result';
+            const resultDiv = document.getElementById(resultId) || document.getElementById('health-result');
+            
+            try {
+                const response = await fetch(baseUrl + path, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...headers
+                    }
+                });
+
+                const data = await response.json();
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.style.display = 'block';
+            }
+        }
+
+        async function searchProducts() {
+            const query = document.getElementById('search-query').value;
+            const category = document.getElementById('search-category').value;
+            const minPrice = document.getElementById('search-min-price').value;
+            const limit = document.getElementById('search-limit').value;
+            
+            const params = new URLSearchParams();
+            if (query) params.append('q', query);
+            if (category) params.append('category', category);
+            if (minPrice) params.append('min_price', minPrice);
+            if (limit) params.append('limit', limit);
+            params.append('sort_by', 'price');
+            params.append('order', 'desc');
+            
+            const path = `/api/demo/search?${params.toString()}`;
+            
+            try {
+                const response = await fetch(baseUrl + path);
+                const data = await response.json();
+                const resultDiv = document.getElementById('search-result');
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                const resultDiv = document.getElementById('search-result');
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.style.display = 'block';
+            }
+        }
+
+        async function getProduct() {
+            const id = document.getElementById('product-id').value;
+            if (!id) {
+                alert('Please enter a product ID');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${baseUrl}/api/demo/${id}`);
+                const data = await response.json();
+                const resultDiv = document.getElementById('product-result');
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                const resultDiv = document.getElementById('product-result');
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.style.display = 'block';
+            }
+        }
+
+        async function createProduct() {
+            const name = document.getElementById('new-name').value;
+            const price = parseFloat(document.getElementById('new-price').value);
+            const category = document.getElementById('new-category').value;
+            const stock = parseInt(document.getElementById('new-stock').value);
+            
+            if (!name || !price || !category) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${baseUrl}/api/demo/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        price: price,
+                        category: category,
+                        stock: stock
+                    })
+                });
+                
+                const data = await response.json();
+                const resultDiv = document.getElementById('create-result');
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                const resultDiv = document.getElementById('create-result');
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

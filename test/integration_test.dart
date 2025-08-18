@@ -119,6 +119,131 @@ class TestController extends BaseController {
     };
     return jsonResponse(jsonEncode(response));
   }
+
+  @GET('/search')
+  Future<Response> search(Request request) async {
+    logRequest(request, 'Search with query parameters');
+    
+    // Get query parameters
+    final query = getOptionalQueryParam(request, 'q', 'all');
+    final limit = getOptionalQueryParam(request, 'limit', '10');
+    final offset = getOptionalQueryParam(request, 'offset', '0');
+    final sortBy = getOptionalQueryParam(request, 'sort_by', 'name');
+    final order = getOptionalQueryParam(request, 'order', 'asc');
+    
+    // Filter data based on query
+    var filteredData = _data.where((item) {
+      if (query == 'all') return true;
+      return item['name'].toString().toLowerCase().contains(query?.toLowerCase() ?? '');
+    }).toList();
+    
+    // Apply sorting
+    filteredData.sort((a, b) {
+      final aValue = a[sortBy] ?? '';
+      final bValue = b[sortBy] ?? '';
+      final result = aValue.toString().compareTo(bValue.toString());
+      return order == 'desc' ? -result : result;
+    });
+    
+    // Apply pagination
+    final limitInt = int.tryParse(limit ?? '10') ?? 10;
+    final offsetInt = int.tryParse(offset ?? '0') ?? 0;
+    final paginatedData = filteredData.skip(offsetInt).take(limitInt).toList();
+    
+    final response = ApiResponse.success({
+      'items': paginatedData,
+      'total': filteredData.length,
+      'limit': limitInt,
+      'offset': offsetInt,
+      'query': query,
+      'sort_by': sortBy,
+      'order': order,
+    }, 'Search completed successfully');
+    
+    return jsonResponse(response.toJson());
+  }
+
+  @GET('/filter')
+  Future<Response> filter(Request request) async {
+    logRequest(request, 'Filter with multiple query parameters');
+    
+    // Get all query parameters
+    final allParams = getAllQueryParams(request);
+    
+    // Extract specific filters
+    final minValue = getOptionalQueryParam(request, 'min_value');
+    final maxValue = getOptionalQueryParam(request, 'max_value');
+    final name = getOptionalQueryParam(request, 'name');
+    final hasValue = getOptionalQueryParam(request, 'has_value');
+    
+    // Apply filters
+    var filteredData = _data.where((item) {
+      // Filter by min value
+      if (minValue != null) {
+        final itemValue = item['value'] as int? ?? 0;
+        final min = int.tryParse(minValue) ?? 0;
+        if (itemValue < min) return false;
+      }
+      
+      // Filter by max value
+      if (maxValue != null) {
+        final itemValue = item['value'] as int? ?? 0;
+        final max = int.tryParse(maxValue) ?? 999999;
+        if (itemValue > max) return false;
+      }
+      
+      // Filter by name (partial match)
+      if (name != null) {
+        final itemName = item['name'].toString().toLowerCase();
+        if (!itemName.contains(name.toLowerCase())) return false;
+      }
+      
+      // Filter by has_value (boolean)
+      if (hasValue != null) {
+        final shouldHaveValue = hasValue.toLowerCase() == 'true';
+        final itemValue = item['value'] as int? ?? 0;
+        if (shouldHaveValue && itemValue == 0) return false;
+        if (!shouldHaveValue && itemValue != 0) return false;
+      }
+      
+      return true;
+    }).toList();
+    
+    final response = ApiResponse.success({
+      'items': filteredData,
+      'total': filteredData.length,
+      'filters_applied': allParams,
+      'available_filters': {
+        'min_value': 'number',
+        'max_value': 'number', 
+        'name': 'string (partial match)',
+        'has_value': 'boolean'
+      }
+    }, 'Filter applied successfully');
+    
+    return jsonResponse(response.toJson());
+  }
+
+  @GET('/headers-test')
+  Future<Response> headersTest(Request request) async {
+    logRequest(request, 'Testing header extraction');
+    
+    // Extract headers
+    final userAgent = getOptionalHeader(request, 'user-agent', 'unknown');
+    final contentType = getOptionalHeader(request, 'content-type', 'not-set');
+    final customHeader = getOptionalHeader(request, 'x-custom-header', 'not-provided');
+    final authorization = getOptionalHeader(request, 'authorization');
+    
+    final response = ApiResponse.success({
+      'user_agent': userAgent,
+      'content_type': contentType,
+      'custom_header': customHeader,
+      'has_authorization': authorization != null,
+      'all_headers': request.headers.keys.toList(),
+    }, 'Headers extracted successfully');
+    
+    return jsonResponse(response.toJson());
+  }
 }
 
 void main() {
@@ -328,6 +453,152 @@ void main() {
         );
         
         expect(response.statusCode, equals(413)); // Request Entity Too Large
+      });
+    });
+
+    group('Query Parameters', () {
+      test('should handle search with query parameters', () async {
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/test/search?q=test&limit=5&offset=0&sort_by=name&order=asc'),
+        );
+        
+        expect(response.statusCode, equals(200));
+        
+        final data = jsonDecode(response.body);
+        expect(data['success'], isTrue);
+        expect(data['data']['query'], equals('test'));
+        expect(data['data']['limit'], equals(5));
+        expect(data['data']['offset'], equals(0));
+        expect(data['data']['sort_by'], equals('name'));
+        expect(data['data']['order'], equals('asc'));
+        expect(data['data'], contains('items'));
+        expect(data['data'], contains('total'));
+      });
+
+      test('should handle search with default parameters', () async {
+        final response = await http.get(Uri.parse('$baseUrl/api/test/search'));
+        
+        expect(response.statusCode, equals(200));
+        
+        final data = jsonDecode(response.body);
+        expect(data['success'], isTrue);
+        expect(data['data']['query'], equals('all'));
+        expect(data['data']['limit'], equals(10));
+        expect(data['data']['offset'], equals(0));
+        expect(data['data']['sort_by'], equals('name'));
+        expect(data['data']['order'], equals('asc'));
+      });
+
+      test('should handle multiple filter parameters', () async {
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/test/filter?min_value=50&max_value=250&name=test&has_value=true'),
+        );
+        
+        expect(response.statusCode, equals(200));
+        
+        final data = jsonDecode(response.body);
+        expect(data['success'], isTrue);
+        expect(data['data']['filters_applied']['min_value'], equals('50'));
+        expect(data['data']['filters_applied']['max_value'], equals('250'));
+        expect(data['data']['filters_applied']['name'], equals('test'));
+        expect(data['data']['filters_applied']['has_value'], equals('true'));
+        expect(data['data'], contains('available_filters'));
+      });
+
+      test('should handle partial query parameters', () async {
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/test/filter?min_value=100'),
+        );
+        
+        expect(response.statusCode, equals(200));
+        
+        final data = jsonDecode(response.body);
+        expect(data['success'], isTrue);
+        expect(data['data']['filters_applied']['min_value'], equals('100'));
+        expect(data['data']['filters_applied'], hasLength(1));
+      });
+
+      test('should handle no query parameters', () async {
+        final response = await http.get(Uri.parse('$baseUrl/api/test/filter'));
+        
+        expect(response.statusCode, equals(200));
+        
+        final data = jsonDecode(response.body);
+        expect(data['success'], isTrue);
+        expect(data['data']['filters_applied'], isEmpty);
+        expect(data['data']['total'], greaterThan(0));
+      });
+    });
+
+    group('Headers Handling', () {
+      test('should extract headers correctly', () async {
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/test/headers-test'),
+          headers: {
+            'X-Custom-Header': 'test-value',
+            'Authorization': 'Bearer token123',
+            'Content-Type': 'application/json',
+          },
+        );
+        
+        expect(response.statusCode, equals(200));
+        
+        final data = jsonDecode(response.body);
+        expect(data['success'], isTrue);
+        expect(data['data']['custom_header'], equals('test-value'));
+        expect(data['data']['has_authorization'], isTrue);
+        expect(data['data']['content_type'], equals('application/json'));
+        expect(data['data']['user_agent'], isNotNull);
+        expect(data['data']['all_headers'], isList);
+      });
+
+      test('should handle missing headers with defaults', () async {
+        final response = await http.get(Uri.parse('$baseUrl/api/test/headers-test'));
+        
+        expect(response.statusCode, equals(200));
+        
+        final data = jsonDecode(response.body);
+        expect(data['success'], isTrue);
+        expect(data['data']['custom_header'], equals('not-provided'));
+        expect(data['data']['has_authorization'], isFalse);
+        expect(data['data']['user_agent'], isNot(equals('unknown'))); // http package sets user-agent
+      });
+    });
+
+    group('Complex Parameter Combinations', () {
+      test('should handle search with complex query string', () async {
+        final uri = Uri.parse('$baseUrl/api/test/search').replace(
+          queryParameters: {
+            'q': 'Item 1',
+            'limit': '1',
+            'offset': '0',
+            'sort_by': 'value',
+            'order': 'desc',
+          },
+        );
+        
+        final response = await http.get(uri);
+        
+        expect(response.statusCode, equals(200));
+        
+        final data = jsonDecode(response.body);
+        expect(data['success'], isTrue);
+        expect(data['data']['items'], hasLength(1));
+        expect(data['data']['query'], equals('Item 1'));
+        expect(data['data']['sort_by'], equals('value'));
+        expect(data['data']['order'], equals('desc'));
+      });
+
+      test('should handle URL encoded query parameters', () async {
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/test/search?q=Test%20Item&sort_by=name&order=asc'),
+        );
+        
+        expect(response.statusCode, equals(200));
+        
+        final data = jsonDecode(response.body);
+        expect(data['success'], isTrue);
+        expect(data['data']['query'], equals('Test Item'));
       });
     });
 
