@@ -10,7 +10,7 @@ import '../security/middleware.dart';
 
 /// A secure HTTP server built on top of Shelf with comprehensive security features.
 class SecureServer {
-  final SecurityConfig config;
+  final ServerConfig config;
   final Router router;
   late final Pipeline pipeline;
 

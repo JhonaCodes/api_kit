@@ -67,15 +67,15 @@ class CorsConfig {
   }
 }
 
-/// Main security configuration.
-class SecurityConfig {
+/// Main server configuration.
+class ServerConfig {
   final RateLimitConfig rateLimit;
   final CorsConfig cors;
   final int maxBodySize;
   final bool enableHttps;
   final List<String> trustedProxies;
 
-  const SecurityConfig({
+  const ServerConfig({
     required this.rateLimit,
     required this.cors,
     required this.maxBodySize,
@@ -83,9 +83,9 @@ class SecurityConfig {
     required this.trustedProxies,
   });
 
-  /// Production security configuration.
-  factory SecurityConfig.production() {
-    return SecurityConfig(
+  /// Production server configuration.
+  factory ServerConfig.production() {
+    return ServerConfig(
       rateLimit: RateLimitConfig.production(),
       cors: CorsConfig.production(),
       maxBodySize: 10 * 1024 * 1024, // 10MB
@@ -94,9 +94,9 @@ class SecurityConfig {
     );
   }
 
-  /// Development security configuration.
-  factory SecurityConfig.development() {
-    return SecurityConfig(
+  /// Development server configuration.
+  factory ServerConfig.development() {
+    return ServerConfig(
       rateLimit: RateLimitConfig.development(),
       cors: CorsConfig.development(),
       maxBodySize: 50 * 1024 * 1024, // 50MB for dev

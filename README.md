@@ -1,15 +1,15 @@
-# dart_secure_api
+# rest_api
 
-A comprehensive security framework for Dart/Shelf APIs with OWASP protection, rate limiting, and built-in security best practices.
+Simple, fast REST API framework with annotation-based routing. Perfect for MVPs and rapid prototyping.
 
 ## Features
 
-- **🛡️ OWASP Security**: Built-in protection against common web vulnerabilities
-- **⚡ Rate Limiting**: Configurable rate limiting with automatic IP banning
-- **📝 Structured Logging**: Integration with logger_rs for comprehensive logging
-- **🔄 Result Pattern**: Uses result_controller for robust error handling
-- **🏗️ Controller Annotations**: Simple annotation-based routing (planned)
-- **⚙️ Configurable Security**: Production and development security configurations
+- **🚀 Annotation-based routing**: Just add @GET, @POST, etc. and you're done
+- **⚡ Fast setup**: Perfect for MVPs and rapid prototyping  
+- **📦 Controller lists**: Register controllers like simple_rest
+- **🔄 Result pattern**: Clean error handling with result_controller
+- **📝 Built-in logging**: Structured logging with logger_rs
+- **🛡️ Basic security**: Essential protection without complexity
 
 ## Getting started
 
@@ -17,7 +17,7 @@ Add this to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_secure_api: ^0.0.1
+  rest_api: ^0.0.1
 ```
 
 ## Basic Usage
@@ -26,28 +26,22 @@ dependencies:
 import 'dart:io';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
-import 'package:dart_secure_api/rest_api.dart';
+import 'package:rest_api/rest_api.dart';
 
 void main() async {
-  // Create your controllers
-  final userController = UserController();
-  
-  // Setup main router
-  final router = Router();
-  router.mount('/api/v1/users', userController.router);
-  
-  // Create secure server
-  final server = SecureServer(
-    config: SecurityConfig.production(),
-    router: router,
-  );
+  // Create API server
+  final server = ApiServer(config: ServerConfig.development());
 
-  // Start the server
-  final result = await server.start(host: 'localhost', port: 8080);
+  // Start with controller list - that's it!
+  final result = await server.start(
+    host: 'localhost',
+    port: 8080,
+    controllerList: [UserController()],
+  );
   
   result.when(
-    success: (httpServer) => print('Server running on http://localhost:8080'),
-    error: (error, stackTrace) => print('Failed to start: $error'),
+    ok: (httpServer) => print('🚀 Server running on http://localhost:8080'),
+    err: (error) => print('❌ Failed to start: ${error.msm}'),
   );
 }
 

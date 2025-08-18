@@ -1,4 +1,4 @@
-import 'package:dart_secure_api/rest_api.dart';
+import 'package:rest_api/rest_api.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -7,8 +7,8 @@ void main() {
       // Additional setup goes here.
     });
 
-    test('SecurityConfig can be created', () {
-      final config = SecurityConfig.development();
+    test('ServerConfig can be created', () {
+      final config = ServerConfig.development();
       expect(config.maxBodySize, equals(50 * 1024 * 1024)); // 50MB for dev
       expect(config.enableHttps, isFalse);
     });

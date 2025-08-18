@@ -1,14 +1,16 @@
-/// A comprehensive security framework for Dart/Shelf APIs.
+/// Simple, fast REST API framework with annotation-based routing.
 ///
-/// This library provides OWASP protection, rate limiting, circuit breaker pattern,
-/// and auto-recovery capabilities for building secure REST APIs with Dart and Shelf.
+/// Perfect for MVPs and rapid prototyping. Just add controllers with annotations
+/// and you're ready to go. Built-in essentials included.
 library;
 
 // Core exports
 export 'src/core/secure_server.dart';
+export 'src/core/api_server.dart';
 export 'src/core/base_controller.dart';
 export 'src/core/router_builder.dart';
 export 'src/core/reflection_helper.dart';
+export 'src/core/middleware_registry.dart';
 
 // Security exports
 export 'src/security/rate_limiter.dart';

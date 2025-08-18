@@ -129,4 +129,27 @@ class ReflectionHelper {
       return null;
     }
   }
+  
+  /// Extracts the controller path from @Controller annotation.
+  static String? extractControllerPath(Object controller) {
+    if (!isReflectionAvailable) {
+      return null;
+    }
+
+    try {
+      final controllerMirror = mirrors.reflect(controller);
+      final classMirror = controllerMirror.type;
+      
+      // Get base path from @Controller annotation
+      for (final metadata in classMirror.metadata) {
+        if (metadata.reflectee is Controller) {
+          return (metadata.reflectee as Controller).path;
+        }
+      }
+      
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 }

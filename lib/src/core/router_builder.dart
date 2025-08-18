@@ -52,4 +52,16 @@ class RouterBuilder {
         throw ArgumentError('Unsupported HTTP method: $method');
     }
   }
+  
+  /// Extracts the controller path from @Controller annotation.
+  static String? extractControllerPath(Object controller) {
+    try {
+      // Try to use reflection to extract @Controller path
+      final reflectionRouter = ReflectionHelper.extractControllerPath(controller);
+      return reflectionRouter;
+    } catch (e) {
+      Log.d('Could not extract controller path via reflection: $e');
+      return null;
+    }
+  }
 }

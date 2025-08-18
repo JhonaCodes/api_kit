@@ -1,33 +1,24 @@
 import 'dart:io';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
-import 'package:dart_secure_api/rest_api.dart';
+import 'package:rest_api/rest_api.dart';
 import 'package:logger_rs/logger_rs.dart';
 
 void main() async {
-  // Create a sample controller
-  final userController = UserController();
-  
-  // Create main router
-  final router = Router();
-  router.mount('/api/v1/users', userController.router);
-  
-  // Add health check endpoint
-  router.get('/health', (Request request) {
-    return Response.ok('{"status": "healthy"}',
-        headers: {'content-type': 'application/json'});
-  });
-
-  // Create secure server with production config
-  final server = SecureServer(
-    config: SecurityConfig.development(), // Use development for example
-    router: router,
+  // Create API server
+  final server = ApiServer(
+    config: ServerConfig.development(), // Use development for example
   );
 
-  // Start the server
+  // Start the server with controller list (simple_rest style!)
   final result = await server.start(
     host: 'localhost',
     port: 8080,
+    controllerList: [
+      UserController(), // Just add controllers to the list!
+      // ProductController(), // Add more controllers here
+      // OrderController(),
+    ],
   );
 
   result.when(
@@ -51,7 +42,7 @@ void main() async {
   );
 }
 
-/// Example user controller demonstrating automatic annotation-based routing.
+/// Example user controller with clean, annotation-based routing.
 @Controller('/api/v1/users')
 class UserController extends BaseController {
   final List<Map<String, dynamic>> _users = [
@@ -59,26 +50,7 @@ class UserController extends BaseController {
     {'id': '2', 'name': 'Bob', 'email': 'bob@example.com'},
   ];
 
-  // When reflection is available, routes are built automatically from annotations!
-  // When reflection is not available, we provide a manual fallback.
-  @override
-  Router get router {
-    // Check if reflection is available
-    if (ReflectionHelper.isReflectionAvailable) {
-      Log.i('Using automatic annotation-based routing');
-      return super.router;
-    }
-    
-    // Fallback to manual registration when reflection is not available
-    Log.w('Reflection not available - using manual route registration');
-    final manualRouter = Router();
-    manualRouter.get('/', getUsers);
-    manualRouter.get('/<id>', getUser);
-    manualRouter.post('/', createUser);
-    manualRouter.put('/<id>', updateUser);
-    manualRouter.delete('/<id>', deleteUser);
-    return manualRouter;
-  }
+  // No need to override router - it's built automatically!
 
   @GET('/')
   Future<Response> getUsers(Request request) async {
@@ -93,47 +65,37 @@ class UserController extends BaseController {
     final id = getRequiredParam(request, 'id');
     logRequest(request, 'Getting user $id');
     
-    final user = _users.firstWhere(
-      (u) => u['id'] == id,
-      orElse: () => {},
-    );
+    final user = _users.firstWhere((u) => u['id'] == id, orElse: () => {});
     
-    if (user.isEmpty) {
-      final response = ApiResponse.notFound('User not found');
-      return jsonResponse(response.toJson(), statusCode: 404);
-    }
+    final response = user.isEmpty 
+        ? ApiResponse.notFound('User not found')
+        : ApiResponse.success(user);
     
-    final response = ApiResponse.success(user);
-    return jsonResponse(response.toJson());
+    final statusCode = user.isEmpty ? 404 : 200;
+    return jsonResponse(response.toJson(), statusCode: statusCode);
   }
 
   @POST('/')
   Future<Response> createUser(Request request) async {
     logRequest(request, 'Creating new user');
     
-    try {
-      final body = await request.readAsString();
-      if (body.isEmpty) {
-        final response = ApiResponse.badRequest('Request body is required');
-        return jsonResponse(response.toJson(), statusCode: 400);
-      }
-      
-      // In a real app, you would validate and parse the JSON here
-      final newUser = {
-        'id': '${_users.length + 1}',
-        'name': 'New User',
-        'email': 'new@example.com',
-      };
-      
-      _users.add(newUser);
-      
-      final response = ApiResponse.success(newUser, 'User created successfully');
-      return jsonResponse(response.toJson(), statusCode: 201);
-    } catch (e) {
-      Log.e('Error creating user', error: e);
-      final response = ApiResponse.error('Failed to create user');
-      return jsonResponse(response.toJson(), statusCode: 500);
+    final body = await request.readAsString();
+    if (body.isEmpty) {
+      final response = ApiResponse.badRequest('Request body is required');
+      return jsonResponse(response.toJson(), statusCode: 400);
     }
+    
+    // In a real app, you would validate and parse the JSON here
+    final newUser = {
+      'id': '${_users.length + 1}',
+      'name': 'New User',
+      'email': 'new@example.com',
+    };
+    
+    _users.add(newUser);
+    
+    final response = ApiResponse.success(newUser, 'User created successfully');
+    return jsonResponse(response.toJson(), statusCode: 201);
   }
 
   @PUT('/<id>')

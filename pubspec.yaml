@@ -1,8 +1,8 @@
-name: dart_secure_api
-description: A comprehensive security framework for Dart/Shelf APIs with OWASP protection, rate limiting, circuit breaker pattern, and auto-recovery capabilities.
+name: rest_api
+description: Simple, fast REST API framework with annotation-based routing. Perfect for MVPs and rapid prototyping with built-in essentials.
 version: 0.0.1
-homepage: https://github.com/jhonacode/dart_secure_api
-repository: https://github.com/jhonacode/dart_secure_api
+homepage: https://github.com/jhonacode/rest_api
+repository: https://github.com/jhonacode/rest_api
 
 environment:
   sdk: ^3.9.0

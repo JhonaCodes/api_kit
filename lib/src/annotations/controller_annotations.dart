@@ -42,3 +42,33 @@ class PATCH {
   
   const PATCH([this.path = '']);
 }
+
+/// Annotation to require authentication on specific endpoints.
+class RequireAuth {
+  final String? role;
+  final List<String> permissions;
+  
+  const RequireAuth({this.role, this.permissions = const []});
+}
+
+/// Annotation to apply custom middleware to specific endpoints.
+class UseMiddleware {
+  final List<Middleware Function()> middlewares;
+  
+  const UseMiddleware(this.middlewares);
+}
+
+/// Annotation to skip default middleware on specific endpoints.
+class SkipMiddleware {
+  final List<String> skip;
+  
+  const SkipMiddleware(this.skip);
+}
+
+/// Annotation for rate limiting specific endpoints.
+class RateLimit {
+  final int maxRequests;
+  final Duration window;
+  
+  const RateLimit({required this.maxRequests, required this.window});
+}
