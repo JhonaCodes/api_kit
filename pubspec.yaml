@@ -1,0 +1,29 @@
+name: dart_secure_api
+description: A comprehensive security framework for Dart/Shelf APIs with OWASP protection, rate limiting, circuit breaker pattern, and auto-recovery capabilities.
+version: 0.0.1
+homepage: https://github.com/jhonacode/dart_secure_api
+repository: https://github.com/jhonacode/dart_secure_api
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  # Core Shelf dependencies (official Dart)
+  shelf: ^1.4.1
+  shelf_router: ^1.1.4
+  
+  # HTTP client (official Dart)
+  http: ^1.1.2
+  
+  # Logging (external but specified by user)
+  logger_rs: ^1.0.3
+  
+  # Result handling (user specified)
+  result_controller: ^1.2.0
+  
+  # Core Dart libraries
+  convert: ^3.1.1
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.6
