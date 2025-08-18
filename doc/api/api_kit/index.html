@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="api_kit library API docs, for the Dart programming language.">
+  <title>api_kit library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">api_kit</a></li>
+    <li class="self-crumb">api_kit.dart</li>
+  </ol>
+  <div class="self-name">api_kit</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar=""
+    data-below-sidebar="api_kit&#47;api_kit-library-sidebar.html">
+  
+    <div>
+      
+
+      <h1>
+        <span class="kind-library">api_kit</span>
+        library 
+ 
+
+      </h1>
+    </div>
+
+    
+<section class="desc markdown">
+  <p>Simple, fast REST API framework with annotation-based routing.</p>
+<p>Perfect for MVPs and rapid prototyping. Just add controllers with annotations
+and you're ready to go. Built-in essentials included.</p>
+</section>
+
+
+    <section class="summary offset-anchor" id="classes">
+      <h2>Classes</h2>
+      <dl>
+          <dt id="ApiResponse">
+  <span class="name "><a href="../api_kit/ApiResponse-class.html">ApiResponse</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> 
+
+</dt>
+<dd>
+  Standard API response model.
+</dd>
+
+          <dt id="ApiResult">
+  <span class="name "><a href="https://pub.dev/documentation/result_controller/1.2.0/result_controller/ApiResult-class.html">ApiResult</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> 
+
+</dt>
+<dd>
+  ApiResult: A specialized Result type for HTTP API operations
+</dd>
+
+          <dt id="ApiServer">
+  <span class="name "><a href="../api_kit/ApiServer-class.html">ApiServer</a></span> 
+
+</dt>
+<dd>
+  API server that automatically registers controllers with annotation support.
+Now includes JWT validation system integration
+</dd>
+
+          <dt id="BaseController">
+  <span class="name "><a href="../api_kit/BaseController-class.html">BaseController</a></span> 
+
+</dt>
+<dd>
+  Base class for all API controllers with common functionality.
+</dd>
+
+          <dt id="BuiltInMiddleware">
+  <span class="name "><a href="../api_kit/BuiltInMiddleware-class.html">BuiltInMiddleware</a></span> 
+
+</dt>
+<dd>
+  Built-in middleware creators for common use cases.
+</dd>
+
+          <dt id="Controller">
+  <span class="name "><a href="../api_kit/Controller-class.html">Controller</a></span> 
+
+</dt>
+<dd>
+  Annotation to mark a class as an API controller.
+</dd>
+
+          <dt id="CorsConfig">
+  <span class="name "><a href="../api_kit/CorsConfig-class.html">CorsConfig</a></span> 
+
+</dt>
+<dd>
+  CORS configuration.
+</dd>
+
+          <dt id="DELETE">
+  <span class="name "><a href="../api_kit/DELETE-class.html">DELETE</a></span> 
+
+</dt>
+<dd>
+  Annotation for DELETE endpoints.
+</dd>
+
+          <dt id="EnhancedAuthMiddleware">
+  <span class="name "><a href="../api_kit/EnhancedAuthMiddleware-class.html">EnhancedAuthMiddleware</a></span> 
+
+</dt>
+<dd>
+  Middleware de autenticación JWT mejorado
+</dd>
+
+          <dt id="EnhancedReflectionHelper">
+  <span class="name "><a href="../api_kit/EnhancedReflectionHelper-class.html">EnhancedReflectionHelper</a></span> 
+
+</dt>
+<dd>
+  Sistema de reflexión mejorado para JWT validation
+</dd>
+
+          <dt id="GET">
+  <span class="name "><a href="../api_kit/GET-class.html">GET</a></span> 
+
+</dt>
+<dd>
+  Annotation for GET endpoints.
+</dd>
+
+          <dt id="JWTController">
+  <span class="name "><a href="../api_kit/JWTController-class.html">JWTController</a></span> 
+
+</dt>
+<dd>
+  Anotación para validación a nivel de controlador
+</dd>
+
+          <dt id="JWTControllerConfig">
+  <span class="name "><a href="../api_kit/JWTControllerConfig-class.html">JWTControllerConfig</a></span> 
+
+</dt>
+<dd>
+  Configuración de validadores a nivel de controlador
+</dd>
+
+          <dt id="JWTEndpoint">
+  <span class="name "><a href="../api_kit/JWTEndpoint-class.html">JWTEndpoint</a></span> 
+
+</dt>
+<dd>
+  Anotación para validación a nivel de endpoint específico
+</dd>
+
+          <dt id="JWTEndpointConfig">
+  <span class="name "><a href="../api_kit/JWTEndpointConfig-class.html">JWTEndpointConfig</a></span> 
+
+</dt>
+<dd>
+  Configuración de validadores a nivel de endpoint
+</dd>
+
+          <dt id="JWTPublic">
+  <span class="name "><a href="../api_kit/JWTPublic-class.html">JWTPublic</a></span> 
+
+</dt>
+<dd>
+  Anotación para marcar un endpoint como público (sin validación JWT)
+</dd>
+
+          <dt id="JWTValidatorBase">
+  <span class="name "><a href="../api_kit/JWTValidatorBase-class.html">JWTValidatorBase</a></span> 
+
+</dt>
+<dd>
+  Base abstracta para todos los validadores JWT personalizados.
+</dd>
+
+          <dt id="MiddlewareRegistry">
+  <span class="name "><a href="../api_kit/MiddlewareRegistry-class.html">MiddlewareRegistry</a></span> 
+
+</dt>
+<dd>
+  Registry for custom middleware that can be applied to specific endpoints.
+</dd>
+
+          <dt id="MyAdminValidator">
+  <span class="name "><a href="../api_kit/MyAdminValidator-class.html">MyAdminValidator</a></span> 
+
+</dt>
+<dd>
+  Validador para usuarios administradores
+Verifica rol, estado activo y permisos de administrador
+</dd>
+
+          <dt id="MyBusinessHoursValidator">
+  <span class="name "><a href="../api_kit/MyBusinessHoursValidator-class.html">MyBusinessHoursValidator</a></span> 
+
+</dt>
+<dd>
+  Validador para horarios de trabajo
+Verifica que el acceso ocurra dentro de horarios permitidos
+</dd>
+
+          <dt id="MyDepartmentValidator">
+  <span class="name "><a href="../api_kit/MyDepartmentValidator-class.html">MyDepartmentValidator</a></span> 
+
+</dt>
+<dd>
+  Validador para departamentos específicos
+Permite configurar departamentos permitidos y nivel requerido
+</dd>
+
+          <dt id="MyFinancialValidator">
+  <span class="name "><a href="../api_kit/MyFinancialValidator-class.html">MyFinancialValidator</a></span> 
+
+</dt>
+<dd>
+  Validador para operaciones financieras
+Permite configurar requisitos específicos como montos mínimos
+</dd>
+
+          <dt id="PATCH">
+  <span class="name "><a href="../api_kit/PATCH-class.html">PATCH</a></span> 
+
+</dt>
+<dd>
+  Annotation for PATCH endpoints.
+</dd>
+
+          <dt id="PathVariable">
+  <span class="name "><a href="../api_kit/PathVariable-class.html">PathVariable</a></span> 
+
+</dt>
+<dd>
+  Annotation for extracting path variables (Spring Boot style)<br>
+Usage: @PathVariable('id') String id
+</dd>
+
+          <dt id="POST">
+  <span class="name "><a href="../api_kit/POST-class.html">POST</a></span> 
+
+</dt>
+<dd>
+  Annotation for POST endpoints.
+</dd>
+
+          <dt id="PUT">
+  <span class="name "><a href="../api_kit/PUT-class.html">PUT</a></span> 
+
+</dt>
+<dd>
+  Annotation for PUT endpoints.
+</dd>
+
+          <dt id="RateLimit">
+  <span class="name "><a href="../api_kit/RateLimit-class.html">RateLimit</a></span> 
+
+</dt>
+<dd>
+  Annotation for rate limiting specific endpoints.
+</dd>
+
+          <dt id="RateLimitConfig">
+  <span class="name "><a href="../api_kit/RateLimitConfig-class.html">RateLimitConfig</a></span> 
+
+</dt>
+<dd>
+  Rate limiting configuration.
+</dd>
+
+          <dt id="RateLimiter">
+  <span class="name "><a href="../api_kit/RateLimiter-class.html">RateLimiter</a></span> 
+
+</dt>
+<dd>
+  Rate limiter implementation for API protection.
+</dd>
+
+          <dt id="ReflectionHelper">
+  <span class="name "><a href="../api_kit/ReflectionHelper-class.html">ReflectionHelper</a></span> 
+
+</dt>
+<dd>
+  Spring Boot-style reflection helper for annotation-based routing
+</dd>
+
+          <dt id="Request">
+  <span class="name "><a href="https://pub.dev/documentation/shelf/1.4.2/shelf/Request-class.html">Request</a></span> 
+
+</dt>
+<dd>
+  An HTTP request to be processed by a Shelf application.
+</dd>
+
+          <dt id="RequestBody">
+  <span class="name "><a href="../api_kit/RequestBody-class.html">RequestBody</a></span> 
+
+</dt>
+<dd>
+  Annotation for extracting request body (Spring Boot style)
+Usage: @RequestBody Map&lt;String, dynamic&gt; body
+</dd>
+
+          <dt id="RequestHeader">
+  <span class="name "><a href="../api_kit/RequestHeader-class.html">RequestHeader</a></span> 
+
+</dt>
+<dd>
+  Annotation for extracting request headers (Spring Boot style)
+Usage: @RequestHeader('Authorization') String auth
+</dd>
+
+          <dt id="RequestParam">
+  <span class="name "><a href="../api_kit/RequestParam-class.html">RequestParam</a></span> 
+
+</dt>
+<dd>
+  Annotation for extracting query parameters (Spring Boot style)
+Usage: @RequestParam('name') String name
+</dd>
+
+          <dt id="RequireAuth">
+  <span class="name "><a href="../api_kit/RequireAuth-class.html">RequireAuth</a></span> 
+
+</dt>
+<dd>
+  Annotation to require authentication on specific endpoints.
+</dd>
+
+          <dt id="Response">
+  <span class="name "><a href="https://pub.dev/documentation/shelf/1.4.2/shelf/Response-class.html">Response</a></span> 
+
+</dt>
+<dd>
+  The response returned by a <a href="https://pub.dev/documentation/shelf/1.4.2/shelf/Handler.html">Handler</a>.
+</dd>
+
+          <dt id="RouterBuilder">
+  <span class="name "><a href="../api_kit/RouterBuilder-class.html">RouterBuilder</a></span> 
+
+</dt>
+<dd>
+  Builds routes automatically from controller annotations.
+</dd>
+
+          <dt id="ServerConfig">
+  <span class="name "><a href="../api_kit/ServerConfig-class.html">ServerConfig</a></span> 
+
+</dt>
+<dd>
+  Main server configuration.
+</dd>
+
+          <dt id="SkipMiddleware">
+  <span class="name "><a href="../api_kit/SkipMiddleware-class.html">SkipMiddleware</a></span> 
+
+</dt>
+<dd>
+  Annotation to skip default middleware on specific endpoints.
+</dd>
+
+          <dt id="UseMiddleware">
+  <span class="name "><a href="../api_kit/UseMiddleware-class.html">UseMiddleware</a></span> 
+
+</dt>
+<dd>
+  Annotation to apply custom middleware to specific endpoints.
+</dd>
+
+          <dt id="ValidationResult">
+  <span class="name "><a href="../api_kit/ValidationResult-class.html">ValidationResult</a></span> 
+
+</dt>
+<dd>
+  Resultado de validación usando Result Pattern
+</dd>
+
+      </dl>
+    </section>
+
+
+
+
+
+
+
+    <section class="summary offset-anchor" id="functions">
+      <h2>Functions</h2>
+      <dl class="callables">
+          <dt id="corsMiddleware" class="callable">
+  <span class="name"><a href="../api_kit/corsMiddleware.html">corsMiddleware</a></span><span class="signature">(<wbr><span class="parameter" id="corsMiddleware-param-config"><span class="type-annotation"><a href="../api_kit/CorsConfig-class.html">CorsConfig</a></span> <span class="parameter-name">config</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/shelf/1.4.2/shelf/Middleware.html">Middleware</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates CORS middleware.
+  
+
+</dd>
+
+          <dt id="errorHandlingMiddleware" class="callable">
+  <span class="name"><a href="../api_kit/errorHandlingMiddleware.html">errorHandlingMiddleware</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/shelf/1.4.2/shelf/Middleware.html">Middleware</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates error handling middleware.
+  
+
+</dd>
+
+          <dt id="loggingMiddleware" class="callable">
+  <span class="name"><a href="../api_kit/loggingMiddleware.html">loggingMiddleware</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/shelf/1.4.2/shelf/Middleware.html">Middleware</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates logging middleware.
+  
+
+</dd>
+
+          <dt id="rateLimitMiddleware" class="callable">
+  <span class="name"><a href="../api_kit/rateLimitMiddleware.html">rateLimitMiddleware</a></span><span class="signature">(<wbr><span class="parameter" id="rateLimitMiddleware-param-config"><span class="type-annotation"><a href="../api_kit/RateLimitConfig-class.html">RateLimitConfig</a></span> <span class="parameter-name">config</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/shelf/1.4.2/shelf/Middleware.html">Middleware</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates rate limiting middleware.
+  
+
+</dd>
+
+          <dt id="requestIdMiddleware" class="callable">
+  <span class="name"><a href="../api_kit/requestIdMiddleware.html">requestIdMiddleware</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/shelf/1.4.2/shelf/Middleware.html">Middleware</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates request ID middleware for tracing.
+  
+
+</dd>
+
+          <dt id="requestSizeLimitMiddleware" class="callable">
+  <span class="name"><a href="../api_kit/requestSizeLimitMiddleware.html">requestSizeLimitMiddleware</a></span><span class="signature">(<wbr><span class="parameter" id="requestSizeLimitMiddleware-param-maxBytes"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span> <span class="parameter-name">maxBytes</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/shelf/1.4.2/shelf/Middleware.html">Middleware</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates request size limit middleware.
+  
+
+</dd>
+
+          <dt id="securityHeadersMiddleware" class="callable">
+  <span class="name"><a href="../api_kit/securityHeadersMiddleware.html">securityHeadersMiddleware</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/shelf/1.4.2/shelf/Middleware.html">Middleware</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates security headers middleware (OWASP protection).
+  
+
+</dd>
+
+      </dl>
+    </section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">api_kit</a></li>
+    <li class="self-crumb">api_kit.dart</li>
+</ol>
+
+    <h5><span class="package-name">api_kit</span> <span class="package-kind">package</span></h5>
+    <ol>
+      <li class="section-title">Libraries</li>
+      <li><a href="../api_kit/">api_kit</a></li>
+</ol>
+
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+    <h5>api_kit library</h5>
+  </div><!--/sidebar-offcanvas-right-->
+</main>
+<footer>
+  <span class="no-break">
+    api_kit
+      0.0.2
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

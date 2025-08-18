@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the createJWTValidationMiddleware method from the EnhancedReflectionHelper class, for the Dart programming language.">
+  <title>createJWTValidationMiddleware method - EnhancedReflectionHelper class - api_kit library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">api_kit</a></li>
+    <li><a href="../../api_kit/">api_kit.dart</a></li>
+    <li><a href="../../api_kit/EnhancedReflectionHelper-class.html">EnhancedReflectionHelper</a></li>
+    <li class="self-crumb">createJWTValidationMiddleware static method</li>
+  </ol>
+  <div class="self-name">createJWTValidationMiddleware</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="api_kit&#47;EnhancedReflectionHelper-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">createJWTValidationMiddleware</span> static method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype"><a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://pub.dev/documentation/shelf/1.4.2/shelf/Middleware.html">Middleware</a></span>&gt;</span></span>&gt;</span></span>
+<span class="name ">createJWTValidationMiddleware</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="createJWTValidationMiddleware-param-controllerType"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Type-class.html">Type</a></span> <span class="parameter-name">controllerType</span>, </span></li>
+<li><span class="parameter" id="createJWTValidationMiddleware-param-methodName"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">methodName</span></span></li>
+</ol>)
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Detecta y procesa anotaciones JWT en controladores y endpoints</p>
+<p><code>controllerType</code> - Tipo del controlador a analizar
+<code>methodName</code> - Nombre del método/endpoint a analizar</p>
+<p>Retorna lista de middlewares JWT que deben aplicarse a este endpoint</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">static Future&lt;List&lt;Middleware&gt;&gt; createJWTValidationMiddleware(
+  Type controllerType,
+  String methodName,
+) async {
+  final middlewares = &lt;Middleware&gt;[];
+
+  try {
+    Log.d(&#39;Creating JWT validation middleware for: $controllerType.$methodName&#39;);
+
+    &#47;&#47; Verificar anotación @JWTPublic primero (mayor prioridad)
+    if (_hasJWTPublicAnnotation(controllerType, methodName)) {
+      Log.i(&#39;🔓 Public endpoint detected: $controllerType.$methodName - No JWT validation required&#39;);
+      return middlewares; &#47;&#47; Sin middleware de validación
+    }
+
+    &#47;&#47; Obtener validadores del método (endpoint-level)
+    final endpointValidators = _getJWTEndpointValidators(controllerType, methodName);
+
+    &#47;&#47; Si hay validadores a nivel de endpoint, usarlos (sobrescriben controller)
+    if (endpointValidators != null) {
+      Log.i(&#39;🔐 Endpoint-level JWT validation: $controllerType.$methodName&#39;);
+      middlewares.add(_createValidationMiddleware(
+        endpointValidators.validators,
+        endpointValidators.requireAll,
+        &#39;$controllerType.$methodName&#39;
+      ));
+      return middlewares;
+    }
+
+    &#47;&#47; Obtener validadores del controlador (controller-level)
+    final controllerValidators = _getJWTControllerValidators(controllerType);
+
+    if (controllerValidators != null) {
+      Log.i(&#39;🔐 Controller-level JWT validation: $controllerType.$methodName&#39;);
+      middlewares.add(_createValidationMiddleware(
+        controllerValidators.validators,
+        controllerValidators.requireAll,
+        &#39;$controllerType.$methodName&#39;
+      ));
+      return middlewares;
+    }
+
+    &#47;&#47; Sin validación JWT configurada
+    Log.d(&#39;🔓 No JWT validation configured for: $controllerType.$methodName&#39;);
+    return middlewares;
+
+  } catch (e, stackTrace) {
+    Log.e(&#39;Error creating JWT validation middleware for $controllerType.$methodName: $e&#39;);
+    return middlewares;
+  }
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">api_kit</a></li>
+    <li><a href="../../api_kit/">api_kit</a></li>
+    <li><a href="../../api_kit/EnhancedReflectionHelper-class.html">EnhancedReflectionHelper</a></li>
+    <li class="self-crumb">createJWTValidationMiddleware static method</li>
+</ol>
+
+    <h5>EnhancedReflectionHelper class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    api_kit
+      0.0.2
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+
