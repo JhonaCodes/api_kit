@@ -1,8 +1,8 @@
-name: rest_api
+name: api_kit
 description: Simple, fast REST API framework with annotation-based routing. Perfect for MVPs and rapid prototyping with built-in essentials.
 version: 0.0.1
-homepage: https://github.com/jhonacode/rest_api
-repository: https://github.com/jhonacode/rest_api
+homepage: https://github.com/jhonacode/api_kit
+repository: https://github.com/jhonacode/api_kit
 
 environment:
   sdk: ^3.9.0

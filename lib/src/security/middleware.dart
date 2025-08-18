@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:shelf/shelf.dart';
 import 'package:logger_rs/logger_rs.dart';
 
-import '../config/security_config.dart';
+import '../config/server_config.dart';
 import 'rate_limiter.dart';
 
 /// Creates request ID middleware for tracing.

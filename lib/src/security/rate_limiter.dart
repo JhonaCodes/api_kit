@@ -1,7 +1,7 @@
 import 'package:shelf/shelf.dart';
 import 'package:logger_rs/logger_rs.dart';
 
-import '../config/security_config.dart';
+import '../config/server_config.dart';
 
 /// Rate limiter implementation for API protection.
 class RateLimiter {

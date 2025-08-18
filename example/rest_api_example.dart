@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
-import 'package:rest_api/rest_api.dart';
+import 'package:api_kit/api_kit.dart';
 import 'package:logger_rs/logger_rs.dart';
 
 void main() async {

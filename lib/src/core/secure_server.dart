@@ -5,7 +5,7 @@ import 'package:shelf_router/shelf_router.dart';
 import 'package:logger_rs/logger_rs.dart';
 import 'package:result_controller/result_controller.dart';
 
-import '../config/security_config.dart';
+import '../config/server_config.dart';
 import '../security/middleware.dart';
 
 /// A secure HTTP server built on top of Shelf with comprehensive security features.

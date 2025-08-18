@@ -1,11 +1,11 @@
 ## 0.0.1
 
 - **Initial release** - Complete framework for secure REST APIs with annotation support
-- **SecureServer**: HTTP server with comprehensive security middleware pipeline
+- **ApiServer**: HTTP server with comprehensive middleware pipeline and controller registration
 - **BaseController**: Abstract base class with automatic route generation
 - **Annotation-Based Routing**: Automatic route generation using @Controller, @GET, @POST, @PUT, @DELETE, @PATCH
 - **Reflection Support**: Automatic detection and fallback for environments without reflection
-- **SecurityConfig**: Configurable security settings for production and development
+- **ServerConfig**: Configurable server settings for production and development
 - **Rate Limiting**: Advanced rate limiting with automatic IP banning and violation tracking
 - **Security Headers**: Automatic OWASP security headers (XSS, CSRF, etc.)
 - **Structured Logging**: Integration with logger_rs for comprehensive request/error logging

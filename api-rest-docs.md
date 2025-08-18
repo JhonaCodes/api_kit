@@ -22,12 +22,12 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import 'dart:isolate';
 
-class SecureServer {
-  final SecurityConfig config;
+class ApiServer {
+  final ServerConfig config;
   final Router router;
   late final Pipeline pipeline;
   
-  SecureServer({
+  ApiServer({
     required this.config,
     required this.router,
   }) {
@@ -94,7 +94,7 @@ class SecureServer {
 ```dart
 // lib/src/security/owasp_protection.dart
 
-Middleware authMiddleware(AuthConfig config) {
+Middleware authMiddleware(ServerConfig config) {
   return (Handler handler) {
     return (Request request) async {
       // Skip public routes
@@ -549,8 +549,8 @@ void main() async {
   final supervisor = ServerSupervisor();
   
   await supervisor.supervise(() async {
-    final server = SecureServer(
-      config: SecurityConfig.production(),
+    final server = ApiServer(
+      config: ServerConfig.production(),
       router: setupRoutes(),
     );
     

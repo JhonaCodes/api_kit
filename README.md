@@ -1,4 +1,4 @@
-# rest_api
+# api_kit
 
 Simple, fast REST API framework with annotation-based routing. Perfect for MVPs and rapid prototyping.
 
@@ -17,7 +17,7 @@ Add this to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  rest_api: ^0.0.1
+  api_kit: ^0.0.1
 ```
 
 ## Basic Usage
@@ -26,7 +26,7 @@ dependencies:
 import 'dart:io';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
-import 'package:rest_api/rest_api.dart';
+import 'package:api_kit/api_kit.dart';
 
 void main() async {
   // Create API server
@@ -85,42 +85,72 @@ class UserController extends BaseController {
 }
 ```
 
-## Automatic Annotation-Based Routing
+## Annotation-Based Routing + Middleware
 
-One of the key features of `dart_secure_api` is automatic route generation using annotations, similar to Spring Boot, ASP.NET Core, or `simple_rest`:
+Perfect for MVPs! Automatic route generation with flexible middleware support:
 
 ### Available Annotations
 
-- `@Controller('/base/path')` - Defines the base path for all routes in the controller
-- `@GET('/path')` - Creates a GET endpoint
-- `@POST('/path')` - Creates a POST endpoint  
-- `@PUT('/path')` - Creates a PUT endpoint
-- `@DELETE('/path')` - Creates a DELETE endpoint
-- `@PATCH('/path')` - Creates a PATCH endpoint
+**HTTP Methods:**
+- `@GET('/path')`, `@POST('/path')`, `@PUT('/path')`, `@DELETE('/path')`, `@PATCH('/path')`
 
-### How It Works
+**Middleware & Security:**
+- `@RequireAuth()` - Require JWT authentication
+- `@RequireAuth(role: 'admin')` - Require specific role
+- `@RateLimit(maxRequests: 10, window: Duration(minutes: 1))` - Endpoint-specific rate limiting
+- `@UseMiddleware([myCustomMiddleware])` - Apply custom middleware
+- `@SkipMiddleware(['cors', 'logging'])` - Skip specific middleware
+
+### Example with Middleware
 
 ```dart
 @Controller('/api/v1/products')
 class ProductController extends BaseController {
-  @GET('/')                    // -> GET /api/v1/products/
-  @GET('/<id>')               // -> GET /api/v1/products/<id>
-  @POST('/')                  // -> POST /api/v1/products/
-  @PUT('/<id>')               // -> PUT /api/v1/products/<id>
-  @DELETE('/<id>')            // -> DELETE /api/v1/products/<id>
-  @PATCH('/<id>/status')      // -> PATCH /api/v1/products/<id>/status
+  @GET('/')
+  Future<Response> getPublicProducts(Request request) async {
+    // Public endpoint - no auth needed
+  }
 
-  Future<Response> methodName(Request request) async {
-    // Your implementation
+  @GET('/admin')
+  @RequireAuth(role: 'admin')
+  Future<Response> getAdminProducts(Request request) async {
+    // Only admins can access this
+  }
+
+  @POST('/')
+  @RequireAuth()
+  @RateLimit(maxRequests: 5, window: Duration(minutes: 1))
+  Future<Response> createProduct(Request request) async {
+    // Authenticated users, rate limited
+  }
+
+  @GET('/heavy-operation')
+  @UseMiddleware([BuiltInMiddleware.apiKey(validKey: 'secret123')])
+  Future<Response> heavyOperation(Request request) async {
+    // Custom API key auth for this endpoint
   }
 }
 ```
 
-The framework automatically:
-1. Scans your controller for annotations using reflection
-2. Builds the router with all annotated methods
-3. Handles path parameters (like `<id>`)
-4. Combines base path + method path for full routes
+### Custom Middleware Setup
+
+```dart
+void main() async {
+  // Register your custom middleware
+  MiddlewareRegistry.register('jwt', BuiltInMiddleware.jwt(
+    secret: 'your-secret-key',
+    requiredRoles: ['user'],
+  ));
+
+  // Your controllers use @RequireAuth automatically!
+  final server = ApiServer(config: ServerConfig.development());
+  await server.start(
+    host: 'localhost',
+    port: 8080,
+    controllerList: [ProductController()],
+  );
+}
+```
 
 ### Path Parameters
 
@@ -179,7 +209,7 @@ class ProductController extends BaseController {
 
 ### Rate Limiting
 ```dart
-final config = SecurityConfig(
+final config = ServerConfig(
   rateLimit: RateLimitConfig(
     maxRequests: 100,
     window: Duration(minutes: 1),
@@ -195,8 +225,8 @@ All responses use the Result pattern with `result_controller`:
 ```dart
 final result = await server.start(host: 'localhost', port: 8080);
 result.when(
-  success: (httpServer) => handleSuccess(httpServer),
-  error: (error, stackTrace) => handleError(error, stackTrace),
+  ok: (httpServer) => handleSuccess(httpServer),
+  err: (error) => handleError(error),
 );
 ```
 
@@ -204,17 +234,15 @@ result.when(
 
 ### Production Configuration
 ```dart
-final server = SecureServer(
-  config: SecurityConfig.production(),
-  router: router,
+final server = ApiServer(
+  config: ServerConfig.production(),
 );
 ```
 
 ### Development Configuration
 ```dart
-final server = SecureServer(
-  config: SecurityConfig.development(), // More permissive for development
-  router: router,
+final server = ApiServer(
+  config: ServerConfig.development(), // More permissive for development
 );
 ```
 

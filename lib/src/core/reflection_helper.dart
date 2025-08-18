@@ -11,24 +11,29 @@ class ReflectionHelper {
   /// Indicates if mirrors are available in the current environment.
   static bool get isReflectionAvailable {
     try {
-      // Try to access mirrors API
-      return mirrors.reflect != null;
+      // Try to actually use mirrors API with a simple test
+      mirrors.reflect('test');
+      return true;
     } catch (e) {
+      Log.d('Mirrors not available: $e');
       return false;
     }
   }
 
   /// Builds routes using reflection if available.
   static Router? buildRoutesWithReflection(Object controller) {
+    Log.i('Checking reflection availability...');
     if (!isReflectionAvailable) {
       Log.w('Reflection not available. Use manual route registration.');
       return null;
     }
 
+    Log.i('Reflection available, building routes...');
     try {
       final router = Router();
       final controllerMirror = mirrors.reflect(controller);
       final classMirror = controllerMirror.type;
+      Log.d('Controller type: ${classMirror.simpleName}');
       
       // Get base path from @Controller annotation
       String basePath = '';
@@ -41,6 +46,8 @@ class ReflectionHelper {
       }
       
       // Process all methods looking for HTTP annotations
+      Log.d('Processing ${classMirror.declarations.length} declarations...');
+      int routeCount = 0;
       for (final declaration in classMirror.declarations.entries) {
         final methodMirror = declaration.value;
         
@@ -118,11 +125,13 @@ class ReflectionHelper {
                   router.patch(normalizedPath, handler);
                   break;
               }
+              routeCount++;
             }
           }
         }
       }
       
+      Log.i('Successfully registered $routeCount routes using reflection');
       return router;
     } catch (e, stackTrace) {
       Log.e('Error building routes with reflection', error: e, stackTrace: stackTrace);

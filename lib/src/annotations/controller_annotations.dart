@@ -1,6 +1,8 @@
 /// Annotations for defining API controllers and endpoints.
 library;
 
+import 'package:shelf/shelf.dart' show Middleware;
+
 /// Annotation to mark a class as an API controller.
 class Controller {
   final String path;
