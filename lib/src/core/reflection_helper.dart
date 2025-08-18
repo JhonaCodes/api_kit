@@ -85,6 +85,9 @@ class ReflectionHelper {
               final normalizedPath = routePath.isEmpty ? '/' : routePath;
               
               Log.d('Registering route: $httpMethod $fullPath -> $methodName');
+              Log.d('  routePath: "$routePath"');
+              Log.d('  normalizedPath: "$normalizedPath"');
+              Log.d('  basePath: "$basePath"');
               
               // Create handler that calls the controller method
               Handler handler = (Request request) async {
