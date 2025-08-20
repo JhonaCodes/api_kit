@@ -25,7 +25,7 @@ Welcome to the complete documentation for **api_kit** - A production-ready REST 
 - [13. Deployment](13-deployment.md) - Production deployment strategies
 - [14. Examples](14-examples.md) - Complete working examples and use cases
 
-### 🔐 JWT Authentication System (NEW in v0.0.2)
+### 🔐 JWT Authentication System (v0.0.2+)
 - [15. JWT Validation System](15-jwt-validation-system.md) - **Complete JWT authentication guide**
 - [16. JWT Quick Start](16-jwt-quick-start.md) - Fast JWT setup for immediate use
 

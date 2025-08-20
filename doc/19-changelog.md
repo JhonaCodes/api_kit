@@ -5,6 +5,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4]
+
+### 🔧 Bug Fixes & Improvements
+
+#### **Documentation Enhancements**
+- **Example Code Quality**: Enhanced `example/example.dart` with comprehensive documentation
+  - Added detailed JSDoc-style comments for all controller methods
+  - Improved code organization and readability
+  - Added proper HTTP status code documentation (200, 201, 404, 400, 500)
+  - Enhanced error handling examples with try-catch patterns
+
+#### **Code Documentation**
+- **Controller Documentation**: Added extensive inline documentation for `UserController`
+  - Detailed endpoint descriptions with HTTP methods and paths
+  - Request/response format examples with JSON samples
+  - Production implementation notes and best practices
+  - Parameter validation and error handling documentation
+
+#### **Development Experience**
+- **Example Improvements**: Better structured example application
+  - Clearer endpoint testing instructions with curl examples
+  - Improved logging and request tracking
+  - Enhanced graceful shutdown handling
+  - Better separation of concerns in controller methods
+
+### 🚧 Technical Improvements
+
+#### **Code Quality**
+- **Error Handling**: Improved error response consistency across example endpoints
+- **Logging**: Enhanced request logging with proper context information
+- **Type Safety**: Better type annotations and null safety handling
+- **Documentation**: Comprehensive inline documentation following Dart standards
+
+#### **Example Application**
+- **Real-world Patterns**: Example now demonstrates production-ready patterns
+- **HTTP Standards**: Proper use of HTTP status codes and response formats
+- **Resource Management**: Improved memory management and resource cleanup
+- **Error Responses**: Standardized error response format across all endpoints
+
+---
+
+## [0.0.3]
+
+### 📚 Documentation & Quality Improvements
+
+#### **Core Improvements**
+- **Documentation Enhancement**: Improved documentation, warnings, and code quality
+- **Version Consistency**: Updated version references across documentation
+- **Code Quality**: Enhanced code formatting and inline documentation
+
+---
+
 ## [0.0.2]
 
 ### 🚀 Major Features Added

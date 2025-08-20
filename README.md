@@ -20,7 +20,7 @@ Add this to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  api_kit: ^0.0.3
+  api_kit: ^0.0.4
 ```
 
 ## Quick Start

@@ -2,7 +2,7 @@
 
 Production-ready REST API framework with comprehensive JWT authentication system. Perfect for MVPs, rapid prototyping, and enterprise applications.
 
-## 🎯 Key Features (v0.0.2)
+## 🎯 Key Features (v0.0.4)
 
 - ✅ **Complete JWT Authentication System** - `@JWTPublic`, `@JWTController`, `@JWTEndpoint` with custom validators
 - ✅ **Annotation-based routing** - `@Controller`, `@GET`, `@POST`, etc.
@@ -205,7 +205,7 @@ final adminToken = _createTestJWT({
 ### 1. Add Dependency
 ```yaml
 dependencies:
-  api_kit: ^0.0.2
+  api_kit: ^0.0.4
 ```
 
 ### 2. Create Controller
@@ -263,14 +263,14 @@ ServerConfig(
 6. **Configure Server**: Setup JWT secrets and excluded paths
 7. **Test Thoroughly**: Validate with provided test patterns
 
-## 📊 Version 0.0.2 Highlights
+## 📊 Version 0.0.4 Highlights
 
-- **Complete JWT Authentication System** with custom validators
-- **Token Blacklisting** for secure logout and token management  
-- **Production-Ready Testing** with 139/139 tests passing
-- **Comprehensive Documentation** reorganized in `doc/` directory
-- **Real-World Examples** for immediate implementation
-- **Enterprise Security Features** ready for production use
+- **Bug Fixes & Improvements** with enhanced documentation and code quality
+- **Example Application Enhancements** with comprehensive inline documentation  
+- **Production-Ready Testing** with 139/139 tests passing (maintained)
+- **Comprehensive Documentation** with better organization and examples
+- **Real-World Patterns** demonstrated in example application
+- **Enhanced Error Handling** with improved consistency and logging
 
 ---
 
