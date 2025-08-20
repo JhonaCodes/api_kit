@@ -1,6 +1,6 @@
 name: api_kit
 description: "Production-ready REST API framework with comprehensive JWT authentication system, custom validators, annotation-based routing, token blacklisting, and enterprise-grade security features. 139/139 tests passing."
-version: 0.0.2
+version: 0.0.3
 homepage: https://github.com/jhonacode/api_kit
 repository: https://github.com/jhonacode/api_kit
 issue_tracker: https://github.com/jhonacode/api_kit/issues
