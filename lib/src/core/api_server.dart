@@ -212,6 +212,7 @@ class ApiServer {
     required int port,
     Router? additionalRoutes,
     String? projectPath,
+    List<String>? includePaths,
   }) async {
     try {
       Log.i('🚀 Starting secure API server on $host:$port');
@@ -220,6 +221,7 @@ class ApiServer {
       Log.i('🔍 Auto-discovering controllers...');
       final controllerList = await ControllerRegistry.discoverControllers(
         projectPath,
+        includePaths,
       );
 
       if (controllerList.isEmpty) {

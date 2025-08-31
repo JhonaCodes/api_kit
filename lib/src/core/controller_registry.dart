@@ -15,6 +15,7 @@ class ControllerRegistry {
   /// This replaces the need for manual controllerList registration
   static Future<List<BaseController>> discoverControllers([
     String? projectPath,
+    List<String>? includePaths,
   ]) async {
     try {
       Log.i('🔍 Auto-discovering controllers using static analysis...');
@@ -23,7 +24,10 @@ class ControllerRegistry {
       final analysisPath = projectPath ?? Directory.current.path;
 
       // Run static analysis to detect all @RestController annotations
-      final result = await AnnotationAPI.detectIn(analysisPath);
+      final result = await AnnotationAPI.detectIn(
+        analysisPath,
+        includePaths: includePaths,
+      );
 
       // Find all RestController annotations
       final restControllers = result.ofType('RestController');

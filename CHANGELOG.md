@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3]
+
+### 🎯 Enhanced Path Configuration
+- **NEW**: `includePaths` parameter in `ApiServer.start()` for custom annotation scanning
+- **NEW**: `includePaths` parameter in `ControllerRegistry.discoverControllers()` 
+- **ENHANCED**: Fine-grained control over which directories to scan for annotations
+- **IMPROVED**: Developers can now specify exactly where controllers are located
+
+### 🔧 API Enhancements
+- **ENHANCED**: `ApiServer.start()` now accepts optional `includePaths` parameter
+- **ENHANCED**: `ControllerRegistry.discoverControllers()` supports custom paths
+- **MAINTAINED**: 100% backward compatibility - existing code works unchanged
+
+### 📊 Usage Examples
+```dart
+// Custom path scanning
+await server.start(
+  host: 'localhost',
+  port: 8080,
+  includePaths: ['lib'],  // Only scan lib/ directory
+);
+
+// Multiple specific directories
+await server.start(
+  host: 'localhost',
+  port: 8080,
+  includePaths: ['lib/controller', 'src/api'],  // Specific paths only
+);
+
+// Default behavior (unchanged)
+await server.start(
+  host: 'localhost',
+  port: 8080,
+  // No includePaths = scans lib/, bin/, example/
+);
+```
+
+### 🛠️ Technical Implementation
+- **IMPROVED**: `ControllerRegistry` passes `includePaths` to `AnnotationAPI.detectIn()`
+- **ENHANCED**: All existing cache optimizations from v0.1.2 maintained
+- **PERFORMANCE**: Custom paths can reduce scanning overhead even further
+
 ## [0.1.2]
 
 ### 🚀 MAJOR PERFORMANCE BREAKTHROUGH
