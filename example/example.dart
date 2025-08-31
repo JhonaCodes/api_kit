@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:api_kit/api_kit.dart';
+import 'package:api_kit/src/annotations/rest_annotations.dart';
 import 'package:logger_rs/logger_rs.dart';
 
 /// Example demonstration of api_kit framework with a complete REST API server.
@@ -40,11 +41,6 @@ void main() async {
   final result = await server.start(
     host: 'localhost',
     port: 8080,
-    controllerList: [
-      UserController(), // Just add controllers to the list!
-      // ProductController(), // Add more controllers here
-      // OrderController(),
-    ],
   );
 
   result.when(
@@ -98,7 +94,7 @@ void main() async {
 /// - Validates required parameters and request bodies
 /// - Provides consistent error handling and logging
 /// - Returns standardized JSON responses using `ApiResponse` pattern
-@Controller('/api/v1/users')
+@RestController(basePath: '/api/v1/users')
 class UserController extends BaseController {
   /// In-memory user storage for demonstration purposes.
   /// In production, replace with proper database integration.
@@ -129,7 +125,7 @@ class UserController extends BaseController {
   ///   ]
   /// }
   /// ```
-  @GET('/')
+  @Get(path: '/')
   Future<Response> getUsers(Request request) async {
     logRequest(request, 'Getting all users');
 
@@ -170,7 +166,7 @@ class UserController extends BaseController {
   ///   "message": "User not found"
   /// }
   /// ```
-  @GET('/<id>')
+  @Get(path: '/{id}')
   Future<Response> getUser(Request request) async {
     final id = getRequiredParam(request, 'id');
     logRequest(request, 'Getting user $id');
@@ -221,7 +217,7 @@ class UserController extends BaseController {
   ///
   /// Note: This example uses simplified user creation for demonstration.
   /// In production, implement proper JSON parsing, validation, and database storage.
-  @POST('/')
+  @Post(path: '/')
   Future<Response> createUser(Request request) async {
     logRequest(request, 'Creating new user');
 
@@ -286,7 +282,7 @@ class UserController extends BaseController {
   /// Note: This example demonstrates basic update flow.
   /// In production, implement proper JSON parsing, field validation,
   /// and database transactions with rollback capability.
-  @PUT('/<id>')
+  @Put(path: '/{id}')
   Future<Response> updateUser(Request request) async {
     final id = getRequiredParam(request, 'id');
     logRequest(request, 'Updating user $id');
@@ -352,7 +348,7 @@ class UserController extends BaseController {
   /// - Transaction-based deletion for data integrity
   /// - Cascade deletion handling for related records
   /// - Audit logging for deletion tracking
-  @DELETE('/<id>')
+  @Delete(path: '/{id}')
   Future<Response> deleteUser(Request request) async {
     final id = getRequiredParam(request, 'id');
     logRequest(request, 'Deleting user $id');
@@ -367,5 +363,16 @@ class UserController extends BaseController {
 
     final response = ApiResponse.success(null, 'User deleted successfully');
     return jsonResponse(response.toJson());
+  }
+
+  /// Get methods map for automatic routing (no manual registration needed)
+  Map<String, Future<Response> Function(Request)> getMethodsMap() {
+    return {
+      'getUsers': getUsers,
+      'getUser': getUser,
+      'createUser': createUser,
+      'updateUser': updateUser,
+      'deleteUser': deleteUser,
+    };
   }
 }

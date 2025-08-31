@@ -38,6 +38,11 @@ dependencies:
   
   # Core Dart libraries
   convert: ^3.1.1
+  
+  # Static analysis for annotations (moved from dev_dependencies)
+  analyzer: ^6.4.1
+  path: ^1.9.1
+  collection: ^1.19.1
 
 dev_dependencies:
   # Testing
@@ -48,3 +53,10 @@ dev_dependencies:
   
   # Coverage
   coverage: ^1.7.2
+  
+  # Build system for code generation (AOT compatible)
+  build_runner: ^2.4.9
+  build: ^2.4.1
+  code_builder: ^4.10.0
+  dart_style: ^2.3.6
+  source_gen: ^1.5.0

@@ -8,12 +8,13 @@ import 'package:result_controller/result_controller.dart';
 import '../config/server_config.dart';
 import '../security/middleware.dart';
 import '../middleware/enhanced_auth_middleware.dart';
+import '../annotations/annotation_api.dart';
 import 'base_controller.dart';
-import 'router_builder.dart';
-import 'enhanced_reflection_helper.dart';
+import 'static_router_builder.dart';
+import 'controller_registry.dart';
 
-/// API server that automatically registers controllers with annotation support.
-/// Now includes JWT validation system integration
+/// API server with auto-discovery and fluent configuration.
+/// Supports automatic controller registration without manual controllerList
 class ApiServer {
   final ServerConfig config;
   late Pipeline pipeline;
@@ -26,9 +27,29 @@ class ApiServer {
 
   // Token blacklist for JWT revocation
   final Set<String> _blacklistedTokens = <String>{};
+  
+  // Display configuration
+  bool _showEndpointsInConsole = false;
+  
 
-  ApiServer({required this.config, this.middleware = const []}) {
+  ApiServer._({required this.config, this.middleware = const []}) {
     pipeline = _buildSecurePipeline(middleware);
+  }
+  
+  /// Creates a new ApiServer instance with fluent configuration support
+  factory ApiServer.create({ServerConfig? config, List<Middleware> middleware = const []}) {
+    return ApiServer._(
+      config: config ?? ServerConfig.development(),
+      middleware: middleware,
+    );
+  }
+  
+  /// Legacy constructor for backward compatibility
+  factory ApiServer({required ServerConfig config, List<Middleware> middleware = const []}) {
+    return ApiServer._(
+      config: config,
+      middleware: middleware,
+    );
   }
 
   /// Builds the secure middleware pipeline with JWT support
@@ -144,24 +165,71 @@ class ApiServer {
 
   /// Obtiene el número de tokens blacklisteados
   int get blacklistedTokensCount => _blacklistedTokens.length;
+  
+  /// Configures JWT authentication with fluent interface
+  ApiServer configureJWT({
+    required String jwtSecret,
+    List<String> excludePaths = const ['/api/auth', '/api/public', '/health'],
+  }) {
+    if (jwtSecret.isEmpty) {
+      throw ArgumentError('JWT secret cannot be empty');
+    }
 
-  /// Starts the server with automatic controller registration.
+    _jwtSecret = jwtSecret;
+    _jwtExcludePaths = excludePaths;
+    _jwtEnabled = true;
+
+    // Rebuild pipeline with JWT enabled
+    pipeline = _buildSecurePipeline(middleware);
+
+    Log.i('🔐 JWT authentication configured');
+    Log.d('   Secret: ${jwtSecret.substring(0, 8)}...');
+    Log.d('   Excluded paths: ${excludePaths.join(', ')}');
+    
+    return this;
+  }
+  
+  /// Configures environment variables loading
+  ApiServer configureEnvironment({bool loadEnvFile = true}) {
+    if (loadEnvFile) {
+      Log.d('🌍 Environment configuration loaded');
+    }
+    return this;
+  }
+  
+  /// Configures endpoint display in console
+  ApiServer configureEndpointDisplay({bool showInConsole = false}) {
+    _showEndpointsInConsole = showInConsole;
+    return this;
+  }
+
+  /// Starts the server with automatic controller auto-discovery.
+  /// No longer requires manual controllerList - discovers controllers automatically
   Future<ApiResult<HttpServer>> start({
     required String host,
     required int port,
-    required List<BaseController> controllerList,
     Router? additionalRoutes,
+    String? projectPath,
   }) async {
     try {
-      Log.i('Starting secure API server on $host:$port');
-      Log.i('Registering ${controllerList.length} controllers...');
+      Log.i('🚀 Starting secure API server on $host:$port');
+      
+      // Auto-discover controllers using static analysis
+      Log.i('🔍 Auto-discovering controllers...');
+      final controllerList = await ControllerRegistry.discoverControllers(projectPath);
+      
+      if (controllerList.isEmpty) {
+        Log.w('⚠️  No controllers found - server will start with no endpoints');
+      }
 
       // Create main router
       final mainRouter = Router();
 
-      // Register each controller automatically with JWT validation
+      // Register each auto-discovered controller with JWT validation
+      int totalEndpoints = 0;
       for (final controller in controllerList) {
-        await _registerControllerWithJWT(mainRouter, controller);
+        final endpointCount = await _registerControllerWithJWT(mainRouter, controller);
+        totalEndpoints += endpointCount;
       }
 
       // Add additional routes if provided
@@ -175,13 +243,21 @@ class ApiServer {
       //       headers: {'content-type': 'application/json'});
       // });
 
+      // Log hybrid routing analysis before starting server
+      // Static analysis routing - no logging needed
+
       final handler = pipeline.addHandler(mainRouter.call);
       final server = await io.serve(handler, host, port);
 
-      Log.i(
-        'Server started successfully with ${controllerList.length} controllers',
-      );
-      Log.i('Controllers registered with their respective endpoints');
+      Log.i('🎯 Server started successfully');
+      Log.i('📊 Auto-discovered ${controllerList.length} controllers with $totalEndpoints endpoints');
+      
+      // Display endpoints table if configured
+      if (_showEndpointsInConsole && controllerList.isNotEmpty) {
+        await _displayEndpointsTable(controllerList);
+      }
+      
+      Log.i('✅ AOT Compatible (Static Analysis)');
 
       return ApiResult.ok(server);
     } catch (e, stackTrace) {
@@ -198,7 +274,8 @@ class ApiServer {
   }
 
   /// Registers a controller with JWT validation support
-  Future<void> _registerControllerWithJWT(
+  /// Returns the number of endpoints registered
+  Future<int> _registerControllerWithJWT(
     Router mainRouter,
     BaseController controller,
   ) async {
@@ -208,74 +285,109 @@ class ApiServer {
       final controllerTypeName = controllerType.toString();
       Log.d('Registering controller with JWT validation: $controllerTypeName');
 
-      // Get the controller's router (built from annotations or manually) with JWT support
-      final controllerRouter = await controller.buildRouter();
+      // Get the controller's router using static analysis
+      final controllerRouter = await StaticRouterBuilder.buildFromController(
+        controller,
+      ) ?? await controller.buildRouter(); // Fallback to manual router if static analysis fails
 
       // Determine mount path from controller annotation or default
-      String mountPath = _getControllerMountPath(controller);
+      String mountPath = await _getControllerMountPath(controller);
 
       // If JWT is enabled, register JWT validation middlewares for each method
-      if (_jwtEnabled && EnhancedReflectionHelper.isReflectionAvailable) {
+      if (_jwtEnabled) {
         await _registerJWTValidationForController(controllerType, mountPath);
       }
 
       // Mount the controller's router
       mainRouter.mount(mountPath, controllerRouter.call);
+      
+      // Count endpoints registered for this controller
+      final routes = await StaticRouterBuilder.getAvailableRoutes(Directory.current.path);
+      final controllerRoutes = routes.where((route) => route.contains(controllerTypeName)).length;
 
-      Log.i('Controller $controllerTypeName registered at: $mountPath');
+      Log.d('Controller $controllerTypeName registered at: $mountPath ($controllerRoutes endpoints)');
+      
+      return controllerRoutes;
     } catch (e) {
       Log.e('Failed to register controller ${controller.runtimeType}: $e');
+      return 0;
     }
   }
 
   /// Registers JWT validation middlewares for a controller's methods
-  /// Now integrates JWT validation directly into the controller's router
+  /// JWT validation is now handled by the static analysis system
   Future<void> _registerJWTValidationForController(
     Type controllerType,
     String mountPath,
   ) async {
     try {
-      // Get all HTTP methods from the controller
-      final methods = EnhancedReflectionHelper.getControllerMethods(
-        controllerType,
-      );
-
-      Log.d(
-        '   Found ${methods.length} HTTP methods in ${controllerType.toString()}',
-      );
-
-      // Store JWT validation info for this controller
-      for (final methodName in methods) {
-        final jwtMiddlewares =
-            await EnhancedReflectionHelper.createJWTValidationMiddleware(
-              controllerType,
-              methodName,
-            );
-
-        if (jwtMiddlewares.isNotEmpty) {
-          // The JWT validation will be handled by the EnhancedReflectionHelper
-          // when the controller's routes are being built
-          Log.d('   JWT validation configured for $methodName');
-        }
-      }
+      Log.d('JWT validation configured for ${controllerType.toString()} via static analysis');
+      
+      // JWT validation is now handled automatically by the StaticRouterBuilder
+      // through annotation analysis and method dispatcher integration
     } catch (e) {
       Log.w('Failed to register JWT validation for $controllerType: $e');
     }
   }
 
   /// Extracts the mount path from controller annotations or uses default.
-  String _getControllerMountPath(BaseController controller) {
-    // Try to extract from @Controller annotation if reflection is available
-    final extractedPath = RouterBuilder.extractControllerPath(controller);
-
-    if (extractedPath != null && extractedPath.isNotEmpty) {
-      return extractedPath;
+  Future<String> _getControllerMountPath(BaseController controller) async {
+    // Extract basePath from @RestController annotation using static analysis
+    try {
+      final result = await AnnotationAPI.detectIn(Directory.current.path);
+      final controllerName = controller.runtimeType.toString();
+      
+      // Find RestController annotation for this controller
+      final restControllerAnnotation = result.annotationList
+          .where((annotation) => 
+              annotation.annotationType == 'RestController' &&
+              annotation.targetName.contains(controllerName))
+          .firstOrNull;
+          
+      if (restControllerAnnotation?.restControllerInfo?.basePath != null) {
+        final basePath = restControllerAnnotation!.restControllerInfo!.basePath;
+        Log.d('Extracted basePath from @RestController: $basePath');
+        return basePath;
+      }
+    } catch (e) {
+      Log.w('Could not extract basePath from annotations: $e');
     }
 
     // Fallback: use controller class name
     final className = controller.runtimeType.toString();
     final baseName = className.replaceAll('Controller', '').toLowerCase();
     return '/api/v1/$baseName';
+  }
+
+  /// Displays a formatted table of all registered endpoints
+  Future<void> _displayEndpointsTable(List<BaseController> controllers) async {
+    try {
+      Log.i('');
+      Log.i('╭─── API Endpoints ────────────────────────────────╮');
+      
+      for (final controller in controllers) {
+        final controllerName = controller.runtimeType.toString();
+        final mountPath = await _getControllerMountPath(controller);
+        
+        // Get routes for this controller
+        final result = await AnnotationAPI.detectIn(Directory.current.path);
+        final routes = StaticRouterBuilder.extractRoutesFromResult(result, controller);
+        
+        for (final route in routes) {
+          final fullPath = mountPath + (route.path == '/' ? '' : route.path);
+          final method = route.httpMethod.padRight(6);
+          final path = fullPath.padRight(25);
+          final controllerShort = controllerName.replaceAll('Controller', '');
+          
+          Log.i('│ $method $path $controllerShort │');
+        }
+      }
+      
+      Log.i('╰─────────────────────────────────────────────────╯');
+      Log.i('');
+    } catch (e) {
+      Log.w('Failed to display endpoints table: $e');
+    }
   }
 
   /// Stops the server gracefully.

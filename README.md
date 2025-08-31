@@ -409,7 +409,7 @@ final config = ServerConfig(
 
 The framework automatically detects if reflection is available:
 
-- **With Reflection** (Dart VM): Annotations work automatically via `dart:mirrors`
+- **Static Analysis** (AOT Compatible): Annotations work automatically via static analysis
 - **Without Reflection** (Flutter Web): Falls back to manual route registration
 
 ```dart

@@ -1,0 +1,25 @@
+# Build configuration for api_kit code generation
+# Migrates from mirrors to AOT-compatible static code generation
+
+targets:
+  $default:
+    builders:
+      # ApiKit code generator for controllers and routing
+      api_kit|api_kit_builder:
+        generate_for:
+          - lib/**
+        options:
+          # Generate routing code for controllers
+          generate_routes: true
+          # Generate JWT validation middleware
+          generate_jwt_middleware: true
+
+# Builder definitions
+builders:
+  api_kit_builder:
+    import: "package:api_kit/src/generation/api_kit_builder.dart"
+    builder_factories: ["apiKitBuilder"]
+    build_extensions:
+      ".dart": [".api_kit.g.dart"]
+    auto_apply: dependents
+    build_to: source
