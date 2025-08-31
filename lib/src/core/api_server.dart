@@ -295,10 +295,14 @@ class ApiServer {
       Log.d('Registering controller with JWT validation: $controllerTypeName');
 
       // Get the controller's router using static analysis only (no fallback to prevent infinite loop)
-      final controllerRouter = await StaticRouterBuilder.buildFromController(controller);
-      
+      final controllerRouter = await StaticRouterBuilder.buildFromController(
+        controller,
+      );
+
       if (controllerRouter == null) {
-        Log.e('❌ Failed to build router for controller ${controller.runtimeType}');
+        Log.e(
+          '❌ Failed to build router for controller ${controller.runtimeType}',
+        );
         return 0;
       }
 

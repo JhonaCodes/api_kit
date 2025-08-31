@@ -407,12 +407,7 @@ class UsersController extends BaseController {
         // Extract ID from URL path (simple approach)
         final pathSegments = request.url.pathSegments;
         final id = pathSegments.isNotEmpty ? pathSegments.last : '';
-        return getUserById(
-          request,
-          id,
-          request.headers,
-          request.url.path,
-        );
+        return getUserById(request, id, request.headers, request.url.path);
       },
       'createUser': (request) async {
         final bodyStr = await request.readAsString();

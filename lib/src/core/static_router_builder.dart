@@ -36,10 +36,11 @@ class RouteInfo {
 /// Routes are discovered by analyzing the source code at build time.
 class StaticRouterBuilder {
   static const _httpMethods = ['Get', 'Post', 'Put', 'Patch', 'Delete'];
-  
+
   // Cache for annotation results to avoid re-analysis on every controller build
-  static final Map<String, AnnotationResult> annotationCache = <String, AnnotationResult>{};
-  
+  static final Map<String, AnnotationResult> annotationCache =
+      <String, AnnotationResult>{};
+
   /// Clear the annotation cache (useful for development/testing)
   static void clearCache() {
     annotationCache.clear();
@@ -59,7 +60,7 @@ class StaticRouterBuilder {
 
       // Use current directory if no path specified
       final analysisPath = projectPath ?? Directory.current.path;
-      
+
       // Create cache key based on project path and include paths
       final cacheKey = '$analysisPath:${includePaths?.join(',') ?? 'default'}';
 
@@ -67,21 +68,32 @@ class StaticRouterBuilder {
       AnnotationResult result;
       if (annotationCache.containsKey(cacheKey)) {
         result = annotationCache[cacheKey]!;
-        Log.d('Using cached annotations (${result.totalAnnotations} annotations)');
+        Log.d(
+          'Using cached annotations (${result.totalAnnotations} annotations)',
+        );
       } else {
         // First time analysis - cache the result
-        result = await AnnotationAPI.detectIn(analysisPath, includePaths: includePaths);
+        result = await AnnotationAPI.detectIn(
+          analysisPath,
+          includePaths: includePaths,
+        );
         annotationCache[cacheKey] = result;
         Log.i('Analyzed and cached ${result.totalAnnotations} annotations');
       }
 
       // Performance optimization: Filter annotations early to avoid processing irrelevant ones
       final controllerClassName = controller.runtimeType.toString();
-      final relevantAnnotations = result.annotationList.where((annotation) =>
-          annotation.targetName.contains(controllerClassName) ||
-          annotation.targetName == controllerClassName).toList();
-      
-      Log.d('Filtered to ${relevantAnnotations.length} relevant annotations for $controllerClassName');
+      final relevantAnnotations = result.annotationList
+          .where(
+            (annotation) =>
+                annotation.targetName.contains(controllerClassName) ||
+                annotation.targetName == controllerClassName,
+          )
+          .toList();
+
+      Log.d(
+        'Filtered to ${relevantAnnotations.length} relevant annotations for $controllerClassName',
+      );
 
       // No need to register - we'll call methods directly from annotations
 
@@ -128,9 +140,10 @@ class StaticRouterBuilder {
 
     // Find the RestController annotation for base path
     String basePath = '';
-    final restControllerAnnotations = filteredAnnotations.where((annotation) =>
-        annotation.annotationType == 'RestController').toList();
-    
+    final restControllerAnnotations = filteredAnnotations
+        .where((annotation) => annotation.annotationType == 'RestController')
+        .toList();
+
     for (final restController in restControllerAnnotations) {
       if (restController.targetName == controllerClassName) {
         basePath = restController.restControllerInfo?.basePath ?? '';
@@ -144,8 +157,9 @@ class StaticRouterBuilder {
 
     // Process HTTP method annotations from filtered list
     for (final httpMethod in _httpMethods) {
-      final methodAnnotations = filteredAnnotations.where((annotation) =>
-          annotation.annotationType == httpMethod).toList();
+      final methodAnnotations = filteredAnnotations
+          .where((annotation) => annotation.annotationType == httpMethod)
+          .toList();
 
       for (final annotation in methodAnnotations) {
         // Check if this annotation belongs to our controller
@@ -287,7 +301,7 @@ class StaticRouterBuilder {
       try {
         // Get the method map from the controller - this should be implemented by each controller
         final methodMap = controller.getMethodMap();
-        
+
         if (methodMap.containsKey(methodName)) {
           final method = methodMap[methodName]!;
           final result = await method(request);
@@ -299,7 +313,9 @@ class StaticRouterBuilder {
           );
         }
       } catch (e) {
-        Log.e('Error calling method $methodName on ${controller.runtimeType}: $e');
+        Log.e(
+          'Error calling method $methodName on ${controller.runtimeType}: $e',
+        );
         return Response.internalServerError(
           body: '{"error": "Method $methodName failed: ${e.toString()}"}',
           headers: {'content-type': 'application/json'},
@@ -307,7 +323,6 @@ class StaticRouterBuilder {
       }
     };
   }
-
 
   /// Convert path parameters from {param} to <param> format for Shelf router
   static String _convertPathParams(String path) {
@@ -360,14 +375,17 @@ class StaticRouterBuilder {
       // Use cache if available
       final cacheKey = '$projectPath:${includePaths?.join(',') ?? 'default'}';
       AnnotationResult result;
-      
+
       if (annotationCache.containsKey(cacheKey)) {
         result = annotationCache[cacheKey]!;
       } else {
-        result = await AnnotationAPI.detectIn(projectPath, includePaths: includePaths);
+        result = await AnnotationAPI.detectIn(
+          projectPath,
+          includePaths: includePaths,
+        );
         annotationCache[cacheKey] = result;
       }
-      
+
       final routes = <String>[];
 
       for (final httpMethod in _httpMethods) {

@@ -13,7 +13,8 @@ class AnnotationAPI {
   }
 
   /// Detects annotations in a specific directory
-  static Future<AnnotationResult> detectIn(String inputPath, {
+  static Future<AnnotationResult> detectIn(
+    String inputPath, {
     List<String>? includePaths,
   }) async {
     // Normalize the path to be absolute
@@ -35,8 +36,8 @@ class AnnotationAPI {
     String? path,
     List<String>? includePaths,
   }) async {
-    final result = path != null 
-        ? await detectIn(path, includePaths: includePaths) 
+    final result = path != null
+        ? await detectIn(path, includePaths: includePaths)
         : await detect();
     return result.annotationList
         .where((annotation) => annotation.annotationType == annotationType)
@@ -56,8 +57,8 @@ class AnnotationAPI {
     String? path,
     List<String>? includePaths,
   }) async {
-    final result = path != null 
-        ? await detectIn(path, includePaths: includePaths) 
+    final result = path != null
+        ? await detectIn(path, includePaths: includePaths)
         : await detect();
     return result.annotationStats;
   }

@@ -14,7 +14,9 @@ import 'static_router_builder.dart';
 /// Connects @JWTController, @JWTEndpoint, @JWTPublic with routing system
 class JWTIntegration {
   // Cache for JWT configuration to avoid re-analysis on every request
-  static final Map<String, JWTEndpointConfig> _jwtConfigCache = <String, JWTEndpointConfig>{};
+  static final Map<String, JWTEndpointConfig> _jwtConfigCache =
+      <String, JWTEndpointConfig>{};
+
   /// Creates a JWT-aware handler that applies validators based on annotations
   static Handler createJWTAwareHandler({
     required BaseController controller,
@@ -81,7 +83,7 @@ class JWTIntegration {
     try {
       final controllerName = controller.runtimeType.toString();
       final cacheKey = '$controllerName.$methodName';
-      
+
       // Check cache first (O(1) lookup)
       if (_jwtConfigCache.containsKey(cacheKey)) {
         return _jwtConfigCache[cacheKey]!;
@@ -90,7 +92,7 @@ class JWTIntegration {
       // Use StaticRouterBuilder cache to avoid re-analysis
       final analysisPath = projectPath ?? Directory.current.path;
       final builderCacheKey = '$analysisPath:default';
-      
+
       AnnotationResult? result;
       // Try to get from StaticRouterBuilder cache
       if (StaticRouterBuilder.annotationCache.containsKey(builderCacheKey)) {

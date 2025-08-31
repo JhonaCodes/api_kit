@@ -10,8 +10,8 @@ class AnnotationDetector {
   final List<String>? includePaths;
 
   AnnotationDetector({
-    required this.projectRoot, 
-    this.includePaths,  // Optional custom paths
+    required this.projectRoot,
+    this.includePaths, // Optional custom paths
   });
 
   Future<AnnotationResult> detect() async {
@@ -49,7 +49,7 @@ class AnnotationDetector {
       // Use custom include paths if provided, otherwise default paths
       final projectPath = projectRoot.absolute.path;
       final List<String> pathsToInclude;
-      
+
       if (includePaths != null && includePaths!.isNotEmpty) {
         // Use custom paths - make them absolute
         pathsToInclude = includePaths!.map((path) {
@@ -64,13 +64,16 @@ class AnnotationDetector {
           '$projectPath/example',
         ];
       }
-      
+
       final files = context.contextRoot
           .analyzedFiles()
           .where((file) => file.endsWith('.dart'))
           .where((file) => !file.contains('.dart_tool'))
-          .where((file) => 
-              pathsToInclude.any((includePath) => file.startsWith(includePath)))
+          .where(
+            (file) => pathsToInclude.any(
+              (includePath) => file.startsWith(includePath),
+            ),
+          )
           .toList();
 
       for (final filePath in files) {
