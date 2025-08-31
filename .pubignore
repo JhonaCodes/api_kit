@@ -6,3 +6,6 @@ demo/
 
 # Development and testing files
 test/
+/.claude/
+/.idea/
+.DS_Store
