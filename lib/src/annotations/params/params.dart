@@ -148,7 +148,8 @@ final class RequestUrl {
 /// Specific use: ```@RequestContext('jwt_payload') Map<String, dynamic> jwt```
 /// Use for all: ```@RequestContext.all() Map<String, dynamic> allContext```
 final class RequestContext {
-  final String? key; // If key is specified, gets only that value from the context
+  final String?
+  key; // If key is specified, gets only that value from the context
   final String? description;
 
   /// Constructor to get a specific value from the context

@@ -105,7 +105,7 @@ extension DartObejctExtension on DartObject {
           // For complex objects, just return type info to avoid deep recursion
           final typeName =
               dartObject.type?.getDisplayString(withNullability: false) ??
-                  'Unknown';
+              'Unknown';
           return {'_type': typeName};
         }(),
         _ => dartObject.toString(),

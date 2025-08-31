@@ -3,6 +3,8 @@
 The enum helps me define the target types in the analysis.
  */
 
+import 'package:api_kit/api_kit.dart';
+
 enum AnnotationTargetType {
   topLevelFunction,
   instanceMethod,
