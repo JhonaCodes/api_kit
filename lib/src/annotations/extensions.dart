@@ -44,10 +44,10 @@ extension DartObejctExtension on DartObject {
     if (objectType?.element case InterfaceElement element) {
       // Use pattern matching (Dart 3.0+)
       for (final field in element.fields) {
-        if (!field.isSynthetic) {
-          final fieldValue = getField(field.name);
+        if (!field.isSynthetic && field.name != null) {
+          final fieldValue = getField(field.name!);
           if (fieldValue != null && !fieldValue.isNull) {
-            map[field.name] = _dartObjectToValue(fieldValue);
+            map[field.name!] = _dartObjectToValue(fieldValue);
           }
         }
       }
@@ -63,8 +63,7 @@ extension DartObejctExtension on DartObject {
     // Prevent infinite recursion
     visited ??= <DartObject>{};
     if (visited.contains(dartObject)) {
-      return dartObject.type?.getDisplayString(withNullability: false) ??
-          'CircularRef';
+      return dartObject.type?.getDisplayString() ?? 'CircularRef';
     }
     visited.add(dartObject);
 
@@ -104,8 +103,7 @@ extension DartObejctExtension on DartObject {
         _ when dartObject.type?.element is InterfaceElement => () {
           // For complex objects, just return type info to avoid deep recursion
           final typeName =
-              dartObject.type?.getDisplayString(withNullability: false) ??
-              'Unknown';
+              dartObject.type?.getDisplayString() ?? 'Unknown';
           return {'_type': typeName};
         }(),
         _ => dartObject.toString(),

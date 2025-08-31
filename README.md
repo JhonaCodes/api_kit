@@ -41,7 +41,7 @@ Add this to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  api_kit: ^0.1.0
+  api_kit: ^0.1.1
 ```
 
 📚 **Need detailed setup help?** → [**Complete Getting Started Guide**](doc/getting-started.md)

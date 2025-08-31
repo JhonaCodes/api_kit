@@ -111,6 +111,7 @@ class UsersController extends BaseController {
   /// - @RequestMethod() and @RequestPath() for request info
   /// - Direct ApiKit.ok() result creation
   @Get(path: '/')
+  @JWTPublic()
   Future<Response> getUsers(
     @QueryParam.all() Map<String, String> allQueryParams,
     @RequestHeader.all() Map<String, String> allHeaders,
@@ -177,11 +178,16 @@ class UsersController extends BaseController {
   ///
   /// ✅ MODERN PATTERN: Path parameter with enhanced annotations
   @Get(path: '/{id}')
+  @JWTPublic()
   Future<Response> getUserById(
+      Request request,
     @PathParam('id') String userId,
     @RequestHeader.all() Map<String, String> allHeaders,
     @RequestPath() String path,
   ) async {
+    print("@@@");
+    print(request.requestedUri);
+    print("@@@");
     // Find user by ID
     final user = _users.firstWhere(
       (u) => u['id'] == userId,
