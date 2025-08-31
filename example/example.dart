@@ -180,7 +180,7 @@ class UsersController extends BaseController {
   @Get(path: '/{id}')
   @JWTPublic()
   Future<Response> getUserById(
-      Request request,
+    Request request,
     @PathParam('id') String userId,
     @RequestHeader.all() Map<String, String> allHeaders,
     @RequestPath() String path,

@@ -102,8 +102,7 @@ extension DartObejctExtension on DartObject {
         }(),
         _ when dartObject.type?.element is InterfaceElement => () {
           // For complex objects, just return type info to avoid deep recursion
-          final typeName =
-              dartObject.type?.getDisplayString() ?? 'Unknown';
+          final typeName = dartObject.type?.getDisplayString() ?? 'Unknown';
           return {'_type': typeName};
         }(),
         _ => dartObject.toString(),
