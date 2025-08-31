@@ -25,7 +25,7 @@ We've successfully migrated from mirrors to a **hybrid routing system** that sup
 ## 📚 Complete Documentation Structure
 
 ### 🎯 **Main Documentation Hub**
-**[`doc/README.md`](docs/README.md)** - **Complete documentation index and navigation guide**
+**[`doc/README.md`](doc/README.md)** - **Complete documentation index and navigation guide**
 
 ### 🔐 **JWT Authentication System (v0.0.2)**
 - **[`doc/15-jwt-validation-system.md`](doc/15-jwt-validation-system.md)** - **Complete JWT system specification**
@@ -264,7 +264,7 @@ ServerConfig(
 
 ## 🎯 Development Workflow
 
-1. **Read Documentation**: Start with [`doc/README.md`](docs/README.md) for complete guidance
+1. **Read Documentation**: Start with [`doc/README.md`](doc/README.md) for complete guidance
 2. **Setup JWT**: Follow [`doc/16-jwt-quick-start.md`](doc/16-jwt-quick-start.md) for authentication
 3. **Create Custom Validators**: Extend `JWTValidatorBase` for your business logic
 4. **Annotate Controllers**: Use `@JWTController` and `@JWTEndpoint` as needed
@@ -332,4 +332,4 @@ dart compile exe bin/server.dart -o server
 - **Beginners**: [`doc/01-setup.md`](doc/01-setup.md)
 - **JWT Setup**: [`doc/16-jwt-quick-start.md`](doc/16-jwt-quick-start.md)
 - **🆕 AOT Migration**: [`doc/20-aot-migration-guide.md`](doc/20-aot-migration-guide.md)
-- **Full Documentation**: [`doc/README.md`](docs/README.md)
+- **Full Documentation**: [`doc/README.md`](doc/README.md)

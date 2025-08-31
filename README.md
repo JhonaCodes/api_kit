@@ -19,19 +19,19 @@ Production-ready REST API framework with annotation-based routing and comprehens
 ## 📚 Quick Navigation
 
 ### 🚀 Getting Started
-- [**Getting Started Guide**](docs/getting-started.md) - Zero to production API in 10 minutes!
-- [**Enhanced Parameters**](docs/annotations/enhanced-parameters-annotation.md) - Learn the new parameter injection system
+- [**Getting Started Guide**](doc/getting-started.md) - Zero to production API in 10 minutes!
+- [**Enhanced Parameters**](doc/annotations/enhanced-parameters-annotation.md) - Learn the new parameter injection system
 
 ### 🔐 JWT Authentication  
-- [**JWT Annotations**](docs/annotations/jwt-annotations.md) - @JWTPublic, @JWTController, @JWTEndpoint
-- [**JWT Validation System**](docs/jwt-validation-system.md) - Custom validators and business logic
+- [**JWT Annotations**](doc/annotations/jwt-annotations.md) - @JWTPublic, @JWTController, @JWTEndpoint
+- [**JWT Validation System**](doc/jwt-validation-system.md) - Custom validators and business logic
 
 ### 📋 HTTP Methods
-- [**@Get**](docs/annotations/get-annotation.md) • [**@Post**](docs/annotations/post-annotation.md) • [**@Put**](docs/annotations/put-annotation.md) • [**@Delete**](docs/annotations/delete-annotation.md) • [**@Patch**](docs/annotations/patch-annotation.md)
+- [**@Get**](doc/annotations/get-annotation.md) • [**@Post**](doc/annotations/post-annotation.md) • [**@Put**](doc/annotations/put-annotation.md) • [**@Delete**](doc/annotations/delete-annotation.md) • [**@Patch**](doc/annotations/patch-annotation.md)
 
 ### 🎯 Use Cases
-- [**Complete CRUD API**](docs/use-cases/complete-crud-api.md) - Full production-ready example
-- [**All Documentation**](docs/README.md) - Complete documentation hub
+- [**Complete CRUD API**](doc/use-cases/complete-crud-api.md) - Full production-ready example
+- [**All Documentation**](doc/README.md) - Complete documentation hub
 
 ---
 
@@ -44,7 +44,7 @@ dependencies:
   api_kit: ^0.1.0
 ```
 
-📚 **Need detailed setup help?** → [**Complete Getting Started Guide**](docs/getting-started.md)
+📚 **Need detailed setup help?** → [**Complete Getting Started Guide**](doc/getting-started.md)
 
 ## Quick Start
 
@@ -74,7 +74,7 @@ void main() async {
 
 ## Enhanced Parameters Controller (NEW!)
 
-> 📖 **Want to learn all Enhanced Parameters?** → [**Enhanced Parameters Documentation**](docs/annotations/enhanced-parameters-annotation.md)
+> 📖 **Want to learn all Enhanced Parameters?** → [**Enhanced Parameters Documentation**](doc/annotations/enhanced-parameters-annotation.md)
 
 ```dart
 @RestController(basePath: '/api/v1/users')
@@ -140,7 +140,7 @@ class UserController extends BaseController {
 
 ## 🆕 Enhanced Parameters System
 
-> 📋 **See all Enhanced Parameters annotations:** [`@QueryParam.all()`](docs/annotations/queryparam-annotation.md) • [`@RequestHeader.all()`](docs/annotations/requestheader-annotation.md) • [`@RequestBody()`](docs/annotations/requestbody-annotation.md) • [`@PathParam()`](docs/annotations/pathparam-annotation.md)
+> 📋 **See all Enhanced Parameters annotations:** [`@QueryParam.all()`](doc/annotations/queryparam-annotation.md) • [`@RequestHeader.all()`](doc/annotations/requestheader-annotation.md) • [`@RequestBody()`](doc/annotations/requestbody-annotation.md) • [`@PathParam()`](doc/annotations/pathparam-annotation.md)
 
 ### Traditional vs Enhanced Approach
 
@@ -281,7 +281,7 @@ Future<Response> createUser(
 
 ## JWT Authentication System
 
-> 🔐 **Complete JWT Documentation:** [**JWT Annotations Guide**](docs/annotations/jwt-annotations.md) • [**JWT Validation System**](docs/jwt-validation-system.md)
+> 🔐 **Complete JWT Documentation:** [**JWT Annotations Guide**](doc/annotations/jwt-annotations.md) • [**JWT Validation System**](doc/jwt-validation-system.md)
 
 ### JWT Annotations
 
@@ -383,7 +383,7 @@ class FinanceController extends BaseController {
 
 ### Custom JWT Validators
 
-> 📖 **Learn to create advanced validators:** [**JWT Validation System Documentation**](docs/jwt-validation-system.md)
+> 📖 **Learn to create advanced validators:** [**JWT Validation System Documentation**](doc/jwt-validation-system.md)
 
 Create your own validators by extending `JWTValidatorBase`:
 
@@ -606,37 +606,37 @@ Consistent error handling with detailed information:
 ## Available Annotations
 
 ### HTTP Methods
-- [`@Get(path: '/path')`](docs/annotations/get-annotation.md) - GET request handling
-- [`@Post(path: '/path')`](docs/annotations/post-annotation.md) - POST request handling  
-- [`@Put(path: '/path')`](docs/annotations/put-annotation.md) - PUT request handling
-- [`@Delete(path: '/path')`](docs/annotations/delete-annotation.md) - DELETE request handling
-- [`@Patch(path: '/path')`](docs/annotations/patch-annotation.md) - PATCH request handling
+- [`@Get(path: '/path')`](doc/annotations/get-annotation.md) - GET request handling
+- [`@Post(path: '/path')`](doc/annotations/post-annotation.md) - POST request handling  
+- [`@Put(path: '/path')`](doc/annotations/put-annotation.md) - PUT request handling
+- [`@Delete(path: '/path')`](doc/annotations/delete-annotation.md) - DELETE request handling
+- [`@Patch(path: '/path')`](doc/annotations/patch-annotation.md) - PATCH request handling
 
 ### JWT Authentication
-- [`@JWTPublic()`](docs/annotations/jwt-annotations.md#jwtpublic---public-endpoint) - Public endpoint (no JWT required)
-- [`@JWTController([validators], requireAll: bool)`](docs/annotations/jwt-annotations.md#jwtcontroller---controller-level-validation) - Controller-level protection
-- [`@JWTEndpoint([validators], requireAll: bool)`](docs/annotations/jwt-annotations.md#jwtendpoint---endpoint-specific-validation) - Endpoint-level protection
+- [`@JWTPublic()`](doc/annotations/jwt-annotations.md#jwtpublic---public-endpoint) - Public endpoint (no JWT required)
+- [`@JWTController([validators], requireAll: bool)`](doc/annotations/jwt-annotations.md#jwtcontroller---controller-level-validation) - Controller-level protection
+- [`@JWTEndpoint([validators], requireAll: bool)`](doc/annotations/jwt-annotations.md#jwtendpoint---endpoint-specific-validation) - Endpoint-level protection
 
 ### Controllers
-- [`@RestController(basePath: '/base/path')`](docs/annotations/restcontroller-annotation.md) - Define base path for controller
+- [`@RestController(basePath: '/base/path')`](doc/annotations/restcontroller-annotation.md) - Define base path for controller
 
 ### 🆕 Enhanced Parameter Annotations
-- [`@PathParam('name')`](docs/annotations/pathparam-annotation.md) - Extract specific path parameter
-- [`@QueryParam('name')`](docs/annotations/queryparam-annotation.md) - Extract specific query parameter
-- [`@QueryParam.all()`](docs/annotations/queryparam-annotation.md) - Get all query parameters as Map<String, String>
-- [`@RequestHeader('name')`](docs/annotations/requestheader-annotation.md) - Extract specific header
-- [`@RequestHeader.all()`](docs/annotations/requestheader-annotation.md) - Get all headers as Map<String, String>
-- [`@RequestBody()`](docs/annotations/requestbody-annotation.md) - Direct body injection as Map<String, dynamic>
-- [`@RequestContext('jwt_payload')`](docs/annotations/enhanced-parameters-annotation.md#request-context) - Direct JWT payload access
-- [`@RequestContext.all()`](docs/annotations/enhanced-parameters-annotation.md#request-context) - Get all context as Map<String, dynamic>
-- [`@RequestMethod()`](docs/annotations/enhanced-parameters-annotation.md#request-components) - Get HTTP method (GET, POST, etc.)
-- [`@RequestPath()`](docs/annotations/enhanced-parameters-annotation.md#request-components) - Get full request path
-- [`@RequestHost()`](docs/annotations/enhanced-parameters-annotation.md#request-components) - Get request host
-- [`@RequestUrl()`](docs/annotations/enhanced-parameters-annotation.md#request-components) - Get complete request URL
+- [`@PathParam('name')`](doc/annotations/pathparam-annotation.md) - Extract specific path parameter
+- [`@QueryParam('name')`](doc/annotations/queryparam-annotation.md) - Extract specific query parameter
+- [`@QueryParam.all()`](doc/annotations/queryparam-annotation.md) - Get all query parameters as Map<String, String>
+- [`@RequestHeader('name')`](doc/annotations/requestheader-annotation.md) - Extract specific header
+- [`@RequestHeader.all()`](doc/annotations/requestheader-annotation.md) - Get all headers as Map<String, String>
+- [`@RequestBody()`](doc/annotations/requestbody-annotation.md) - Direct body injection as Map<String, dynamic>
+- [`@RequestContext('jwt_payload')`](doc/annotations/enhanced-parameters-annotation.md#request-context) - Direct JWT payload access
+- [`@RequestContext.all()`](doc/annotations/enhanced-parameters-annotation.md#request-context) - Get all context as Map<String, dynamic>
+- [`@RequestMethod()`](doc/annotations/enhanced-parameters-annotation.md#request-components) - Get HTTP method (GET, POST, etc.)
+- [`@RequestPath()`](doc/annotations/enhanced-parameters-annotation.md#request-components) - Get full request path
+- [`@RequestHost()`](doc/annotations/enhanced-parameters-annotation.md#request-components) - Get request host
+- [`@RequestUrl()`](doc/annotations/enhanced-parameters-annotation.md#request-components) - Get complete request URL
 
 ## Path Parameters with Enhanced Parameters
 
-> 📖 **Learn all about path parameters:** [**PathParam Annotation Documentation**](docs/annotations/pathparam-annotation.md)
+> 📖 **Learn all about path parameters:** [**PathParam Annotation Documentation**](doc/annotations/pathparam-annotation.md)
 
 Access path parameters directly with Enhanced Parameters:
 
@@ -801,31 +801,31 @@ genhtml coverage/lcov.info -o coverage/html
 ## 📚 Complete Documentation
 
 ### 🎯 Annotation Reference
-- **[GET Annotation](docs/annotations/get-annotation.md)** - GET request handling with Enhanced Parameters
-- **[POST Annotation](docs/annotations/post-annotation.md)** - POST request handling and body injection
-- **[PUT Annotation](docs/annotations/put-annotation.md)** - PUT request handling for complete updates
-- **[PATCH Annotation](docs/annotations/patch-annotation.md)** - PATCH request handling for partial updates
-- **[DELETE Annotation](docs/annotations/delete-annotation.md)** - DELETE request handling with audit
-- **[RestController Annotation](docs/annotations/restcontroller-annotation.md)** - Controller organization and structure
+- **[GET Annotation](doc/annotations/get-annotation.md)** - GET request handling with Enhanced Parameters
+- **[POST Annotation](doc/annotations/post-annotation.md)** - POST request handling and body injection
+- **[PUT Annotation](doc/annotations/put-annotation.md)** - PUT request handling for complete updates
+- **[PATCH Annotation](doc/annotations/patch-annotation.md)** - PATCH request handling for partial updates
+- **[DELETE Annotation](doc/annotations/delete-annotation.md)** - DELETE request handling with audit
+- **[RestController Annotation](doc/annotations/restcontroller-annotation.md)** - Controller organization and structure
 
 ### 🔐 JWT Authentication Reference
-- **[JWT Annotations](docs/annotations/jwt-annotations.md)** - @JWTPublic, @JWTController, @JWTEndpoint
-- **[JWT Validation System](docs/jwt-validation-system.md)** - Custom validators and business logic
+- **[JWT Annotations](doc/annotations/jwt-annotations.md)** - @JWTPublic, @JWTController, @JWTEndpoint
+- **[JWT Validation System](doc/jwt-validation-system.md)** - Custom validators and business logic
 
 ### 🆕 Enhanced Parameters Reference
-- **[QueryParam Annotation](docs/annotations/queryparam-annotation.md)** - Query parameter extraction and .all() access
-- **[RequestHeader Annotation](docs/annotations/requestheader-annotation.md)** - Header extraction and .all() access
-- **[PathParam Annotation](docs/annotations/pathparam-annotation.md)** - Path parameter extraction
-- **[RequestBody Annotation](docs/annotations/requestbody-annotation.md)** - Direct body injection
-- **[Enhanced Parameters](docs/annotations/enhanced-parameters-annotation.md)** - Complete enhanced parameters guide
+- **[QueryParam Annotation](doc/annotations/queryparam-annotation.md)** - Query parameter extraction and .all() access
+- **[RequestHeader Annotation](doc/annotations/requestheader-annotation.md)** - Header extraction and .all() access
+- **[PathParam Annotation](doc/annotations/pathparam-annotation.md)** - Path parameter extraction
+- **[RequestBody Annotation](doc/annotations/requestbody-annotation.md)** - Direct body injection
+- **[Enhanced Parameters](doc/annotations/enhanced-parameters-annotation.md)** - Complete enhanced parameters guide
 
 ### 📋 Use Cases & Examples  
-- **[Complete CRUD API](docs/use-cases/complete-crud-api.md)** - Full CRUD with Enhanced Parameters
-- **[Complete CRUD Enhanced](docs/use-cases/complete-crud-api-enhanced.md)** - Enhanced version with new patterns
-- **[Framework Limitations](docs/use-cases/framework-limitations.md)** - Current limitations and future improvements
+- **[Complete CRUD API](doc/use-cases/complete-crud-api.md)** - Full CRUD with Enhanced Parameters
+- **[Complete CRUD Enhanced](doc/use-cases/complete-crud-api-enhanced.md)** - Enhanced version with new patterns
+- **[Framework Limitations](doc/use-cases/framework-limitations.md)** - Current limitations and future improvements
 
 ### 🚀 Getting Started
-- **[Getting Started Guide](docs/getting-started.md)** - Complete tutorial: Zero to production API in 10 minutes!
+- **[Getting Started Guide](doc/getting-started.md)** - Complete tutorial: Zero to production API in 10 minutes!
 
 ## Migration Guide
 
@@ -898,17 +898,17 @@ MIT License - see LICENSE file for details.
 **Ready to dive deeper?** Our comprehensive documentation covers every aspect:
 
 ### 🎯 **Start Here**
-- **[Documentation Hub](docs/README.md)** - Complete navigation and overview
-- **[Getting Started](docs/getting-started.md)** - Step-by-step tutorial
+- **[Documentation Hub](doc/README.md)** - Complete navigation and overview
+- **[Getting Started](doc/getting-started.md)** - Step-by-step tutorial
 
 ### 🔥 **Master the Framework**
-- **[All HTTP Annotations](docs/annotations/)** - Complete annotation reference
-- **[Enhanced Parameters](docs/annotations/enhanced-parameters-annotation.md)** - Zero-boilerplate parameter injection
-- **[JWT System](docs/annotations/jwt-annotations.md)** - Production-ready authentication
+- **[All HTTP Annotations](doc/annotations/)** - Complete annotation reference
+- **[Enhanced Parameters](doc/annotations/enhanced-parameters-annotation.md)** - Zero-boilerplate parameter injection
+- **[JWT System](doc/annotations/jwt-annotations.md)** - Production-ready authentication
 
 ### 🎆 **Production Examples** 
-- **[Complete CRUD API](docs/use-cases/complete-crud-api.md)** - Real-world implementation
-- **[Framework Limitations](docs/use-cases/framework-limitations.md)** - Understand current boundaries
+- **[Complete CRUD API](doc/use-cases/complete-crud-api.md)** - Real-world implementation
+- **[Framework Limitations](doc/use-cases/framework-limitations.md)** - Understand current boundaries
 
 **🚀 Start building production-ready APIs today!**
 
