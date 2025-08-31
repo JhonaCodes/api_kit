@@ -181,14 +181,10 @@ class UsersController extends BaseController {
   @Get(path: '/{id}')
   @JWTPublic()
   Future<Response> getUserById(
-    Request request,
     @PathParam('id') String userId,
     @RequestHeader.all() Map<String, String> allHeaders,
     @RequestPath() String path,
   ) async {
-    print("@@@");
-    print(request.requestedUri);
-    print("@@@");
     // Find user by ID
     final user = _users.firstWhere(
       (u) => u['id'] == userId,

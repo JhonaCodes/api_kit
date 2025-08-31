@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2025-09-01
+
+### 🎯 AOT Compilation Fix
+- **CRITICAL FIX**: Removed unused `dart:mirrors` import that prevented AOT compilation
+- **FIXED**: Docker build now works with `dart compile exe` (AOT)
+- **ENHANCED**: Full AOT compatibility for production deployments
+- **PERFORMANCE**: AOT binaries are faster and smaller than JIT
+
+### 🐳 Production Deployment Ready
+- **DOCKER**: Full AOT compilation support in containerized environments
+- **PERFORMANCE**: Optimized binaries for production use
+- **COMPATIBILITY**: Works in restricted environments that don't support mirrors
+
 ## [0.1.3]
 
 ### 🎯 Enhanced Path Configuration
