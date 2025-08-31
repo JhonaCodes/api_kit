@@ -222,9 +222,7 @@ class AdminController extends BaseController {
   
   /// Emergency access - only admin required (overrides business hours)
   @Post(path: '/emergency-access')
-  @JWTEndpoint([
-    MyAdminValidator(),
-  ])
+  @JWTEndpoint([MyAdminValidator(),])
   Future<Response> emergencyAccess(Request request) async {
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>?;
     final adminUser = jwtPayload?['user_id'] ?? 'unknown';
@@ -384,8 +382,8 @@ class MixedAccessController extends BaseController {
   /// Specific validation for this endpoint only
   @Post(path: '/admin-action')
   @JWTEndpoint([
-    const MyAdminValidator(),
-    const MyBusinessHoursValidator(),
+    MyAdminValidator(),
+    MyBusinessHoursValidator(),
   ], requireAll: true)
   Future<Response> adminAction(Request request) async {
     final body = await request.readAsString();
