@@ -107,4 +107,11 @@ abstract class BaseController {
   // 🎯 RESULT CONTROLLER INTEGRATION
   // Use ApiResult.ok() and ApiResult.err() directly in your methods
   // ========================================
+
+  /// Returns a map of method names to their corresponding functions
+  /// This should be overridden by each controller to provide their specific methods
+  /// For example: {'getUsers': (request) => getUsers(request), ...}
+  Map<String, Future<Response> Function(Request)> getMethodMap() {
+    return <String, Future<Response> Function(Request)>{};
+  }
 }

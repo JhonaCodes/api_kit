@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:api_kit/api_kit.dart';
 import 'package:logger_rs/logger_rs.dart';
@@ -390,5 +391,48 @@ class UsersController extends BaseController {
     });
 
     return ApiResponseBuilder.fromResult(result);
+  }
+
+  /// Implement method map for static analysis compatibility
+  @override
+  Map<String, Future<Response> Function(Request)> getMethodMap() {
+    return {
+      'getUsers': (request) => getUsers(
+        request.url.queryParameters,
+        request.headers,
+        request.method,
+        request.url.path,
+      ),
+      'getUserById': (request) {
+        // Extract ID from URL path (simple approach)
+        final pathSegments = request.url.pathSegments;
+        final id = pathSegments.isNotEmpty ? pathSegments.last : '';
+        return getUserById(
+          request,
+          id,
+          request.headers,
+          request.url.path,
+        );
+      },
+      'createUser': (request) async {
+        final bodyStr = await request.readAsString();
+        final bodyData = jsonDecode(bodyStr) as Map<String, dynamic>;
+        return createUser(bodyData, request.headers, request.method);
+      },
+      'updateUser': (request) async {
+        final bodyStr = await request.readAsString();
+        final bodyData = jsonDecode(bodyStr) as Map<String, dynamic>;
+        // Extract ID from URL path
+        final pathSegments = request.url.pathSegments;
+        final id = pathSegments.isNotEmpty ? pathSegments.last : '';
+        return updateUser(id, bodyData, request.headers);
+      },
+      'deleteUser': (request) {
+        // Extract ID from URL path
+        final pathSegments = request.url.pathSegments;
+        final id = pathSegments.isNotEmpty ? pathSegments.last : '';
+        return deleteUser(id, request.url.path, request.method);
+      },
+    };
   }
 }

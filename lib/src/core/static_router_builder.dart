@@ -56,12 +56,20 @@ class StaticRouterBuilder {
 
       Log.i('Found ${result.totalAnnotations} annotations');
 
+      // Performance optimization: Filter annotations early to avoid processing irrelevant ones
+      final controllerClassName = controller.runtimeType.toString();
+      final relevantAnnotations = result.annotationList.where((annotation) =>
+          annotation.targetName.contains(controllerClassName) ||
+          annotation.targetName == controllerClassName).toList();
+      
+      Log.d('Filtered to ${relevantAnnotations.length} relevant annotations for $controllerClassName');
+
       // No need to register - we'll call methods directly from annotations
 
-      // Build router from detected annotations
+      // Build router from detected annotations using only relevant ones
       final router = Router();
-      final routes = extractRoutesFromResult(
-        result,
+      final routes = extractRoutesFromFilteredAnnotations(
+        relevantAnnotations,
         controller,
         projectPath: analysisPath,
       );
@@ -90,7 +98,56 @@ class StaticRouterBuilder {
     }
   }
 
-  /// Extract routes from analysis result that match the controller
+  /// Extract routes from filtered annotations (performance optimized)
+  static List<RouteInfo> extractRoutesFromFilteredAnnotations(
+    List<AnnotationDetails> filteredAnnotations,
+    BaseController controller, {
+    String? projectPath,
+  }) {
+    final routes = <RouteInfo>[];
+    final controllerClassName = controller.runtimeType.toString();
+
+    // Find the RestController annotation for base path
+    String basePath = '';
+    final restControllerAnnotations = filteredAnnotations.where((annotation) =>
+        annotation.annotationType == 'RestController').toList();
+    
+    for (final restController in restControllerAnnotations) {
+      if (restController.targetName == controllerClassName) {
+        basePath = restController.restControllerInfo?.basePath ?? '';
+        break;
+      }
+    }
+
+    Log.d(
+      'Processing controller $controllerClassName with basePath: $basePath',
+    );
+
+    // Process HTTP method annotations from filtered list
+    for (final httpMethod in _httpMethods) {
+      final methodAnnotations = filteredAnnotations.where((annotation) =>
+          annotation.annotationType == httpMethod).toList();
+
+      for (final annotation in methodAnnotations) {
+        // Check if this annotation belongs to our controller
+        if (annotation.targetName.startsWith('$controllerClassName.')) {
+          final route = _createRouteFromAnnotation(
+            annotation,
+            controller,
+            basePath,
+            projectPath,
+          );
+          if (route != null) {
+            routes.add(route);
+          }
+        }
+      }
+    }
+
+    return routes;
+  }
+
+  /// Extract routes from analysis result that match the controller (legacy method)
   static List<RouteInfo> extractRoutesFromResult(
     AnnotationResult result,
     BaseController controller, {
@@ -202,55 +259,36 @@ class StaticRouterBuilder {
     }
   }
 
-  /// Create handler that calls the method directly on the controller
+  /// Create handler that calls controller method from a simple method map
   static Handler _createMethodHandler(
     BaseController controller,
     String methodName,
   ) {
     return (Request request) async {
       try {
-        // Call the method directly based on the method name from annotations
-        // This is a simple approach that works without mirrors or complex registration
-
-        final methodMap = _getControllerMethods(controller);
-        final method = methodMap[methodName];
-
-        if (method != null) {
-          return await method(request);
+        // Get the method map from the controller - this should be implemented by each controller
+        final methodMap = controller.getMethodMap();
+        
+        if (methodMap.containsKey(methodName)) {
+          final method = methodMap[methodName]!;
+          final result = await method(request);
+          return result;
         } else {
           return Response.notFound(
-            'Method $methodName not found in controller',
+            '{"error": "Method $methodName not found in controller ${controller.runtimeType}"}',
+            headers: {'content-type': 'application/json'},
           );
         }
       } catch (e) {
-        Log.e('Error in method handler for $methodName: $e');
+        Log.e('Error calling method $methodName on ${controller.runtimeType}: $e');
         return Response.internalServerError(
-          body: '{"error": "Internal server error"}',
+          body: '{"error": "Method $methodName failed: ${e.toString()}"}',
           headers: {'content-type': 'application/json'},
         );
       }
     };
   }
 
-  /// Get controller methods mapped by name for direct invocation
-  static Map<String, Future<Response> Function(Request)> _getControllerMethods(
-    BaseController controller,
-  ) {
-    // Try to call getMethodsMap() if the controller implements it
-    try {
-      final dynamic dynamicController = controller;
-      if (dynamicController.getMethodsMap != null) {
-        return dynamicController.getMethodsMap()
-            as Map<String, Future<Response> Function(Request)>;
-      }
-    } catch (e) {
-      Log.w(
-        'Controller ${controller.runtimeType} does not implement getMethodsMap(): $e',
-      );
-    }
-
-    return {};
-  }
 
   /// Convert path parameters from {param} to <param> format for Shelf router
   static String _convertPathParams(String path) {
