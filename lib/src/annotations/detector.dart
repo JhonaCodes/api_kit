@@ -12,17 +12,17 @@ class AnnotationDetector {
 
   Future<AnnotationResult> detect() async {
     final stopwatch = Stopwatch()..start();
-    
+
     try {
       final collection = AnalysisContextCollection(
         includedPaths: [projectRoot.absolute.path],
         resourceProvider: PhysicalResourceProvider.INSTANCE,
       );
-      
+
       return await _performAnalysis(collection, stopwatch);
     } catch (e) {
       // If we get SDK errors (common with Flutter test), return empty result
-      if (e.toString().contains('PathNotFoundException') || 
+      if (e.toString().contains('PathNotFoundException') ||
           e.toString().contains('sdk_library_metadata') ||
           e.toString().contains('libraries.dart')) {
         stopwatch.stop();
@@ -34,33 +34,35 @@ class AnnotationDetector {
       rethrow;
     }
   }
-  
+
   Future<AnnotationResult> _performAnalysis(
-    AnalysisContextCollection collection, 
+    AnalysisContextCollection collection,
     Stopwatch stopwatch,
   ) async {
+    final visitor = AnnotationVisitor();
 
-      final visitor = AnnotationVisitor();
+    for (final context in collection.contexts) {
+      final files = context.contextRoot
+          .analyzedFiles()
+          .where((file) => file.endsWith('.dart'))
+          .where((file) => !file.contains('.dart_tool'));
 
-      for (final context in collection.contexts) {
-        final files = context.contextRoot.analyzedFiles()
-            .where((file) => file.endsWith('.dart'))
-            .where((file) => !file.contains('.dart_tool'));
-
-        for (final filePath in files) {
-          final libraryResult = await context.currentSession.getResolvedLibrary(filePath);
-          if (libraryResult is ResolvedLibraryResult) {
-            for (final unit in libraryResult.units) {
-              unit.unit.visitChildren(visitor);
-            }
+      for (final filePath in files) {
+        final libraryResult = await context.currentSession.getResolvedLibrary(
+          filePath,
+        );
+        if (libraryResult is ResolvedLibraryResult) {
+          for (final unit in libraryResult.units) {
+            unit.unit.visitChildren(visitor);
           }
         }
       }
+    }
 
-      stopwatch.stop();
-      return AnnotationResult(
-        annotationList: visitor.foundAnnotations,
-        processingTime: stopwatch.elapsed,
-      );
+    stopwatch.stop();
+    return AnnotationResult(
+      annotationList: visitor.foundAnnotations,
+      processingTime: stopwatch.elapsed,
+    );
   }
 }

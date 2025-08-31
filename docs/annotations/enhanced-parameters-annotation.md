@@ -73,14 +73,14 @@ Future<Response> inspectRequest(
   @RequestScheme() String scheme,        // http, https
   @RequestUrl() Uri fullUrl,             // URL completa como Uri
 ) async {
-  return jsonResponse(jsonEncode({
+  return ApiKit.ok({
     'method': method,      // No request.method
     'path': path,          // No request.url.path
     'host': host,          // No request.url.host
     'port': port,          // No request.url.port
     'scheme': scheme,      // No request.url.scheme
     'url': fullUrl.toString(),
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -96,7 +96,7 @@ Future<Response> getUserProfile(
 ) async {
   // JWT disponible directamente, sin request.context['jwt_payload']
   final userId = jwtPayload['user_id'];
-  return jsonResponse(jsonEncode({'user_id': userId}));
+  return ApiKit.ok({'user_id': userId}).toHttpResponse();
 }
 ```
 
@@ -136,7 +136,7 @@ class EnhancedController extends BaseController {
     final authHeader = allHeaders['authorization'];
     final debugMode = allQueryParams['debug'] == 'true';
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'message': 'Complete request handling without manual Request parameter!',
       'user_id': userId,
       'method': method,
@@ -144,7 +144,7 @@ class EnhancedController extends BaseController {
       'has_auth': authHeader != null,
       'debug_mode': debugMode,
       'request_body': body,
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -164,7 +164,7 @@ Future<Response> debugFullRequest(
   @RequestScheme() String scheme,
   @RequestUrl() Uri fullUrl,
 ) async {
-  return jsonResponse(jsonEncode({
+  return ApiKit.ok({
     'complete_request_debug': {
       'http_info': {
         'method': method,
@@ -199,7 +199,7 @@ Future<Response> debugFullRequest(
           .toList(),
       },
     },
-  }));
+  }).toHttpResponse();
 }
 ```
 

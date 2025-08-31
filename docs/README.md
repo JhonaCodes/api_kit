@@ -76,8 +76,8 @@ class HelloController extends BaseController {
   
   @Get(path: '/world')
   @JWTPublic()
-  Future<Response> sayHello(Request request) async {
-    return jsonResponse('{"message": "Hello World!"}');
+  Future<Response> sayHello() async {
+    return ApiKit.ok({"message": "Hello World!"}).toHttpResponse();
   }
 }
 
@@ -86,7 +86,6 @@ void main() async {
   await server.start(
     host: 'localhost', 
     port: 8080,
-    controllerList: [HelloController()],
   );
 }
 ```
@@ -98,9 +97,10 @@ class UserController extends BaseController {
   
   @Get(path: '/profile')
   @JWTEndpoint([MyUserValidator()])
-  Future<Response> getProfile(Request request) async {
-    final jwt = request.context['jwt_payload'] as Map<String, dynamic>;
-    return jsonResponse(jsonEncode({'user_id': jwt['user_id']}));
+  Future<Response> getProfile(
+    @RequestContext('jwt_payload') Map<String, dynamic> jwt,
+  ) async {
+    return ApiKit.ok({'user_id': jwt['user_id']}).toHttpResponse();
   }
 }
 ```
@@ -291,7 +291,6 @@ void main() async {
   await server.start(
     host: 'localhost',
     port: 8080,
-    controllerList: [YourController()],
   );
 }
 ```
@@ -310,11 +309,6 @@ void main() async {
   await server.start(
     host: '0.0.0.0',
     port: 8080,
-    controllerList: [
-      PublicController(),
-      UserController(),
-      AdminController(),
-    ],
   );
 }
 ```
@@ -327,7 +321,9 @@ void main() async {
 ```dart
 @Get(path: '/info')
 @JWTPublic()
-Future<Response> getInfo(Request request) async { ... }
+Future<Response> getInfo() async {
+  return ApiKit.ok({"info": "endpoint público"}).toHttpResponse();
+}
 ```
 
 ### 2. **CRUD con Autenticación**
@@ -357,14 +353,13 @@ class ProductController extends BaseController {
 ```dart
 @Get(path: '/report/{id}')
 Future<Response> getReport(
-  Request request,
   @PathParam('id') String reportId,
   @RequestHeader('Accept', defaultValue: 'application/json') String format,
 ) async {
   if (format.contains('application/pdf')) {
     return Response.ok(pdfData, headers: {'Content-Type': 'application/pdf'});
   }
-  return jsonResponse(jsonEncode(reportData));
+  return ApiKit.ok(reportData).toHttpResponse();
 }
 ```
 
@@ -374,44 +369,46 @@ Future<Response> getReport(
 
 ### ❓ ¿Por qué necesito `Request request` si ya tengo `@RequestBody`?
 
-**Respuesta**: Es una limitación actual del framework. `@RequestBody` parsea el JSON automáticamente, pero aún necesitas `Request` para acceder al contexto JWT.
+**Respuesta**: ¡Ya no es necesario! Con las nuevas enhanced parameters:
 
 ```dart
-// Estado actual (necesario)
-@Post(path: '/users')
-Future<Response> createUser(
-  Request request,  // ← Para JWT context
-  @RequestBody() Map<String, dynamic> data, // ← Ya parseado
-) async {
-  final jwt = request.context['jwt_payload']; // Extracción manual
-}
-
-// Estado ideal (futuro)
+// ✅ Estado actual (ya implementado)
 @Post(path: '/users')
 Future<Response> createUser(
   @RequestBody() Map<String, dynamic> data,
-  @JWTPayload() Map<String, dynamic> jwt, // ← Inyectado automáticamente
+  @RequestContext('jwt_payload') Map<String, dynamic> jwt, // ← Ya disponible!
 ) async {
-  // Sin Request manual
+  return ApiKit.ok({'user_created': data['name'], 'by': jwt['user_id']}).toHttpResponse();
+}
+
+// ❌ Ya no necesario (obsoleto)
+@Post(path: '/users')
+Future<Response> createUserOld(
+  Request request,  // ← Ya no necesario
+  @RequestBody() Map<String, dynamic> data,
+) async {
+  final jwt = request.context['jwt_payload']; // ← Manual extraction obsoleto
 }
 ```
 
 ### ❓ ¿Por qué necesito extraer JWT si ya usé `@JWTEndpoint`?
 
-**Respuesta**: Otra limitación actual. Si `@JWTEndpoint([MyValidator()])` ya validó el JWT, debería estar disponible automáticamente.
+**Respuesta**: ¡Ya está resuelto! Con `@RequestContext('jwt_payload')`:
 
 ```dart
-// Estado actual (redundante)
-@JWTEndpoint([MyUserValidator()]) // ← Ya validó el JWT aquí
-Future<Response> updateUser(Request request) async {
-  final jwt = request.context['jwt_payload']; // ← ¿Por qué extraer manualmente?
+// ✅ Estado actual (ya funciona)
+@JWTEndpoint([MyUserValidator()]) 
+Future<Response> updateUser(
+  @RequestBody() Map<String, dynamic> data,
+  @RequestContext('jwt_payload') Map<String, dynamic> jwt, // ← Automático!
+) async {
+  return ApiKit.ok({'updated': data['id'], 'by': jwt['user_id']}).toHttpResponse();
 }
 
-// Estado lógico (como debería ser)
-@JWTEndpoint([MyUserValidator()]) // JWT validado automáticamente
-Future<Response> updateUser(@RequestBody() Map<String, dynamic> data) async {
-  // JWT disponible implícitamente porque la anotación lo garantiza
-  final jwt = currentJWT; // O algún mecanismo automático
+// ❌ Ya no necesario (obsoleto)
+@JWTEndpoint([MyUserValidator()])
+Future<Response> updateUserOld(Request request) async {
+  final jwt = request.context['jwt_payload']; // ← Manual y obsoleto
 }
 ```
 
@@ -426,12 +423,15 @@ Future<Response> updateUser(@RequestBody() Map<String, dynamic> data) async {
 **Respuesta**: Usa el patrón estándar de respuestas de error:
 
 ```dart
-return Response.badRequest(body: jsonEncode({
-  'error': 'Descripción del error',
-  'validation_errors': ['Lista', 'de', 'errores'],
-  'received_data': dataRecibida,
-  'expected_format': 'Formato esperado'
-}));
+return ApiKit.err(ApiErr(
+  code: 'VALIDATION_ERROR',
+  message: 'Descripción del error',
+  details: {
+    'validation_errors': ['Lista', 'de', 'errores'],
+    'received_data': dataRecibida,
+    'expected_format': 'Formato esperado'
+  },
+)).toHttpResponse();
 ```
 
 ---

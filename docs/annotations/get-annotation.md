@@ -41,11 +41,23 @@ La anotación `@Get` se utiliza para marcar métodos como endpoints que responde
 class UserController extends BaseController {
   
   @Get(path: '/list')
-  Future<Response> getUsers(Request request) async {
-    return jsonResponse(jsonEncode({
-      'users': ['John', 'Jane', 'Bob'],
-      'total': 3
-    }));
+  Future<Response> getUsers() async {
+    final users = ['John', 'Jane', 'Bob'];
+    return ApiKit.ok({
+      'users': users,
+          'total': users.length
+        }
+      }).toHttpResponse();
+      
+      }).toHttpResponse();
+    } catch (e, stack) {
+      return ApiKit.err(ApiErr(
+        title: 'Failed to fetch users',
+        msm: 'Error retrieving user list: ${e.toString()}',
+        exception: e,
+        stackTrace: stack,
+      ));
+    }
   }
 }
 ```
@@ -57,12 +69,27 @@ class UserController extends BaseController {
   
   @Get(path: '/list')
   Future<Response> getUsersEnhanced() async {
-    // Direct implementation without manual Request extraction
-    return jsonResponse(jsonEncode({
-      'users': ['John', 'Jane', 'Bob'],
-      'total': 3,
-      'message': 'Simplified implementation - no Request parameter needed!'
-    }));
+    try {
+      // Direct implementation without manual Request extraction
+      final users = ['John', 'Jane', 'Bob'];
+      final response = return ApiKit.ok({
+        'success': true,
+        'data': {
+          'users': users,
+          'total': users.length,
+          'message': 'Enhanced implementation - no Request parameter needed!'
+        }
+      }).toHttpResponse();
+      
+      }).toHttpResponse();
+    } catch (e, stack) {
+      return ApiKit.err(ApiErr(
+        title: 'Failed to fetch users',
+        msm: 'Error in enhanced user fetch: ${e.toString()}',
+        exception: e,
+        stackTrace: stack,
+      ));
+    }
   }
 }
 ```
@@ -80,11 +107,11 @@ Future<Response> getProducts(Request request) async {
   final method = request.method;
   final userAgent = request.headers['user-agent'];
   
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'products': [],
     'method': method,
     'user_agent': userAgent
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -99,12 +126,12 @@ Future<Response> getProductsEnhanced(
   @RequestHeader.all() Map<String, String> headers,
 ) async {
   // Direct parameter injection - no manual extraction needed
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'products': [],
     'method': method,                          // Direct injection
     'user_agent': headers['user-agent'],       // From headers map
     'all_headers_count': headers.length,       // Bonus: access to all headers
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -122,12 +149,12 @@ Future<Response> healthCheck(Request request) async {
   final host = request.url.host;
   final path = request.url.path;
   
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'status': 'healthy',
     'timestamp': DateTime.now().toIso8601String(),
     'host': host,
     'path': path
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -144,13 +171,13 @@ Future<Response> healthCheckEnhanced(
   @RequestPath() String path,
   @RequestUrl() Uri fullUrl,
 ) async {
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'status': 'healthy',
     'timestamp': DateTime.now().toIso8601String(),
     'host': host,           // Direct injection
     'path': path,           // Direct injection
     'full_url': fullUrl.toString(),  // Complete URL access
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -165,12 +192,12 @@ Future<Response> getUserById(
 ) async {
   final method = request.method;
   
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'user_id': userId,
     'name': 'John Doe',
     'email': 'john@example.com',
     'method': method
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -181,12 +208,12 @@ Future<Response> getUserByIdEnhanced(
   @PathParam('userId') String userId,        // Keep specific path params
   @RequestMethod() String method,            // Direct method injection
 ) async {
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'user_id': userId,
     'name': 'John Doe',
     'email': 'john@example.com',
     'method': method,                        // No manual extraction
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -202,14 +229,14 @@ Future<Response> getProductsWithFilters(
   @QueryParam('limit', defaultValue: 10) int limit,
 ) async {
   // Can't access additional query parameters not predefined
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'products': [],
     'filters': {
       'category': category,
       'page': page, 
       'limit': limit
     }
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -224,7 +251,7 @@ Future<Response> getProductsWithFiltersEnhanced(
   final page = int.tryParse(allQueryParams['page'] ?? '1') ?? 1;
   final limit = int.tryParse(allQueryParams['limit'] ?? '10') ?? 10;
   
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'products': [],
     'filters': {
       'category': category,
@@ -233,7 +260,7 @@ Future<Response> getProductsWithFiltersEnhanced(
       'all_params': allQueryParams,          // Bonus: see all parameters
       'total_filters': allQueryParams.length, // Dynamic filtering support
     }
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -251,11 +278,11 @@ Future<Response> getUserProfile(Request request) async {
   final userId = jwtPayload['user_id'];
   final userRole = jwtPayload['role'];
   
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'user_id': userId,
     'role': userRole,
     'profile': 'user profile data'
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -271,12 +298,12 @@ Future<Response> getUserProfileEnhanced(
   final userId = jwtPayload['user_id'];
   final userRole = jwtPayload['role'];
   
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'user_id': userId,
     'role': userRole,
     'profile': 'user profile data',
     'method': method,           // Bonus: direct method access
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -289,10 +316,10 @@ Future<Response> getUserProfileEnhanced(
 Future<Response> getPublicInfo(Request request) async {
   final userAgent = request.headers['user-agent'];
   
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'message': 'Esta información es pública',
     'user_agent': userAgent
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -304,12 +331,12 @@ Future<Response> getPublicInfoEnhanced(
   @RequestHeader.all() Map<String, String> headers,
   @RequestHost() String host,
 ) async {
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'message': 'Esta información es pública',
     'user_agent': headers['user-agent'] ?? 'unknown',
     'host': host,
     'headers_count': headers.length,
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -331,7 +358,7 @@ Future<Response> getDashboardEnhanced(
   final userId = jwtPayload['user_id'];
   final page = int.tryParse(allQueryParams['page'] ?? '1') ?? 1;
   
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'dashboard_data': 'admin dashboard content',
     'user_id': userId,
     'page': page,
@@ -342,7 +369,7 @@ Future<Response> getDashboardEnhanced(
     'headers_count': allHeaders.length,
     'context_keys': fullContext.keys.toList(),
     'full_url': fullUrl.toString(),
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -490,14 +517,14 @@ Future<Response> healthCheckEnhanced(
   @RequestPath() String path,
   @RequestHeader.all() Map<String, String> headers,
 ) async {
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'status': 'healthy',
     'timestamp': DateTime.now().toIso8601String(),
     'host': host,
     'path': path,
     'user_agent': headers['user-agent'],
     'total_headers': headers.length,
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -524,12 +551,12 @@ Future<Response> getUserOrdersEnhanced(
   final dateFrom = filters['date_from'];     // Optional filter
   final dateTo = filters['date_to'];         // Optional filter
   
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'user_id': userId,
     'orders': [],  // Filtered results
     'applied_filters': filters,
     'method': method,
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -545,7 +572,7 @@ Future<Response> debugRequestEnhanced(
   @RequestHost() String host,
   @RequestUrl() Uri fullUrl,
 ) async {
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'request_analysis': {
       'method': method,
       'path': path,
@@ -560,7 +587,7 @@ Future<Response> debugRequestEnhanced(
         'context_entries': fullContext.length,
       }
     }
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -576,7 +603,7 @@ Future<Response> adminDashboardEnhanced(
   final adminId = jwtPayload['user_id'];
   final role = jwtPayload['role'];
   
-  return jsonResponse(jsonEncode({
+  return return ApiKit.ok({
     'dashboard_data': 'admin content',
     'admin_info': {
       'id': adminId,
@@ -585,7 +612,7 @@ Future<Response> adminDashboardEnhanced(
     'host': host,
     'active_filters': filters,
     'timestamp': DateTime.now().toIso8601String(),
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -618,7 +645,7 @@ void main() async {
   await server.start(
     host: 'localhost',
     port: 8080,
-    controllerList: [UserController(), ProductController()],
+    // Controllers auto-discovered
   );
 }
 ```

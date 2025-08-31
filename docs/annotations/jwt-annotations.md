@@ -68,22 +68,22 @@ class PublicController extends BaseController {
   @Get(path: '/health')
   @JWTPublic()  // No requiere autenticación
   Future<Response> healthCheck(Request request) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'status': 'healthy',
       'timestamp': DateTime.now().toIso8601String(),
       'service': 'api_kit'
-    }));
+    }).toHttpResponse();
   }
   
   @Get(path: '/info')
   @JWTPublic()  // Información pública
   Future<Response> getPublicInfo(Request request) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'app_name': 'My API',
       'version': '1.0.0',
       'documentation': 'https://api.example.com/docs',
       'support': 'support@example.com'
-    }));
+    }).toHttpResponse();
   }
   
   @Post(path: '/contact')
@@ -101,20 +101,21 @@ class PublicController extends BaseController {
         .toList();
     
     if (missingFields.isNotEmpty) {
-      return Response.badRequest(body: jsonEncode({
-        'error': 'Required fields missing',
-        'missing_fields': missingFields
-      }));
+      return ApiKit.err(ApiErr(
+        code: 'MISSING_FIELDS',
+        message: 'Required fields missing',
+        details: {'missing_fields': missingFields},
+      )).toHttpResponse();
     }
     
     // Procesar formulario de contacto
     final contactId = 'contact_${DateTime.now().millisecondsSinceEpoch}';
     
-    return Response(201, body: jsonEncode({
+    return ApiKit.ok({
       'message': 'Contact form submitted successfully',
       'contact_id': contactId,
       'status': 'pending_review'
-    }), headers: {'Content-Type': 'application/json'});
+    }).toHttpResponse();
   }
 }
 ```
@@ -131,7 +132,7 @@ class PublicController extends BaseController {
     @RequestMethod() String method,
     @RequestPath() String path,
   ) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'status': 'healthy',
       'timestamp': DateTime.now().toIso8601String(),
       'service': 'api_kit',
@@ -141,7 +142,7 @@ class PublicController extends BaseController {
         'path': path,
       },
       'enhanced': true,
-    }));
+    }).toHttpResponse();
   }
   
   @Get(path: '/info')
@@ -150,7 +151,7 @@ class PublicController extends BaseController {
     @RequestHeader.all() Map<String, String> headers,
     @RequestHost() String host,
   ) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'app_name': 'My API',
       'version': '1.0.0',
       'documentation': 'https://api.example.com/docs',
@@ -161,7 +162,7 @@ class PublicController extends BaseController {
         'accept_language': headers['accept-language'] ?? 'en',
       },
       'enhanced': true,
-    }));
+    }).toHttpResponse();
   }
   
   @Post(path: '/contact')
@@ -180,10 +181,11 @@ class PublicController extends BaseController {
         .toList();
     
     if (missingFields.isNotEmpty) {
-      return Response.badRequest(body: jsonEncode({
-        'error': 'Required fields missing',
-        'missing_fields': missingFields
-      }));
+      return ApiKit.err(ApiErr(
+        code: 'MISSING_FIELDS',
+        message: 'Required fields missing',
+        details: {'missing_fields': missingFields},
+      )).toHttpResponse();
     }
     
     // Enhanced: Capture client context for better support
@@ -195,13 +197,13 @@ class PublicController extends BaseController {
       'ip': headers['x-forwarded-for'] ?? headers['x-real-ip'],
     };
     
-    return Response(201, body: jsonEncode({
+    return ApiKit.ok({
       'message': 'Contact form submitted successfully',
       'contact_id': contactId,
       'status': 'pending_review',
       'client_context': clientContext,  // Enhanced context tracking
       'enhanced': true,
-    }), headers: {'Content-Type': 'application/json'});
+    }).toHttpResponse();
   }
 }
 ```
@@ -223,12 +225,12 @@ class AdminController extends BaseController {
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     final adminUser = jwtPayload['user_id'];
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'message': 'All users retrieved',
       'requested_by': adminUser,
       'validation': 'admin + active_session',
       'users': [] // En implementación real, obtener de BD
-    }));
+    }).toHttpResponse();
   }
   
   @Post(path: '/users')  // Hereda validación del controller
@@ -240,22 +242,22 @@ class AdminController extends BaseController {
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     final adminUser = jwtPayload['user_id'];
     
-    return Response(201, body: jsonEncode({
+    return ApiKit.ok({
       'message': 'User created successfully',
       'created_by': adminUser,
       'user': userData,
       'validation_passed': ['admin', 'active_session']
-    }), headers: {'Content-Type': 'application/json'});
+    }).toHttpResponse();
   }
   
   @Get(path: '/health')
   @JWTPublic()  // Sobrescribe la validación del controller
   Future<Response> adminHealthCheck(Request request) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'status': 'healthy',
       'service': 'admin-panel',
       'authentication': 'bypassed'
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -284,7 +286,7 @@ class AdminController extends BaseController {
     final limit = int.tryParse(filters['limit'] ?? '10') ?? 10;
     final search = filters['search'];
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'message': 'All users retrieved - Enhanced!',
       'requested_by': adminUser,
       'admin_context': {
@@ -304,7 +306,7 @@ class AdminController extends BaseController {
       'validation': 'admin + active_session',
       'users': [], // En implementación real, obtener de BD con filtros
       'enhanced': true,
-    }));
+    }).toHttpResponse();
   }
   
   @Post(path: '/users')  // Hereda validación del controller
@@ -317,7 +319,7 @@ class AdminController extends BaseController {
     final adminUser = jwtPayload['user_id'];
     final adminRole = jwtPayload['role'];
     
-    return Response(201, body: jsonEncode({
+    return ApiKit.ok({
       'message': 'User created successfully - Enhanced!',
       'created_by': adminUser,
       'admin_role': adminRole,
@@ -329,7 +331,7 @@ class AdminController extends BaseController {
       },
       'validation_passed': ['admin', 'active_session'],
       'enhanced': true,
-    }), headers: {'Content-Type': 'application/json'});
+    }).toHttpResponse();
   }
   
   @Get(path: '/health')
@@ -339,7 +341,7 @@ class AdminController extends BaseController {
     @RequestPath() String path,
     @RequestMethod() String method,
   ) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'status': 'healthy',
       'service': 'admin-panel',
       'authentication': 'bypassed',
@@ -349,7 +351,7 @@ class AdminController extends BaseController {
         'method': method,
       },
       'enhanced': true,
-    }));
+    }).toHttpResponse();
   }
 }
 
@@ -415,11 +417,11 @@ class FinancialController extends BaseController {
   @Get(path: '/balance')  // Solo validación de usuario (hereda del controller)
   Future<Response> getBalance(Request request) async {
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'balance': 1000.0,
       'user_id': jwtPayload['user_id'],
       'validation_level': 'basic_user'
-    }));
+    }).toHttpResponse();
   }
   
   @Post(path: '/transfer')
@@ -436,13 +438,13 @@ class FinancialController extends BaseController {
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     final userId = jwtPayload['user_id'];
     
-    return Response(201, body: jsonEncode({
+    return ApiKit.ok({
       'message': 'Transfer completed successfully',
       'transfer_id': 'txn_${DateTime.now().millisecondsSinceEpoch}',
       'from_user': userId,
       'amount': transferData['amount'],
       'validation_passed': ['user', 'financial_clearance_2', 'business_hours']
-    }), headers: {'Content-Type': 'application/json'});
+    }).toHttpResponse();
   }
   
   @Delete(path: '/transactions/{transactionId}')
@@ -457,12 +459,12 @@ class FinancialController extends BaseController {
     
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'message': 'Transaction deleted successfully',
       'transaction_id': transactionId,
       'deleted_by': jwtPayload['user_id'],
       'validation_level': 'maximum_clearance_with_audit'
-    }));
+    }).toHttpResponse();
   }
   
   @Get(path: '/reports/summary')
@@ -472,10 +474,10 @@ class FinancialController extends BaseController {
   ], requireAll: false)          // Cualquiera de los dos (OR logic)
   Future<Response> getFinancialSummary(Request request) async {
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'summary': 'Financial summary data...',
       'validation_logic': 'OR - financial_clearance_1 OR department_finance_accounting'
-    }));
+    }).toHttpResponse();
   }
 }
 
@@ -599,10 +601,10 @@ class EnterpriseController extends BaseController {
   
   @Get(path: '/dashboard')  // Solo validación de empleado + empresa
   Future<Response> getDashboard(Request request) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'dashboard': 'employee dashboard data',
       'validation': 'employee + company'
-    }));
+    }).toHttpResponse();
   }
   
   @Get(path: '/hr/employees')
@@ -612,10 +614,10 @@ class EnterpriseController extends BaseController {
     MyPrivacyValidator(level: 'high'),  // Alto nivel de privacidad
   ], requireAll: true)
   Future<Response> getHREmployees(Request request) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'employees': 'HR employee data',
       'validation': 'employee + hr + high_privacy'
-    }));
+    }).toHttpResponse();
   }
   
   @Post(path: '/finance/budget')
@@ -631,23 +633,23 @@ class EnterpriseController extends BaseController {
     
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     
-    return Response(201, body: jsonEncode({
+    return ApiKit.ok({
       'message': 'Budget created successfully',
       'budget': budgetData,
       'created_by': jwtPayload['user_id'],
       'validation': 'financial_3 + manager_2 + budget_limit'
-    }), headers: {'Content-Type': 'application/json'});
+    }).toHttpResponse();
   }
   
   @Get(path: '/public/company-info')
   @JWTPublic()  // Información pública de la empresa
   Future<Response> getCompanyInfo(Request request) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'company_name': 'Enterprise Corp',
       'founded': '2010',
       'industry': 'Technology',
       'authentication': 'not_required'
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -701,12 +703,12 @@ Future<Response> getPublicStatus(
   @QueryParam.all() Map<String, String> params,
 ) async {
   // Complete context access without authentication
-  return jsonResponse(jsonEncode({
+  return ApiKit.ok({
     'status': 'operational',
     'host': host,
     'client_info': headers,
     'request_params': params,
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -726,12 +728,12 @@ class SecureController extends BaseController {
     final userId = jwt['user_id'];
     final userRole = jwt['role'];
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'secure_data': [],
       'user_context': {'id': userId, 'role': userRole},
       'applied_filters': filters,
       'client_info': headers,
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -761,10 +763,10 @@ Future<Response> sensitiveOperation(
     'user_agent': headers['user-agent'],
   };
   
-  return jsonResponse(jsonEncode({
+  return ApiKit.ok({
     'message': 'Sensitive operation completed',
     'audit_id': 'audit_${DateTime.now().millisecondsSinceEpoch}',
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -779,7 +781,7 @@ Future<Response> debugJWTContext(
   @RequestHeader.all() Map<String, String> headers,
   @QueryParam.all() Map<String, String> params,
 ) async {
-  return jsonResponse(jsonEncode({
+  return ApiKit.ok({
     'jwt_payload': jwt,
     'full_context_keys': fullContext.keys.toList(),
     'headers_count': headers.length,
@@ -789,7 +791,7 @@ Future<Response> debugJWTContext(
       'jwt_keys': jwt.keys.toList(),
       'context_size': fullContext.length,
     }
-  }));
+  }).toHttpResponse();
 }
 ```
 
@@ -875,12 +877,6 @@ void main() async {
   await server.start(
     host: '0.0.0.0',
     port: 8080,
-    controllerList: [
-      PublicController(),
-      AdminController(),
-      FinancialController(),
-      EnterpriseController(),
-    ],
   );
 }
 ```

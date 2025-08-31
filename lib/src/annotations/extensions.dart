@@ -1,7 +1,6 @@
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
-import 'package:analyzer/dart/element/type.dart';
 
 /// Extension para detectar anotaciones de forma genérica
 extension AnnotationExtension on Annotation {
@@ -18,7 +17,7 @@ extension AnnotationExtension on Annotation {
   bool get isFromMyPackage {
     final libraryId = elementAnnotation?.element?.library?.identifier;
     if (libraryId == null) return false;
-    
+
     return _myPackageUris.any((uri) => libraryId == uri);
   }
 
@@ -31,7 +30,7 @@ extension AnnotationExtension on Annotation {
   Map<String, dynamic> get allAnnotationData {
     final evaluatedAnnotation = elementAnnotation?.computeConstantValue();
     if (evaluatedAnnotation == null) return <String, dynamic>{};
-    
+
     return evaluatedAnnotation.toMap();
   }
 }
@@ -45,10 +44,10 @@ extension DartObejctExtension on DartObject {
     if (objectType?.element case InterfaceElement element) {
       // Usar pattern matching (Dart 3.0+)
       for (final field in element.fields) {
-        if (!field.isSynthetic && field.name != null) {
-          final fieldValue = getField(field.name!);
+        if (!field.isSynthetic) {
+          final fieldValue = getField(field.name);
           if (fieldValue != null && !fieldValue.isNull) {
-            map[field.name!] = _dartObjectToValue(fieldValue);
+            map[field.name] = _dartObjectToValue(fieldValue);
           }
         }
       }
@@ -57,11 +56,15 @@ extension DartObejctExtension on DartObject {
     return map;
   }
 
-  dynamic _dartObjectToValue(DartObject dartObject, {Set<DartObject>? visited}) {
+  dynamic _dartObjectToValue(
+    DartObject dartObject, {
+    Set<DartObject>? visited,
+  }) {
     // Prevent infinite recursion
     visited ??= <DartObject>{};
     if (visited.contains(dartObject)) {
-      return dartObject.type?.getDisplayString(withNullability: false) ?? 'CircularRef';
+      return dartObject.type?.getDisplayString(withNullability: false) ??
+          'CircularRef';
     }
     visited.add(dartObject);
 
@@ -77,15 +80,21 @@ extension DartObejctExtension on DartObject {
             // Prevent huge lists from being processed
             return '${listValue.length} items';
           }
-          return listValue.map((item) => _dartObjectToValue(item, visited: visited)).toList();
+          return listValue
+              .map((item) => _dartObjectToValue(item, visited: visited))
+              .toList();
         }(),
         _ when dartObject.toMapValue() != null => () {
           final mapValue = dartObject.toMapValue()!;
           final result = <String, dynamic>{};
           var count = 0;
           mapValue.forEach((key, value) {
-            if (key != null && value != null && count < 10) { // Limit map size
-              final keyStr = _dartObjectToValue(key, visited: visited).toString();
+            if (key != null && value != null && count < 10) {
+              // Limit map size
+              final keyStr = _dartObjectToValue(
+                key,
+                visited: visited,
+              ).toString();
               result[keyStr] = _dartObjectToValue(value, visited: visited);
               count++;
             }
@@ -94,7 +103,9 @@ extension DartObejctExtension on DartObject {
         }(),
         _ when dartObject.type?.element is InterfaceElement => () {
           // For complex objects, just return type info to avoid deep recursion
-          final typeName = dartObject.type?.getDisplayString(withNullability: false) ?? 'Unknown';
+          final typeName =
+              dartObject.type?.getDisplayString(withNullability: false) ??
+              'Unknown';
           return {'_type': typeName};
         }(),
         _ => dartObject.toString(),

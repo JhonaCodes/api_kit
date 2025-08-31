@@ -42,12 +42,12 @@ class UserController extends BaseController {
   
   @Get(path: '/list')  // URL final: /api/users/list
   Future<Response> getUsers(Request request) async {
-    return jsonResponse(jsonEncode({'users': []}));
+    return ApiKit.ok({'users': []}).toHttpResponse();
   }
   
   @Post(path: '/create')  // URL final: /api/users/create
   Future<Response> createUser(Request request) async {
-    return jsonResponse(jsonEncode({'message': 'User created'}));
+    return ApiKit.ok({'message': 'User created'}).toHttpResponse();
   }
   
   @Get(path: '/{id}')  // URL final: /api/users/{id}
@@ -55,7 +55,7 @@ class UserController extends BaseController {
     Request request,
     @PathParam('id') String userId,
   ) async {
-    return jsonResponse(jsonEncode({'user_id': userId}));
+    return ApiKit.ok({'user_id': userId}).toHttpResponse();
   }
 }
 ```
@@ -68,10 +68,10 @@ class UserController extends BaseController {
   @Get(path: '/list')  // URL final: /api/users/list
   Future<Response> getUsersEnhanced() async {
     // Direct implementation without Request parameter
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'users': [],
       'enhanced': true,
-    }));
+    }).toHttpResponse();
   }
   
   @Post(path: '/create')  // URL final: /api/users/create
@@ -79,11 +79,11 @@ class UserController extends BaseController {
     @RequestBody() Map<String, dynamic> userData,  // Direct body injection
     @RequestHost() String host,
   ) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'message': 'User created - Enhanced!',
       'user': userData,
       'created_on_host': host,
-    }));
+    }).toHttpResponse();
   }
   
   @Get(path: '/{id}')  // URL final: /api/users/{id}
@@ -91,11 +91,11 @@ class UserController extends BaseController {
     @PathParam('id') String userId,
     @RequestMethod() String method,
   ) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'user_id': userId,
       'method': method,
       'enhanced': true,
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -117,12 +117,12 @@ class ProductController extends BaseController {
     @QueryParam('q', required: true) String query,
     @QueryParam('category', required: false) String? category,
   ) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'message': 'Product search',
       'query': query,
       'category': category,
       'controller_tags': ['products', 'catalog', 'inventory']
-    }));
+    }).toHttpResponse();
   }
   
   @Post(path: '/create')  // URL: /api/products/create
@@ -131,10 +131,10 @@ class ProductController extends BaseController {
     Request request,
     @RequestBody(required: true) Map<String, dynamic> productData,
   ) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'message': 'Product created',
       'product': productData
-    }));
+    }).toHttpResponse();
   }
   
   @Put(path: '/{productId}')  // URL: /api/products/{productId}
@@ -144,11 +144,11 @@ class ProductController extends BaseController {
     @PathParam('productId') String productId,
     @RequestBody(required: true) Map<String, dynamic> productData,
   ) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'message': 'Product updated',
       'product_id': productId,
       'data': productData
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -168,22 +168,22 @@ class AdminController extends BaseController {
   @Get(path: '/dashboard')  // Hereda requiresAuth = true
   @JWTEndpoint([MyAdminValidator()])
   Future<Response> getDashboard(Request request) async {
-    return jsonResponse(jsonEncode({'dashboard': 'admin data'}));
+    return ApiKit.ok({'dashboard': 'admin data'}).toHttpResponse();
   }
   
   @Get(path: '/users')  // Hereda requiresAuth = true  
   @JWTEndpoint([MyAdminValidator()])
   Future<Response> getAllUsers(Request request) async {
-    return jsonResponse(jsonEncode({'users': []}));
+    return ApiKit.ok({'users': []}).toHttpResponse();
   }
   
   @Get(path: '/health')  // Sobrescribe requiresAuth
   @JWTPublic() // Este endpoint es público a pesar del requiresAuth del controller
   Future<Response> adminHealthCheck(Request request) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'status': 'healthy',
       'service': 'admin-panel'
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -208,7 +208,7 @@ class AdminController extends BaseController {
     final adminId = jwt['user_id'];
     final adminRole = jwt['role'];
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'dashboard': 'admin data',
       'admin_context': {
         'admin_id': adminId,
@@ -217,7 +217,7 @@ class AdminController extends BaseController {
         'user_agent': headers['user-agent'],
       },
       'enhanced': true,
-    }));
+    }).toHttpResponse();
   }
   
   @Get(path: '/users')  // Hereda requiresAuth = true  
@@ -230,13 +230,13 @@ class AdminController extends BaseController {
     final page = int.tryParse(filters['page'] ?? '1') ?? 1;
     final limit = int.tryParse(filters['limit'] ?? '10') ?? 10;
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'users': [],
       'admin_id': adminId,
       'pagination': {'page': page, 'limit': limit},
       'applied_filters': filters,
       'enhanced': true,
-    }));
+    }).toHttpResponse();
   }
   
   @Get(path: '/health')  // Sobrescribe requiresAuth
@@ -246,7 +246,7 @@ class AdminController extends BaseController {
     @RequestMethod() String method,
     @RequestPath() String path,
   ) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'status': 'healthy',
       'service': 'admin-panel',
       'endpoint_info': {
@@ -255,7 +255,7 @@ class AdminController extends BaseController {
         'path': path,
       },
       'enhanced': true,
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -272,10 +272,10 @@ class OrderControllerV1 extends BaseController {
   
   @Get(path: '/list')  // URL: /api/v1/orders/list
   Future<Response> getOrders(Request request) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'version': '1.0',
       'orders': []
-    }));
+    }).toHttpResponse();
   }
 }
 
@@ -293,12 +293,12 @@ class OrderControllerV2 extends BaseController {
     @QueryParam('status', required: false) String? status,
     @QueryParam('page', defaultValue: 1) int page,
   ) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'version': '2.0',
       'orders': [],
       'pagination': {'page': page},
       'filters': {'status': status}
-    }));
+    }).toHttpResponse();
   }
   
   @Get(path: '/{orderId}/detailed')  // URL: /api/v2/orders/{orderId}/detailed
@@ -306,11 +306,11 @@ class OrderControllerV2 extends BaseController {
     Request request,
     @PathParam('orderId') String orderId,
   ) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'version': '2.0',
       'order_id': orderId,
       'detailed_info': true
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -326,7 +326,7 @@ class StoreController extends BaseController {
   
   @Get(path: '/list')  // URL: /api/stores/list
   Future<Response> getStores(Request request) async {
-    return jsonResponse(jsonEncode({'stores': []}));
+    return ApiKit.ok({'stores': []}).toHttpResponse();
   }
   
   @Get(path: '/{storeId}/info')  // URL: /api/stores/{storeId}/info
@@ -334,10 +334,10 @@ class StoreController extends BaseController {
     Request request,
     @PathParam('storeId') String storeId,
   ) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'store_id': storeId,
       'info': 'store details'
-    }));
+    }).toHttpResponse();
   }
 }
 
@@ -354,10 +354,10 @@ class StoreProductController extends BaseController {
     Request request,
     @PathParam('storeId') String storeId,
   ) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'store_id': storeId,
       'products': []
-    }));
+    }).toHttpResponse();
   }
   
   @Post(path: '/create')  // URL: /api/stores/{storeId}/products/create
@@ -366,11 +366,11 @@ class StoreProductController extends BaseController {
     @PathParam('storeId') String storeId,
     @RequestBody(required: true) Map<String, dynamic> productData,
   ) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'message': 'Product created for store',
       'store_id': storeId,
       'product': productData
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -393,11 +393,11 @@ class FinancialController extends BaseController {
   Future<Response> getBalance(Request request) async {
     // Solo ejecuta si pasa validación financiera + horas de negocio + auditoría
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'balance': 1000.0,
       'user_id': jwtPayload['user_id'],
       'timestamp': DateTime.now().toIso8601String()
-    }));
+    }).toHttpResponse();
   }
   
   @Post(path: '/transfer')  // Hereda validadores + validación específica
@@ -409,10 +409,10 @@ class FinancialController extends BaseController {
     @RequestBody(required: true) Map<String, dynamic> transferData,
   ) async {
     // Requiere: financial + business hours + audit + transfer validation
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'message': 'Transfer completed',
       'transfer': transferData
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -474,11 +474,11 @@ class PublicController extends BaseController {
     @RequestHeader.all() Map<String, String> headers,
   ) async {
     // Complete access without authentication
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'public_data': 'available',
       'host': host,
       'user_agent': headers['user-agent'] ?? 'unknown',
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -498,12 +498,12 @@ class SecureController extends BaseController {
     final userId = jwt['user_id'];
     final userRole = jwt['role'];
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'profile': 'user profile data',
       'user_id': userId,
       'role': userRole,
       'method': method,
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -520,12 +520,12 @@ class DataController extends BaseController {
     @RequestContext('jwt_payload') Map<String, dynamic> jwt,
   ) async {
     // Handle unlimited search criteria dynamically
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'results': [],
       'applied_filters': allFilters,
       'total_filters': allFilters.length,
       'user_id': jwt['user_id'],
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -542,7 +542,7 @@ class AdvancedV2Controller extends BaseController {
     @RequestHeader.all() Map<String, String> headers,
     @RequestHost() String host,
   ) async {
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'version': '2.0',
       'features': ['enhanced_params', 'dynamic_filtering', 'direct_jwt'],
       'client_options': options,
@@ -550,7 +550,7 @@ class AdvancedV2Controller extends BaseController {
         'host': host,
         'user_agent': headers['user-agent'],
       },
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -569,12 +569,12 @@ class TenantController extends BaseController {
   ) async {
     final userId = jwt['user_id'];
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'tenant_id': tenantId,
       'resources': [],
       'filters': resourceFilters,
       'requested_by': userId,
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -619,7 +619,7 @@ void main() async {
   await server.start(
     host: 'localhost',
     port: 8080,
-    controllerList: [
+    // Auto-discovery - [
       UserController(),           // @RestController(basePath: '/api/users')
       ProductController(),        // @RestController(basePath: '/api/products')
       AdminController(),          // @RestController(basePath: '/api/admin')

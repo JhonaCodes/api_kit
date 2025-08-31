@@ -167,13 +167,13 @@ class ProductController extends BaseController {
         'error': 'Invalid pagination parameters',
         'valid_page': 'page >= 1',
         'valid_limit': '1 <= limit <= 50 (public limit)'
-      }));
+      }).toHttpResponse();
     }
     
     // Simular búsqueda pública (datos limitados)
     final products = _generateMockProducts(query, category, page, limit, isPublic: true);
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'message': 'Public product search completed',
       'products': products,
       'pagination': {
@@ -187,7 +187,7 @@ class ProductController extends BaseController {
         'category': category,
       },
       'note': 'Login for detailed product information and advanced filters'
-    }));
+    }).toHttpResponse();
   }
   
   /// Lista completa de productos - Requiere autenticación de usuario
@@ -250,7 +250,7 @@ class ProductController extends BaseController {
       return Response.badRequest(body: jsonEncode({
         'error': 'Invalid query parameters',
         'validation_errors': validationErrors
-      }));
+      }).toHttpResponse();
     }
     
     // Simular búsqueda completa
@@ -264,7 +264,7 @@ class ProductController extends BaseController {
       includeSupplier: includeSupplier,
     );
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'message': 'Products retrieved successfully',
       'products': products,
       'pagination': {
@@ -286,7 +286,7 @@ class ProductController extends BaseController {
         'stock_included': includeStock,
         'supplier_included': includeSupplier,
       }
-    }));
+    }).toHttpResponse();
   }
   
   /// Obtener producto específico por ID
@@ -308,7 +308,7 @@ class ProductController extends BaseController {
         'error': 'Invalid product ID format',
         'expected_format': 'prod_<identifier>',
         'received': productId
-      }));
+      }).toHttpResponse();
     }
     
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
@@ -321,7 +321,7 @@ class ProductController extends BaseController {
         'error': 'Product not found',
         'product_id': productId,
         'suggestion': 'Check the product ID or use the search endpoint'
-      }));
+      }).toHttpResponse();
     }
     
     // Agregar información adicional según parámetros
@@ -333,7 +333,7 @@ class ProductController extends BaseController {
       product['related_products'] = _getMockRelatedProducts(productId);
     }
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'message': 'Product retrieved successfully',
       'product': product,
       'user_context': {
@@ -341,7 +341,7 @@ class ProductController extends BaseController {
         'reviews_included': includeReviews,
         'related_included': includeRelated,
       }
-    }));
+    }).toHttpResponse();
   }
   
   // ========================================
@@ -370,7 +370,7 @@ class ProductController extends BaseController {
         'error': 'Invalid Content-Type',
         'expected': 'application/json',
         'received': contentType
-      }));
+      }).toHttpResponse();
     }
     
     // ⚠️ Limitación actual: JWT debe extraerse manualmente del Request
@@ -385,7 +385,7 @@ class ProductController extends BaseController {
         'error': 'Product validation failed',
         'validation_errors': validationResult['errors'],
         'received_data': productData
-      }));
+      }).toHttpResponse();
     }
     
     // Crear producto
@@ -442,7 +442,7 @@ class ProductController extends BaseController {
       return Response.notFound(jsonEncode({
         'error': 'Product not found',
         'product_id': productId
-      }));
+      }).toHttpResponse();
     }
     
     // Validar datos completos para PUT
@@ -452,7 +452,7 @@ class ProductController extends BaseController {
         'error': 'Complete product data validation failed',
         'validation_errors': validationResult['errors'],
         'hint': 'PUT requires all fields. Use PATCH for partial updates.'
-      }));
+      }).toHttpResponse();
     }
     
     // Actualizar producto completo
@@ -468,13 +468,13 @@ class ProductController extends BaseController {
       actions.add('suppliers_notified');
     }
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'message': 'Product updated completely',
       'product': updatedProduct,
       'update_type': 'complete_replacement',
       'actions_performed': actions,
       'updated_by': managerId,
-    }));
+    }).toHttpResponse();
   }
   
   /// Actualización parcial del producto
@@ -498,7 +498,7 @@ class ProductController extends BaseController {
       return Response.badRequest(body: jsonEncode({
         'error': 'No fields to update',
         'hint': 'Include at least one field in the request body'
-      }));
+      }).toHttpResponse();
     }
     
     // Verificar que el producto existe
@@ -506,7 +506,7 @@ class ProductController extends BaseController {
       return Response.notFound(jsonEncode({
         'error': 'Product not found',
         'product_id': productId
-      }));
+      }).toHttpResponse();
     }
     
     // Validar campos enviados
@@ -515,7 +515,7 @@ class ProductController extends BaseController {
       return Response.badRequest(body: jsonEncode({
         'error': 'Partial update validation failed',
         'validation_errors': validationResult['errors']
-      }));
+      }).toHttpResponse();
     }
     
     // Aplicar actualización parcial
@@ -531,7 +531,7 @@ class ProductController extends BaseController {
       patchedProduct[field] = updates[field];
     }
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'message': 'Product updated partially',
       'product': patchedProduct,
       'updated_fields': updatedFields,
@@ -540,7 +540,7 @@ class ProductController extends BaseController {
         'fields_updated': updatedFields.length,
         'stock_validation': validateStock,
       }
-    }));
+    }).toHttpResponse();
   }
   
   // ========================================
@@ -567,7 +567,7 @@ class ProductController extends BaseController {
         'error': 'Deletion confirmation required',
         'required_header': 'X-Confirm-Delete: CONFIRM_DELETE',
         'received': confirmHeader
-      }));
+      }).toHttpResponse();
     }
     
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
@@ -578,7 +578,7 @@ class ProductController extends BaseController {
       return Response.notFound(jsonEncode({
         'error': 'Product not found',
         'product_id': productId
-      }));
+      }).toHttpResponse();
     }
     
     // Verificar dependencias
@@ -603,7 +603,7 @@ class ProductController extends BaseController {
       'confirmation_verified': true,
     };
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'message': 'Product deleted successfully',
       'deletion_record': deletionRecord,
       'security_validation': {
@@ -611,7 +611,7 @@ class ProductController extends BaseController {
         'business_hours': true,
         'confirmation_header': true,
       }
-    }));
+    }).toHttpResponse();
   }
   
   // ========================================
@@ -818,7 +818,7 @@ void main() async {
   await server.start(
     host: '0.0.0.0',
     port: 8080,
-    controllerList: [ProductController()],
+    // Controllers auto-discovered
   );
   
   print('🚀 Product CRUD API running on http://localhost:8080');

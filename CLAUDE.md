@@ -14,7 +14,7 @@ We've successfully migrated from mirrors to a **hybrid routing system** that sup
 - ✅ **Hybrid Routing System** - Generated code with mirrors fallback  
 - ✅ **Zero Breaking Changes** - Existing code works unchanged
 - ✅ **Complete JWT Authentication System** - `@JWTPublic`, `@JWTController`, `@JWTEndpoint` with custom validators
-- ✅ **Annotation-based routing** - `@Controller`, `@GET`, `@POST`, etc.
+- ✅ **Annotation-based routing** - `@RestController`, `@Get`, `@Post`, etc.
 - ✅ **Production-ready security** - CORS, rate limiting, security headers
 - ✅ **Token blacklisting** - Advanced token management and revocation
 - ✅ **Custom validators** - Extensible JWT validation with AND/OR logic
@@ -73,7 +73,7 @@ void main() async {
   await server.start(
     host: '0.0.0.0',
     port: 8080,
-    controllerList: [UserController(), AdminController()],
+    // Controllers auto-discovered
   );
 }
 ```
@@ -86,7 +86,7 @@ void main() async {
 Future<Response> getPublicInfo(Request request) async { ... }
 
 // Controller-level protection
-@Controller('/api/admin')
+@RestController(basePath: '/api/admin')
 @JWTController([
   const MyAdminValidator(),
   const MyBusinessHoursValidator(),
@@ -133,13 +133,13 @@ class MyAdminValidator extends JWTValidatorBase {
 ## 🏗️ Basic Controller Example
 
 ```dart
-@Controller('/api/users')
+@RestController(basePath: '/api/users')
 class UserController extends BaseController {
   
   @GET('/list')
   @JWTPublic() // Public endpoint
   Future<Response> getUsers(Request request) async {
-    return jsonResponse(jsonEncode({'users': ['John', 'Jane']}));
+    return ApiKit.ok({'users': ['John', 'Jane']}).toHttpResponse();
   }
   
   @POST('/create')
@@ -152,10 +152,10 @@ class UserController extends BaseController {
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     final adminUser = jwtPayload['user_id'];
     
-    return jsonResponse(jsonEncode({
+    return ApiKit.ok({
       'created': userData['name'],
       'created_by': adminUser,
-    }));
+    }).toHttpResponse();
   }
 }
 ```
@@ -169,7 +169,7 @@ class UserController extends BaseController {
 - **`MyBusinessHoursValidator`** - Time-based access restrictions
 
 ### Core Annotations
-- **`@Controller('/path')`** - Define controller base path
+- **`@RestController(basePath: '/path')`** - Define controller base path
 - **`@GET('/endpoint')`, `@POST('/endpoint')`** - HTTP method routing
 - **`@JWTPublic()`** - Public endpoint (no JWT required)
 - **`@JWTController([validators], requireAll: bool)`** - Controller-level JWT validation
@@ -219,12 +219,12 @@ dependencies:
 
 ### 2. Create Controller
 ```dart
-@Controller('/api/hello')
+@RestController(basePath: '/api/hello')
 class HelloController extends BaseController {
   @GET('/world')
   @JWTPublic()
   Future<Response> sayHello(Request request) async {
-    return jsonResponse('{"message": "Hello World!"}');
+    return ApiKit.ok({"message": "Hello World!"}).toHttpResponse();
   }
 }
 ```
@@ -236,7 +236,7 @@ void main() async {
   await server.start(
     host: 'localhost', 
     port: 8080,
-    controllerList: [HelloController()],
+    // Controllers auto-discovered
   );
 }
 ```

@@ -1,679 +1,924 @@
-/// Combined Real-World Example
-/// Demuestra el uso combinado de todos los tipos de parámetros en escenarios realistas
-/// @PathParam, @QueryParam, @RequestHeader, @RequestBody, @Param
-library;
-
-import 'dart:convert';
 import 'dart:io';
 import 'package:api_kit/api_kit.dart';
+import 'package:logger_rs/logger_rs.dart';
+
+/// 🌍 Real-World Combined Example - Production-Ready API
+///
+/// This example demonstrates a production-ready API with:
+/// - ✅ Enhanced parameter annotations (NO Request request needed)
+/// - ✅ JWT authentication with role-based access
+/// - ✅ Complex business logic with validation
+/// - ✅ Direct Ok/Err pattern with result_controller
+/// - ✅ Real-world error handling and logging
+/// - ✅ Complete parameter extraction showcase
+///
+/// ## 🎯 Real-World Features:
+/// - Multi-tenant user management
+/// - Product catalog with complex filtering
+/// - Order processing with inventory validation
+/// - JWT-protected admin operations
+/// - Comprehensive error handling
+/// - Production-ready logging
+///
+/// ## Running the Example:
+/// ```bash
+/// dart run example/params/combined_real_world_example.dart
+/// ```
+///
+/// ## Test Production-Ready Endpoints:
+/// ```bash
+/// # Public endpoints
+/// curl "http://localhost:8080/api/products?category=electronics&page=1&limit=5"
+/// curl "http://localhost:8080/api/products/search?q=laptop&sort=price&order=asc"
+///
+/// # User management (protected)
+/// curl "http://localhost:8080/api/users/profile" \
+///   -H "Authorization: Bearer your_jwt_token"
+///
+/// # Admin operations (requires admin JWT)
+/// curl "http://localhost:8080/api/admin/analytics?period=monthly" \
+///   -H "Authorization: Bearer admin_jwt_token"
+///
+/// # Order processing
+/// curl -X POST "http://localhost:8080/api/orders" \
+///   -H "Authorization: Bearer user_jwt_token" \
+///   -H "Content-Type: application/json" \
+///   -d '{"items":[{"product_id":"prod_123","quantity":2}]}'
+/// ```
 
 void main() async {
-  print('🌟 Combined Real-World Example - All parameter types in realistic scenarios');
+  final server = ApiServer(config: ServerConfig.development());
 
-  final server = ApiServer.create()
-    .configureEndpointDisplay(showInConsole: true);
-
-  final result = await server.start(
-    host: 'localhost',
-    port: 8095,
-    projectPath: Directory.current.path,
+  // Configure JWT for production-ready auth
+  server.configureJWTAuth(
+    jwtSecret: 'real-world-production-secret-key-256-bits-minimum',
+    excludePaths: ['/health', '/api/products', '/api/public'],
   );
+
+  final result = await server.start(host: 'localhost', port: 8080);
 
   result.when(
     ok: (httpServer) {
-      print('\n🧪 Test Combined Real-World endpoints:');
-      
-      print('\n   📊 E-commerce Product Management:');
-      print('   # Get products in category with pagination:');
-      print('   curl -H "Authorization: Bearer shop_token_123" -H "X-Store-ID: store_456" "http://localhost:8095/api/stores/store_456/categories/electronics/products?page=1&limit=5&sort=price&order=asc&in_stock=true"');
-      
-      print('\n   # Update product with full data:');
-      print('   curl -X PUT -H "Authorization: Bearer admin_token_123" -H "Content-Type: application/json" -H "X-Store-ID: store_456" -d \'{"name":"Updated Product","price":299.99,"description":"New description","tags":["electronics","sale"]}\' "http://localhost:8095/api/stores/store_456/products/prod_123?notify_users=true&publish_immediately=false"');
-      
-      print('\n   💬 Social Media API:');
-      print('   # Get user posts with filters:');
-      print('   curl -H "Authorization: Bearer user_token_456" -H "Accept: application/json" -H "Accept-Language: en-US,es;q=0.9" "http://localhost:8095/api/users/user_123/posts?page=1&type=public&since=2024-01-01&include_comments=true"');
-      
-      print('\n   # Create new post:');
-      print('   curl -X POST -H "Authorization: Bearer user_token_456" -H "Content-Type: application/json" -H "X-Client-App: mobile-app" -d \'{"content":"Hello world!","visibility":"public","tags":["hello","world"],"location":{"lat":40.7128,"lng":-74.0060}}\' "http://localhost:8095/api/users/user_123/posts?auto_publish=true&schedule_time="');
-      
-      print('\n   📁 File Management System:');
-      print('   # Upload file to folder:');
-      print('   curl -X POST -H "Authorization: Bearer file_token_789" -H "Content-Type: application/json" -H "X-Upload-Context: user_upload" -d \'{"filename":"document.pdf","size":1048576,"content_type":"application/pdf","description":"Important document"}\' "http://localhost:8095/api/folders/folder_456/files?create_thumbnails=true&scan_virus=true&notify_owner=false"');
-      
-      print('\n⚠️  Press Ctrl+C to stop');
+      Log.i('🌍 Real-World API Server running on http://localhost:8080');
+      Log.i('📦 Products API: http://localhost:8080/api/products');
+      Log.i('👥 Users API: http://localhost:8080/api/users (protected)');
+      Log.i('📋 Orders API: http://localhost:8080/api/orders (protected)');
+      Log.i('⚙️  Admin API: http://localhost:8080/api/admin (admin only)');
+
+      ProcessSignal.sigint.watch().listen((sig) async {
+        Log.i('🛑 Shutting down real-world server...');
+        await httpServer.close(force: false);
+        exit(0);
+      });
     },
     err: (error) {
-      print('❌ Error: $error');
+      Log.e('❌ Failed to start real-world server: ${error.msm}');
+      exit(1);
     },
   );
 }
 
-/// Controller simulando una API de E-commerce real
-@RestController(basePath: '/api/stores')
-class EcommerceController extends BaseController {
+/// 📦 Products Controller - Public Product Catalog
+///
+/// ✅ Demonstrates complex filtering and search without Request parameter
+@RestController(basePath: '/api/products')
+class ProductsController extends BaseController {
+  final List<Map<String, dynamic>> _products = [
+    {
+      'id': 'prod_1',
+      'name': 'Gaming Laptop Pro',
+      'category': 'electronics',
+      'price': 1299.99,
+      'stock': 15,
+      'rating': 4.8,
+      'brand': 'TechCorp',
+    },
+    {
+      'id': 'prod_2',
+      'name': 'Wireless Headphones',
+      'category': 'electronics',
+      'price': 199.99,
+      'stock': 45,
+      'rating': 4.6,
+      'brand': 'AudioMax',
+    },
+    {
+      'id': 'prod_3',
+      'name': 'Coffee Maker Deluxe',
+      'category': 'home',
+      'price': 89.99,
+      'stock': 23,
+      'rating': 4.4,
+      'brand': 'BrewMaster',
+    },
+    {
+      'id': 'prod_4',
+      'name': 'Running Shoes Elite',
+      'category': 'sports',
+      'price': 159.99,
+      'stock': 67,
+      'rating': 4.7,
+      'brand': 'SportsPro',
+    },
+    {
+      'id': 'prod_5',
+      'name': 'Smart Watch Series X',
+      'category': 'electronics',
+      'price': 299.99,
+      'stock': 8,
+      'rating': 4.5,
+      'brand': 'TechCorp',
+    },
+    {
+      'id': 'prod_6',
+      'name': 'Yoga Mat Premium',
+      'category': 'sports',
+      'price': 49.99,
+      'stock': 112,
+      'rating': 4.3,
+      'brand': 'FitLife',
+    },
+  ];
 
-  /// Sistema completo de productos: PathParam + QueryParam + RequestHeader
-  @Get(path: '/{storeId}/categories/{categoryName}/products')
-  Future<Response> getProductsInCategory(
-    Request request,
-    // Path parameters
-    @PathParam('storeId', description: 'Store identifier') String storeId,
-    @PathParam('categoryName', description: 'Product category name') String categoryName,
-    
-    // Query parameters
-    @QueryParam('page', defaultValue: 1, description: 'Page number') int page,
-    @QueryParam('limit', defaultValue: 10, description: 'Items per page') int limit,
-    @QueryParam('sort', defaultValue: 'name', description: 'Sort field') String sortBy,
-    @QueryParam('order', defaultValue: 'asc', description: 'Sort order') String sortOrder,
-    @QueryParam('in_stock', required: false, description: 'Filter by stock status') bool? inStockOnly,
-    @QueryParam('min_price', required: false, description: 'Minimum price filter') double? minPrice,
-    @QueryParam('max_price', required: false, description: 'Maximum price filter') double? maxPrice,
-    
-    // Headers
-    @RequestHeader('Authorization', required: true, description: 'Bearer authentication token') String authHeader,
-    @RequestHeader('X-Store-ID', required: true, description: 'Store ID verification header') String storeIdHeader,
-    @RequestHeader('Accept-Language', required: false, defaultValue: 'en-US', description: 'Language preference') String language,
+  /// 📋 Get products with advanced filtering
+  ///
+  /// ✅ Complex query parameter processing without Request parameter
+  @Get(path: '/')
+  Future<Response> getProducts(
+    @QueryParam.all() Map<String, String> allQueryParams,
+    @RequestHeader.all() Map<String, String> allHeaders,
+    @RequestMethod() String method,
+    @RequestHost() String host,
   ) async {
-    
-    // Validaciones de autenticación
-    if (!authHeader.startsWith('Bearer ')) {
-      return Response.unauthorized(jsonEncode({'error': 'Invalid authorization format'}));
-    }
-    
-    final token = authHeader.substring(7);
-    if (token.length < 10) {
-      return Response.unauthorized(jsonEncode({'error': 'Invalid token'}));
-    }
-    
-    // Verificar que el store ID del path coincide con el header
-    if (storeId != storeIdHeader) {
-      return Response.badRequest(body: jsonEncode({
-        'error': 'Store ID mismatch',
-        'path_store_id': storeId,
-        'header_store_id': storeIdHeader,
-      }));
-    }
-    
-    // Validar parámetros de paginación
+    // ✅ Extract and validate pagination parameters
+    final pageStr = allQueryParams['page'] ?? '1';
+    final limitStr = allQueryParams['limit'] ?? '10';
+    final page = int.tryParse(pageStr) ?? 1;
+    final limit = int.tryParse(limitStr) ?? 10;
+
     if (page < 1 || limit < 1 || limit > 100) {
-      return Response.badRequest(body: jsonEncode({
-        'error': 'Invalid pagination parameters',
-        'valid_page': 'page >= 1',
-        'valid_limit': '1 <= limit <= 100',
-      }));
+      final result = ApiKit.badRequest<Map<String, dynamic>>(
+        'Invalid pagination parameters',
+        validations: <String, String>{
+          if (page < 1) 'page': 'Page must be >= 1',
+          if (limit < 1 || limit > 100) 'limit': 'Limit must be 1-100',
+        },
+      );
+      return ApiResponseBuilder.fromResult(result);
     }
-    
-    // Validar filtros de precio
-    if (minPrice != null && maxPrice != null && minPrice > maxPrice) {
-      return Response.badRequest(body: jsonEncode({
-        'error': 'Invalid price range',
-        'min_price': minPrice,
-        'max_price': maxPrice,
-      }));
+
+    // ✅ Apply complex filtering
+    var filteredProducts = List<Map<String, dynamic>>.from(_products);
+
+    // Category filter
+    final categoryFilter = allQueryParams['category'];
+    if (categoryFilter != null && categoryFilter.isNotEmpty) {
+      filteredProducts = filteredProducts
+          .where((p) => p['category'] == categoryFilter)
+          .toList();
     }
-    
-    // Simular productos filtrados
-    final mockProducts = List.generate(limit, (index) {
-      final productId = 'prod_${(page - 1) * limit + index + 1}';
-      final basePrice = 50.0 + (index * 25.0);
-      final actualPrice = minPrice != null ? 
-        (basePrice < minPrice ? minPrice : basePrice) : basePrice;
-      
-      return {
-        'id': productId,
-        'name': 'Product ${index + 1} in $categoryName',
-        'category': categoryName,
-        'price': actualPrice,
-        'in_stock': inStockOnly ?? (index % 3 != 0), // Simular stock
-        'store_id': storeId,
-        'description': 'High-quality product in $categoryName category',
-      };
-    });
-    
-    // Filtrar por precio si se especifica
-    final filteredProducts = mockProducts.where((product) {
-      final price = product['price'] as double;
-      if (minPrice != null && price < minPrice) return false;
-      if (maxPrice != null && price > maxPrice) return false;
-      if (inStockOnly == true && product['in_stock'] != true) return false;
-      return true;
-    }).toList();
-    
-    // Ordenar productos
+
+    // Brand filter
+    final brandFilter = allQueryParams['brand'];
+    if (brandFilter != null && brandFilter.isNotEmpty) {
+      filteredProducts = filteredProducts
+          .where((p) => p['brand'] == brandFilter)
+          .toList();
+    }
+
+    // Price range filter
+    final minPriceStr = allQueryParams['min_price'];
+    final maxPriceStr = allQueryParams['max_price'];
+    if (minPriceStr != null || maxPriceStr != null) {
+      final minPrice = double.tryParse(minPriceStr ?? '0') ?? 0;
+      final maxPrice = double.tryParse(maxPriceStr ?? '999999') ?? 999999;
+
+      filteredProducts = filteredProducts.where((p) {
+        final price = p['price'] as double;
+        return price >= minPrice && price <= maxPrice;
+      }).toList();
+    }
+
+    // Stock availability filter
+    final inStockOnly = allQueryParams['in_stock'] == 'true';
+    if (inStockOnly) {
+      filteredProducts = filteredProducts
+          .where((p) => (p['stock'] as int) > 0)
+          .toList();
+    }
+
+    // ✅ Apply sorting
+    final sortBy = allQueryParams['sort'] ?? 'name';
+    final sortOrder = allQueryParams['order'] ?? 'asc';
+
     filteredProducts.sort((a, b) {
-      late int comparison;
-      switch (sortBy) {
-        case 'price':
-          comparison = (a['price'] as double).compareTo(b['price'] as double);
-          break;
-        case 'name':
-        default:
-          comparison = (a['name'] as String).compareTo(b['name'] as String);
-          break;
+      dynamic valueA = a[sortBy];
+      dynamic valueB = b[sortBy];
+
+      if (valueA == null || valueB == null) return 0;
+
+      int comparison;
+      if (valueA is num && valueB is num) {
+        comparison = valueA.compareTo(valueB);
+      } else {
+        comparison = valueA.toString().compareTo(valueB.toString());
       }
+
       return sortOrder == 'desc' ? -comparison : comparison;
     });
-    
-    return jsonResponse(jsonEncode({
-      'message': 'Products retrieved successfully',
-      'request_context': {
-        'store_id': storeId,
-        'category': categoryName,
-        'authenticated_user': token.hashCode.toString(),
-        'language': language,
+
+    // ✅ Apply pagination
+    final totalProducts = filteredProducts.length;
+    final startIndex = (page - 1) * limit;
+    final endIndex = (startIndex + limit).clamp(0, totalProducts);
+
+    if (startIndex >= totalProducts) {
+      filteredProducts = [];
+    } else {
+      filteredProducts = filteredProducts.sublist(startIndex, endIndex);
+    }
+
+    final result = ApiKit.ok({
+      'products': filteredProducts,
+      'pagination': {
+        'current_page': page,
+        'per_page': limit,
+        'total_items': totalProducts,
+        'total_pages': (totalProducts / limit).ceil(),
+        'has_next': endIndex < totalProducts,
+        'has_prev': page > 1,
       },
       'filters_applied': {
-        'page': page,
-        'limit': limit,
+        'category': categoryFilter,
+        'brand': brandFilter,
+        'min_price': minPriceStr != null ? double.tryParse(minPriceStr) : null,
+        'max_price': maxPriceStr != null ? double.tryParse(maxPriceStr) : null,
+        'in_stock_only': inStockOnly,
         'sort_by': sortBy,
         'sort_order': sortOrder,
-        'in_stock_only': inStockOnly,
-        'price_range': {
-          'min': minPrice,
-          'max': maxPrice,
-        },
       },
-      'results': {
-        'products': filteredProducts,
-        'total_found': filteredProducts.length,
-        'page': page,
-        'per_page': limit,
-        'has_next_page': filteredProducts.length >= limit,
+      'request_info': {
+        'method': method,
+        'host': host,
+        'query_params_count': allQueryParams.length,
+        'headers_count': allHeaders.length,
       },
-      'metadata': {
-        'store_verified': storeId == storeIdHeader,
-        'filters_count': [inStockOnly, minPrice, maxPrice].where((f) => f != null).length,
-        'query_performance_ms': 25,
-      },
-    }));
+    });
+
+    return ApiResponseBuilder.fromResult(result);
   }
 
-  /// Actualización completa: PathParam + QueryParam + RequestHeader + RequestBody
-  @Put(path: '/{storeId}/products/{productId}')
-  Future<Response> updateProduct(
-    Request request,
-    // Path parameters
-    @PathParam('storeId', description: 'Store identifier') String storeId,
-    @PathParam('productId', description: 'Product identifier') String productId,
-    
-    // Query parameters
-    @QueryParam('notify_users', defaultValue: false, description: 'Notify users of changes') bool notifyUsers,
-    @QueryParam('publish_immediately', defaultValue: true, description: 'Publish changes immediately') bool publishImmediately,
-    @QueryParam('create_backup', defaultValue: true, description: 'Create backup before update') bool createBackup,
-    
-    // Headers
-    @RequestHeader('Authorization', required: true, description: 'Admin authorization token') String authHeader,
-    @RequestHeader('X-Store-ID', required: true, description: 'Store ID verification') String storeIdHeader,
-    @RequestHeader('Content-Type', required: false, defaultValue: 'application/json', description: 'Request content type') String contentType,
-    
-    // Body
-    @RequestBody(required: true, description: 'Product update data') Map<String, dynamic> productData,
+  /// 🔍 Product search with advanced text matching
+  @Get(path: '/search')
+  Future<Response> searchProducts(
+    @QueryParam.all() Map<String, String> allQueryParams,
+    @RequestPath() String path,
+    @RequestMethod() String method,
   ) async {
-    
-    // Validar autorización de admin
-    if (!authHeader.startsWith('Bearer admin_')) {
-      return Response.forbidden(jsonEncode({
-        'error': 'Admin access required',
-        'hint': 'Use admin token starting with "Bearer admin_"'
-      }));
+    final searchQuery = allQueryParams['q'];
+
+    if (searchQuery == null || searchQuery.trim().isEmpty) {
+      final result = ApiKit.badRequest<Map<String, dynamic>>(
+        'Search query is required',
+        validations: {'q': 'Query parameter cannot be empty'},
+      );
+      return ApiResponseBuilder.fromResult(result);
     }
-    
-    // Verificar store ID
-    if (storeId != storeIdHeader) {
-      return Response.badRequest(body: jsonEncode({
-        'error': 'Store ID mismatch',
-        'expected': storeId,
-        'received': storeIdHeader,
-      }));
+
+    // ✅ Advanced text search
+    final query = searchQuery.toLowerCase().trim();
+    final searchResults = _products.where((product) {
+      final name = product['name'].toString().toLowerCase();
+      final category = product['category'].toString().toLowerCase();
+      final brand = product['brand'].toString().toLowerCase();
+
+      return name.contains(query) ||
+          category.contains(query) ||
+          brand.contains(query);
+    }).toList();
+
+    // Calculate relevance scores
+    for (var product in searchResults) {
+      int score = 0;
+      final name = product['name'].toString().toLowerCase();
+      final category = product['category'].toString().toLowerCase();
+      final brand = product['brand'].toString().toLowerCase();
+
+      if (name.contains(query)) score += 3;
+      if (category.contains(query)) score += 2;
+      if (brand.contains(query)) score += 1;
+
+      product['relevance_score'] = score;
     }
-    
-    // Validar content type
-    if (!contentType.contains('application/json')) {
-      return Response.badRequest(body: jsonEncode({
-        'error': 'Invalid content type',
-        'expected': 'application/json',
-        'received': contentType,
-      }));
-    }
-    
-    // Validar datos del producto
-    final validationErrors = <String>[];
-    final name = productData['name'] as String?;
-    final price = productData['price'];
-    final description = productData['description'] as String?;
-    final tags = productData['tags'] as List<dynamic>?;
-    
-    if (name == null || name.isEmpty) {
-      validationErrors.add('Product name is required');
-    }
-    
-    if (price == null) {
-      validationErrors.add('Product price is required');
-    } else if (price is! num || price <= 0) {
-      validationErrors.add('Product price must be a positive number');
-    }
-    
-    if (validationErrors.isNotEmpty) {
-      return Response.badRequest(body: jsonEncode({
-        'error': 'Validation failed',
-        'validation_errors': validationErrors,
-        'received_data': productData,
-      }));
-    }
-    
-    final processedTags = tags?.whereType<String>().toList() ?? [];
-    
-    // Simular proceso de actualización
-    final updateResult = {
-      'product_id': productId,
-      'store_id': storeId,
-      'updated_fields': {
-        'name': name,
-        'price': price,
-        'description': description ?? 'No description',
-        'tags': processedTags,
+
+    // Sort by relevance and rating
+    searchResults.sort((a, b) {
+      final scoreComparison = (b['relevance_score'] as int).compareTo(
+        a['relevance_score'] as int,
+      );
+      if (scoreComparison != 0) return scoreComparison;
+      return (b['rating'] as double).compareTo(a['rating'] as double);
+    });
+
+    final result = ApiKit.ok({
+      'search_results': searchResults,
+      'search_info': {
+        'query': searchQuery,
+        'results_count': searchResults.length,
+        'total_products_searched': _products.length,
       },
-      'updated_at': DateTime.now().toIso8601String(),
-      'updated_by': authHeader.substring(7),
+      'request_info': {
+        'method': method,
+        'path': path,
+        'search_performed_at': DateTime.now().toIso8601String(),
+      },
+    });
+
+    return ApiResponseBuilder.fromResult(result);
+  }
+
+  /// 📦 Get single product details
+  @Get(path: '/{productId}')
+  Future<Response> getProductById(
+    @PathParam('productId') String productId,
+    @RequestHeader.all() Map<String, String> allHeaders,
+  ) async {
+    final product = _products.firstWhere(
+      (p) => p['id'] == productId,
+      orElse: () => <String, dynamic>{},
+    );
+
+    if (product.isEmpty) {
+      final result = ApiKit.notFound<Map<String, dynamic>>(
+        'Product with ID $productId not found',
+      );
+      return ApiResponseBuilder.fromResult(result);
+    }
+
+    // Add additional details for single product view
+    final productDetails = Map<String, dynamic>.from(product);
+    productDetails['details'] = {
+      'description': 'Detailed description for ${product['name']}',
+      'specifications': {
+        'warranty': '2 years',
+        'shipping_weight': '2.5 lbs',
+        'dimensions': '12x8x4 inches',
+      },
+      'availability': {
+        'in_stock': (product['stock'] as int) > 0,
+        'stock_level': product['stock'],
+        'estimated_delivery': '3-5 business days',
+      },
     };
-    
-    // Simular acciones adicionales
-    final actions = <String>[];
-    if (createBackup) actions.add('backup_created');
-    if (notifyUsers) actions.add('users_notified');
-    if (publishImmediately) actions.add('changes_published');
-    
-    return jsonResponse(jsonEncode({
-      'message': 'Product updated successfully',
-      'update_context': {
-        'store_id': storeId,
-        'product_id': productId,
-        'admin_user': authHeader.substring(7).split('_').last,
+
+    final result = ApiKit.ok({
+      'product': productDetails,
+      'request_info': {
+        'product_id_requested': productId,
+        'user_agent': allHeaders['user-agent'] ?? 'unknown',
+        'viewed_at': DateTime.now().toIso8601String(),
       },
-      'update_options': {
-        'notify_users': notifyUsers,
-        'publish_immediately': publishImmediately,
-        'create_backup': createBackup,
-      },
-      'result': updateResult,
-      'actions_performed': actions,
-      'metadata': {
-        'content_type_verified': contentType.contains('application/json'),
-        'store_id_verified': storeId == storeIdHeader,
-        'tags_processed': processedTags.length,
-        'update_duration_ms': 150,
-      },
-    }));
+    });
+
+    return ApiResponseBuilder.fromResult(result);
   }
 }
 
-/// Controller simulando una API de Social Media
+/// 👥 Users Controller - JWT-Protected User Management
+///
+/// ✅ Demonstrates JWT integration with enhanced parameters
 @RestController(basePath: '/api/users')
-class SocialMediaController extends BaseController {
+@JWTController([UserActiveValidator()]) // All endpoints require active user
+class UsersController extends BaseController {
+  final Map<String, Map<String, dynamic>> _users = {
+    'user_123': {
+      'id': 'user_123',
+      'name': 'John Doe',
+      'email': 'john@example.com',
+      'role': 'customer',
+      'active': true,
+    },
+    'user_456': {
+      'id': 'user_456',
+      'name': 'Jane Smith',
+      'email': 'jane@example.com',
+      'role': 'premium',
+      'active': true,
+    },
+    'user_789': {
+      'id': 'user_789',
+      'name': 'Admin User',
+      'email': 'admin@example.com',
+      'role': 'admin',
+      'active': true,
+    },
+  };
 
-  /// Obtener posts con filtros completos
-  @Get(path: '/{userId}/posts')
-  Future<Response> getUserPosts(
-    Request request,
-    // Path parameter
-    @PathParam('userId', description: 'User identifier') String userId,
-    
-    // Query parameters
-    @QueryParam('page', defaultValue: 1, description: 'Page number') int page,
-    @QueryParam('type', defaultValue: 'all', description: 'Post type filter') String postType,
-    @QueryParam('since', required: false, description: 'Date filter (YYYY-MM-DD)') String? sinceDate,
-    @QueryParam('include_comments', defaultValue: false, description: 'Include comments in response') bool includeComments,
-    
-    // Headers
-    @RequestHeader('Authorization', required: true, description: 'User authentication token') String authHeader,
-    @RequestHeader('Accept', required: false, defaultValue: 'application/json', description: 'Response format preference') String acceptHeader,
-    @RequestHeader('Accept-Language', required: false, defaultValue: 'en-US', description: 'Language preference') String language,
+  /// 👤 Get user profile with JWT context
+  @Get(path: '/profile')
+  Future<Response> getUserProfile(
+    @RequestContext('jwt_payload')
+    Map<String, dynamic> jwtPayload, // ✅ Direct JWT access
+    @RequestHeader.all() Map<String, String> allHeaders,
+    @RequestMethod() String method,
+    @RequestPath() String path,
   ) async {
-    
-    // Validar token de usuario
-    if (!authHeader.startsWith('Bearer user_')) {
-      return Response.unauthorized(jsonEncode({
-        'error': 'User authentication required',
-        'hint': 'Use user token starting with "Bearer user_"'
-      }));
+    final userId = jwtPayload['user_id'] as String;
+    final userRole = jwtPayload['role'] as String?;
+
+    final user = _users[userId];
+    if (user == null) {
+      final result = ApiKit.notFound<Map<String, dynamic>>(
+        'User profile not found',
+      );
+      return ApiResponseBuilder.fromResult(result);
     }
-    
-    final token = authHeader.substring(7);
-    final tokenUserId = token.split('_').last;
-    
-    // Verificar que el usuario puede acceder a estos posts (mismo usuario o público)
-    final canAccess = tokenUserId == userId.split('_').last || postType == 'public';
-    if (!canAccess) {
-      return Response.forbidden(jsonEncode({
-        'error': 'Access denied',
-        'message': 'Can only access your own posts or public posts'
-      }));
-    }
-    
-    // Validar filtros de fecha
-    DateTime? filterDate;
-    if (sinceDate != null) {
-      try {
-        filterDate = DateTime.parse('${sinceDate}T00:00:00Z');
-      } catch (e) {
-        return Response.badRequest(body: jsonEncode({
-          'error': 'Invalid date format',
-          'expected_format': 'YYYY-MM-DD',
-          'received': sinceDate,
-        }));
-      }
-    }
-    
-    // Simular posts
-    final posts = List.generate(10, (index) {
-      final postDate = DateTime.now().subtract(Duration(days: index));
-      final shouldInclude = filterDate == null || postDate.isAfter(filterDate);
-      
-      if (!shouldInclude) return null;
-      
-      final post = {
-        'id': 'post_${userId}_$index',
-        'user_id': userId,
-        'content': 'This is post #${index + 1} from user $userId',
-        'type': postType == 'all' ? (index % 2 == 0 ? 'public' : 'private') : postType,
-        'created_at': postDate.toIso8601String(),
-        'likes_count': index * 5,
-        'shares_count': index * 2,
-      };
-      
-      if (includeComments) {
-        post['comments'] = List.generate(3, (commentIndex) => {
-          'id': 'comment_${index}_$commentIndex',
-          'content': 'Comment $commentIndex on post $index',
-          'author': 'user_${commentIndex + 100}',
-          'created_at': postDate.add(Duration(minutes: commentIndex * 10)).toIso8601String(),
-        });
-      }
-      
-      return post;
-    }).where((post) => post != null).toList();
-    
-    return jsonResponse(jsonEncode({
-      'message': 'Posts retrieved successfully',
-      'request_context': {
-        'user_id': userId,
-        'requesting_user': tokenUserId,
-        'language': language,
-        'response_format': acceptHeader.contains('json') ? 'json' : 'other',
+
+    // Add profile-specific information
+    final profile = Map<String, dynamic>.from(user);
+    profile['profile_info'] = {
+      'last_login': DateTime.now()
+          .subtract(Duration(hours: 2))
+          .toIso8601String(),
+      'account_type': userRole ?? 'standard',
+      'preferences': {
+        'notifications': true,
+        'marketing_emails': false,
+        'theme': 'auto',
       },
-      'filters': {
-        'page': page,
-        'post_type': postType,
-        'since_date': sinceDate,
-        'include_comments': includeComments,
+    };
+
+    final result = ApiKit.ok({
+      'profile': profile,
+      'jwt_context': {
+        'authenticated_as': userId,
+        'role': userRole,
+        'token_valid': true,
       },
-      'results': {
-        'posts': posts,
-        'total_count': posts.length,
-        'page': page,
-        'comments_included': includeComments,
+      'request_info': {
+        'method': method,
+        'path': path,
+        'user_agent': allHeaders['user-agent'],
+        'accessed_at': DateTime.now().toIso8601String(),
       },
-      'metadata': {
-        'date_filter_applied': filterDate != null,
-        'access_level': canAccess ? 'granted' : 'denied',
-        'localization': language,
-      },
-    }));
+    });
+
+    return ApiResponseBuilder.fromResult(result);
   }
 
-  /// Crear post completo
-  @Post(path: '/{userId}/posts')
-  Future<Response> createPost(
-    Request request,
-    // Path parameter
-    @PathParam('userId', description: 'User identifier') String userId,
-    
-    // Query parameters
-    @QueryParam('auto_publish', defaultValue: true, description: 'Publish post immediately') bool autoPublish,
-    @QueryParam('schedule_time', required: false, description: 'Schedule publication time') String? scheduleTime,
-    
-    // Headers
-    @RequestHeader('Authorization', required: true, description: 'User authentication token') String authHeader,
-    @RequestHeader('Content-Type', required: true, description: 'Request content type') String contentType,
-    @RequestHeader('X-Client-App', required: false, defaultValue: 'web', description: 'Client application identifier') String clientApp,
-    
-    // Body
-    @RequestBody(required: true, description: 'Post creation data') Map<String, dynamic> postData,
+  /// ✏️ Update user profile
+  @Put(path: '/profile')
+  Future<Response> updateProfile(
+    @RequestBody() Map<String, dynamic> updateData,
+    @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload,
+    @RequestHeader.all() Map<String, String> allHeaders,
   ) async {
-    
-    // Validar autenticación
-    final token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : '';
-    final tokenUserIdParts = token.split('_');
-    final tokenUserId = tokenUserIdParts.isNotEmpty ? tokenUserIdParts.last : null;
-    final pathUserIdParts = userId.split('_');
-    final pathUserId = pathUserIdParts.isNotEmpty ? pathUserIdParts.last : null;
-    
-    if (tokenUserId != pathUserId) {
-      return Response.forbidden(jsonEncode({
-        'error': 'Cannot create posts for other users',
-        'token_user': tokenUserId,
-        'path_user': pathUserId,
-      }));
-    }
-    
-    // Validar datos del post
-    final content = postData['content'] as String?;
-    final visibility = postData['visibility'] as String? ?? 'private';
-    final tags = postData['tags'] as List<dynamic>? ?? [];
-    final location = postData['location'] as Map<String, dynamic>?;
-    
-    if (content == null || content.isEmpty) {
-      return Response.badRequest(body: jsonEncode({
-        'error': 'Post content is required',
-        'received_data': postData,
-      }));
-    }
-    
-    if (content.length > 500) {
-      return Response.badRequest(body: jsonEncode({
-        'error': 'Post content too long',
-        'max_length': 500,
-        'current_length': content.length,
-      }));
-    }
-    
-    // Validar horario programado
-    DateTime? scheduledFor;
-    if (scheduleTime != null && scheduleTime.isNotEmpty) {
-      try {
-        scheduledFor = DateTime.parse(scheduleTime);
-        if (scheduledFor.isBefore(DateTime.now())) {
-          return Response.badRequest(body: jsonEncode({
-            'error': 'Cannot schedule posts in the past',
-            'schedule_time': scheduleTime,
-            'current_time': DateTime.now().toIso8601String(),
-          }));
-        }
-      } catch (e) {
-        return Response.badRequest(body: jsonEncode({
-          'error': 'Invalid schedule time format',
-          'expected_format': 'ISO 8601 (YYYY-MM-DDTHH:mm:ssZ)',
-          'received': scheduleTime,
-        }));
+    try {
+      final userId = jwtPayload['user_id'] as String;
+
+      final user = _users[userId];
+      if (user == null) {
+        final result = ApiKit.notFound<Map<String, dynamic>>(
+          'User profile not found',
+        );
+        return ApiResponseBuilder.fromResult(result);
       }
+
+      // Validate update data
+      if (updateData.isEmpty) {
+        final result = ApiKit.badRequest<Map<String, dynamic>>(
+          'No update data provided',
+          validations: {'body': 'Request body cannot be empty'},
+        );
+        return ApiResponseBuilder.fromResult(result);
+      }
+
+      // Apply allowed updates
+      final updatedUser = Map<String, dynamic>.from(user);
+
+      if (updateData['name'] != null) {
+        final name = updateData['name'].toString().trim();
+        if (name.isEmpty) {
+          final result = ApiKit.badRequest<Map<String, dynamic>>(
+            'Name cannot be empty',
+            validations: {'name': 'Name must have content'},
+          );
+          return ApiResponseBuilder.fromResult(result);
+        }
+        updatedUser['name'] = name;
+      }
+
+      if (updateData['email'] != null) {
+        final email = updateData['email'].toString().trim();
+        if (!email.contains('@') || email.length < 5) {
+          final result = ApiKit.badRequest<Map<String, dynamic>>(
+            'Invalid email format',
+            validations: {'email': 'Email must be valid format'},
+          );
+          return ApiResponseBuilder.fromResult(result);
+        }
+        updatedUser['email'] = email;
+      }
+
+      updatedUser['updated_at'] = DateTime.now().toIso8601String();
+      _users[userId] = updatedUser;
+
+      final result = ApiKit.ok({
+        'user': updatedUser,
+        'message': 'Profile updated successfully',
+        'changes_applied': updateData.keys.toList(),
+        'update_context': {
+          'updated_by': userId,
+          'content_type': allHeaders['content-type'],
+          'updated_at': updatedUser['updated_at'],
+        },
+      });
+
+      return ApiResponseBuilder.fromResult(result);
+    } catch (e, stack) {
+      final result = ApiKit.serverError<Map<String, dynamic>>(
+        'Failed to update profile: ${e.toString()}',
+        exception: e,
+        stackTrace: stack,
+      );
+      return ApiResponseBuilder.fromResult(result);
     }
-    
-    final postId = 'post_${userId}_${DateTime.now().millisecondsSinceEpoch}';
-    final processedTags = tags.whereType<String>().take(10).toList();
-    
-    final newPost = {
-      'id': postId,
-      'user_id': userId,
-      'content': content,
-      'visibility': visibility,
-      'tags': processedTags,
-      'location': location,
-      'status': scheduledFor != null ? 'scheduled' : (autoPublish ? 'published' : 'draft'),
-      'created_at': DateTime.now().toIso8601String(),
-      'scheduled_for': scheduledFor?.toIso8601String(),
-      'client_app': clientApp,
-    };
-    
-    return jsonResponse(jsonEncode({
-      'message': 'Post created successfully',
-      'post': newPost,
-      'creation_context': {
-        'user_id': userId,
-        'client_app': clientApp,
-        'auto_publish': autoPublish,
-        'is_scheduled': scheduledFor != null,
-      },
-      'content_analysis': {
-        'content_length': content.length,
-        'word_count': content.split(' ').length,
-        'tags_count': processedTags.length,
-        'has_location': location != null,
-        'estimated_read_time_seconds': (content.length / 10).ceil(),
-      },
-      'publication_info': {
-        'status': newPost['status'],
-        'published_immediately': autoPublish && scheduledFor == null,
-        'scheduled_for': scheduledFor?.toIso8601String(),
-        'visibility': visibility,
-      },
-    }));
   }
 }
 
-/// Controller simulando un sistema de gestión de archivos
-@RestController(basePath: '/api/folders')
-class FileManagementController extends BaseController {
+/// 📋 Orders Controller - Complex Business Logic
+///
+/// ✅ Demonstrates real-world order processing with validation
+@RestController(basePath: '/api/orders')
+@JWTController([UserActiveValidator()])
+class OrdersController extends BaseController {
+  final List<Map<String, dynamic>> _orders = [];
+  final Map<String, int> _inventory = {
+    'prod_1': 15,
+    'prod_2': 45,
+    'prod_3': 23,
+    'prod_4': 67,
+    'prod_5': 8,
+    'prod_6': 112,
+  };
 
-  /// Upload de archivo con todos los parámetros combinados
-  @Post(path: '/{folderId}/files')
-  Future<Response> uploadFileToFolder(
-    Request request,
-    // Path parameter
-    @PathParam('folderId', description: 'Folder identifier') String folderId,
-    
-    // Query parameters
-    @QueryParam('create_thumbnails', defaultValue: false, description: 'Generate thumbnails for images') bool createThumbnails,
-    @QueryParam('scan_virus', defaultValue: true, description: 'Perform virus scanning') bool scanVirus,
-    @QueryParam('notify_owner', defaultValue: true, description: 'Notify folder owner') bool notifyOwner,
-    @QueryParam('max_file_size', defaultValue: 52428800, description: 'Maximum file size in bytes') int maxFileSize, // 50MB
-    
-    // Headers
-    @RequestHeader('Authorization', required: true, description: 'File upload authorization token') String authHeader,
-    @RequestHeader('Content-Type', required: true, description: 'Request content type') String contentType,
-    @RequestHeader('X-Upload-Context', required: false, defaultValue: 'web_upload', description: 'Upload context information') String uploadContext,
-    
-    // Body
-    @RequestBody(required: true, description: 'File upload metadata') Map<String, dynamic> fileData,
+  /// 📋 Create new order with complex validation
+  @Post(path: '/')
+  Future<Response> createOrder(
+    @RequestBody() Map<String, dynamic> orderData,
+    @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload,
+    @QueryParam.all() Map<String, String> allQueryParams,
+    @RequestHeader.all() Map<String, String> allHeaders,
   ) async {
-    
-    // Validar token de archivos
-    if (!authHeader.startsWith('Bearer file_')) {
-      return Response.unauthorized(jsonEncode({
-        'error': 'File upload authorization required',
-        'hint': 'Use file token starting with "Bearer file_"'
-      }));
-    }
-    
-    // Validar datos del archivo
-    final filename = fileData['filename'] as String?;
-    final fileSize = fileData['size'];
-    final fileContentType = fileData['content_type'] as String?;
-    final description = fileData['description'] as String?;
-    
-    final validationErrors = <String>[];
-    
-    if (filename == null || filename.isEmpty) {
-      validationErrors.add('Filename is required');
-    }
-    
-    if (fileSize == null || fileSize is! int || fileSize <= 0) {
-      validationErrors.add('Valid file size is required');
-    } else if (fileSize > maxFileSize) {
-      validationErrors.add('File size exceeds maximum allowed ($maxFileSize bytes)');
-    }
-    
-    if (fileContentType == null || fileContentType.isEmpty) {
-      validationErrors.add('File content type is required');
-    }
-    
-    if (validationErrors.isNotEmpty) {
-      return Response.badRequest(body: jsonEncode({
-        'error': 'File upload validation failed',
-        'validation_errors': validationErrors,
-        'limits': {
-          'max_file_size_bytes': maxFileSize,
-          'max_file_size_mb': (maxFileSize / (1024 * 1024)).toStringAsFixed(1),
+    try {
+      final userId = jwtPayload['user_id'] as String;
+      final userRole = jwtPayload['role'] as String?;
+
+      // ✅ Validate order structure
+      final items = orderData['items'] as List<dynamic>?;
+      if (items == null || items.isEmpty) {
+        final result = ApiKit.badRequest<Map<String, dynamic>>(
+          'Order must contain at least one item',
+          validations: {'items': 'Items array is required and cannot be empty'},
+        );
+        return ApiResponseBuilder.fromResult(result);
+      }
+
+      // ✅ Validate each item and check inventory
+      final validatedItems = <Map<String, dynamic>>[];
+      double totalAmount = 0.0;
+      final inventoryChanges = <String, int>{};
+
+      for (var i = 0; i < items.length; i++) {
+        final item = items[i] as Map<String, dynamic>?;
+        if (item == null) {
+          final result = ApiKit.badRequest<Map<String, dynamic>>(
+            'Invalid item at index $i',
+            validations: {'items[$i]': 'Item must be an object'},
+          );
+          return ApiResponseBuilder.fromResult(result);
+        }
+
+        final productId = item['product_id'] as String?;
+        final quantity = item['quantity'] as int?;
+
+        if (productId == null || quantity == null || quantity <= 0) {
+          final result = ApiKit.badRequest<Map<String, dynamic>>(
+            'Invalid item data at index $i',
+            validations: <String, String>{
+              if (productId == null)
+                'items[$i].product_id': 'Product ID is required',
+              if (quantity == null || quantity <= 0)
+                'items[$i].quantity': 'Quantity must be positive',
+            },
+          );
+          return ApiResponseBuilder.fromResult(result);
+        }
+
+        // Check inventory availability
+        final availableStock = _inventory[productId] ?? 0;
+        if (availableStock < quantity) {
+          final result = ApiKit.conflict<Map<String, dynamic>>(
+            'Insufficient stock for product $productId. Available: $availableStock, Requested: $quantity',
+          );
+          return ApiResponseBuilder.fromResult(result);
+        }
+
+        // Find product price (mock product lookup)
+        final productPrice = _getProductPrice(productId);
+        if (productPrice == null) {
+          final result = ApiKit.notFound<Map<String, dynamic>>(
+            'Product $productId not found',
+          );
+          return ApiResponseBuilder.fromResult(result);
+        }
+
+        final itemTotal = productPrice * quantity;
+        totalAmount += itemTotal;
+
+        validatedItems.add({
+          'product_id': productId,
+          'quantity': quantity,
+          'unit_price': productPrice,
+          'total_price': itemTotal,
+        });
+
+        inventoryChanges[productId] =
+            (inventoryChanges[productId] ?? 0) + quantity;
+      }
+
+      // Apply quantity-based discount for premium users
+      if (userRole == 'premium' && totalAmount > 100.0) {
+        totalAmount *= 0.9; // 10% discount
+      }
+
+      // Create order
+      final orderId = 'order_${DateTime.now().millisecondsSinceEpoch}';
+      final order = {
+        'id': orderId,
+        'user_id': userId,
+        'items': validatedItems,
+        'total_amount': totalAmount,
+        'status': 'pending',
+        'created_at': DateTime.now().toIso8601String(),
+        'user_role': userRole,
+        'discount_applied':
+            userRole == 'premium' && totalAmount > 90.0, // After discount
+      };
+
+      // Update inventory
+      inventoryChanges.forEach((productId, quantity) {
+        _inventory[productId] = (_inventory[productId] ?? 0) - quantity;
+      });
+
+      _orders.add(order);
+
+      final result = ApiKit.ok({
+        'order': order,
+        'message': 'Order created successfully',
+        'inventory_updates': inventoryChanges.map(
+          (productId, quantity) =>
+              MapEntry(productId, 'Reserved $quantity units'),
+        ),
+        'processing_info': {
+          'order_id': orderId,
+          'items_count': validatedItems.length,
+          'total_amount': totalAmount,
+          'user_role': userRole,
+          'premium_discount': userRole == 'premium',
         },
-      }));
+        'request_context': {
+          'user_agent': allHeaders['user-agent'],
+          'content_type': allHeaders['content-type'],
+          'query_params': allQueryParams,
+        },
+      });
+
+      return ApiResponseBuilder.fromResult(result);
+    } catch (e, stack) {
+      final result = ApiKit.serverError<Map<String, dynamic>>(
+        'Failed to create order: ${e.toString()}',
+        exception: e,
+        stackTrace: stack,
+      );
+      return ApiResponseBuilder.fromResult(result);
     }
-    
-    // Analizar tipo de archivo
-    final isImage = fileContentType!.startsWith('image/');
-    final isDocument = ['application/pdf', 'application/msword', 'text/plain'].contains(fileContentType);
-    final fileExtension = filename!.contains('.') ? filename.split('.').last.toLowerCase() : '';
-    
-    // Simular procesamiento
-    final fileId = 'file_${DateTime.now().millisecondsSinceEpoch}';
-    final uploadPath = '/uploads/$folderId/$fileId/$filename';
-    
-    final processedFile = {
-      'id': fileId,
-      'filename': filename,
-      'original_name': filename,
-      'folder_id': folderId,
-      'size_bytes': fileSize,
-      'size_mb': (fileSize / (1024 * 1024)).toStringAsFixed(2),
-      'content_type': fileContentType,
-      'description': description ?? 'No description provided',
-      'upload_path': uploadPath,
-      'uploaded_at': DateTime.now().toIso8601String(),
-      'uploaded_by': authHeader.substring(7),
-      'upload_context': uploadContext,
-    };
-    
-    // Simular acciones adicionales
-    final actions = <String>[];
-    if (createThumbnails && isImage) actions.add('thumbnails_created');
-    if (scanVirus) actions.add('virus_scan_completed');
-    if (notifyOwner) actions.add('owner_notified');
-    
-    final securityInfo = {
-      'virus_scan': scanVirus ? 'passed' : 'skipped',
-      'file_safe': true,
-      'quarantined': false,
-    };
-    
-    return jsonResponse(jsonEncode({
-      'message': 'File uploaded successfully',
-      'file': processedFile,
-      'upload_context': {
-        'folder_id': folderId,
-        'upload_source': uploadContext,
-        'uploader': authHeader.substring(7),
-      },
-      'processing_options': {
-        'create_thumbnails': createThumbnails,
-        'scan_virus': scanVirus,
-        'notify_owner': notifyOwner,
-        'max_file_size_mb': (maxFileSize / (1024 * 1024)).toStringAsFixed(1),
-      },
-      'file_analysis': {
-        'file_extension': fileExtension,
-        'is_image': isImage,
-        'is_document': isDocument,
-        'thumbnails_applicable': isImage && createThumbnails,
-        'size_category': fileSize < 1024 * 1024 ? 'small' : 
-                        fileSize < 10 * 1024 * 1024 ? 'medium' : 'large',
-      },
-      'actions_performed': actions,
-      'security': securityInfo,
-      'metadata': {
-        'content_type_verified': contentType.contains('application/json'),
-        'upload_duration_ms': 200,
-        'storage_location': uploadPath,
-        'backup_created': true,
-      },
-    }));
   }
+
+  /// 📋 Get user's orders
+  @Get(path: '/')
+  Future<Response> getUserOrders(
+    @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload,
+    @QueryParam.all() Map<String, String> allQueryParams,
+  ) async {
+    final userId = jwtPayload['user_id'] as String;
+
+    // Filter orders by user
+    var userOrders = _orders
+        .where((order) => order['user_id'] == userId)
+        .toList();
+
+    // Apply status filter if provided
+    final statusFilter = allQueryParams['status'];
+    if (statusFilter != null && statusFilter.isNotEmpty) {
+      userOrders = userOrders
+          .where((order) => order['status'] == statusFilter)
+          .toList();
+    }
+
+    // Sort by creation date (newest first)
+    userOrders.sort(
+      (a, b) => DateTime.parse(
+        b['created_at'],
+      ).compareTo(DateTime.parse(a['created_at'])),
+    );
+
+    final result = ApiKit.ok({
+      'orders': userOrders,
+      'summary': {
+        'total_orders': userOrders.length,
+        'status_filter': statusFilter,
+        'user_id': userId,
+      },
+      'order_stats': {
+        'pending': userOrders.where((o) => o['status'] == 'pending').length,
+        'completed': userOrders.where((o) => o['status'] == 'completed').length,
+        'cancelled': userOrders.where((o) => o['status'] == 'cancelled').length,
+      },
+    });
+
+    return ApiResponseBuilder.fromResult(result);
+  }
+
+  /// Helper method to get product price (mock implementation)
+  double? _getProductPrice(String productId) {
+    final prices = {
+      'prod_1': 1299.99,
+      'prod_2': 199.99,
+      'prod_3': 89.99,
+      'prod_4': 159.99,
+      'prod_5': 299.99,
+      'prod_6': 49.99,
+    };
+    return prices[productId];
+  }
+}
+
+/// ⚙️ Admin Controller - Advanced Analytics and Management
+///
+/// ✅ Demonstrates admin-only operations with complex data processing
+@RestController(basePath: '/api/admin')
+@JWTController([AdminRoleValidator(), AdminActiveValidator()], requireAll: true)
+class AdminController extends BaseController {
+  /// 📊 Get business analytics
+  @Get(path: '/analytics')
+  Future<Response> getAnalytics(
+    @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload,
+    @QueryParam.all() Map<String, String> allQueryParams,
+    @RequestHeader.all() Map<String, String> allHeaders,
+    @RequestMethod() String method,
+  ) async {
+    final adminId = jwtPayload['user_id'] as String;
+    final period = allQueryParams['period'] ?? 'daily';
+    final category = allQueryParams['category'];
+
+    // Generate mock analytics data based on parameters
+    final analytics = {
+      'period': period,
+      'category_filter': category,
+      'metrics': {
+        'total_revenue': 15420.50,
+        'total_orders': 87,
+        'average_order_value': 177.13,
+        'conversion_rate': 3.2,
+      },
+      'top_products': [
+        {'id': 'prod_1', 'name': 'Gaming Laptop Pro', 'sales': 12},
+        {'id': 'prod_4', 'name': 'Running Shoes Elite', 'sales': 8},
+        {'id': 'prod_2', 'name': 'Wireless Headphones', 'sales': 6},
+      ],
+      'sales_by_category': {
+        'electronics': 8950.75,
+        'sports': 4320.25,
+        'home': 2149.50,
+      },
+      'generated_at': DateTime.now().toIso8601String(),
+      'generated_by': adminId,
+    };
+
+    final result = ApiKit.ok({
+      'analytics': analytics,
+      'request_info': {
+        'method': method,
+        'admin_id': adminId,
+        'query_params': allQueryParams,
+        'user_agent': allHeaders['user-agent'],
+      },
+      'admin_context': {
+        'has_full_access': true,
+        'data_access_level': 'all_tenants',
+        'report_generated_at': DateTime.now().toIso8601String(),
+      },
+    });
+
+    return ApiResponseBuilder.fromResult(result);
+  }
+
+  /// ⚙️ System health check for admins
+  @Get(path: '/system/health')
+  Future<Response> getSystemHealth(
+    @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload,
+    @RequestPath() String path,
+  ) async {
+    final adminId = jwtPayload['user_id'] as String;
+
+    final systemHealth = {
+      'status': 'healthy',
+      'uptime':
+          '${DateTime.now().difference(DateTime.now().subtract(Duration(hours: 24))).inHours} hours',
+      'services': {
+        'database': 'operational',
+        'cache': 'operational',
+        'message_queue': 'operational',
+        'external_apis': 'operational',
+      },
+      'metrics': {
+        'cpu_usage': '45%',
+        'memory_usage': '68%',
+        'disk_usage': '23%',
+        'active_connections': 142,
+      },
+      'last_deployment': DateTime.now()
+          .subtract(Duration(days: 3))
+          .toIso8601String(),
+      'checked_by': adminId,
+      'check_time': DateTime.now().toIso8601String(),
+    };
+
+    final result = ApiKit.ok({
+      'system_health': systemHealth,
+      'admin_info': {
+        'admin_id': adminId,
+        'access_level': 'system_admin',
+        'path_accessed': path,
+      },
+    });
+
+    return ApiResponseBuilder.fromResult(result);
+  }
+}
+
+// ===== JWT VALIDATORS =====
+
+/// User active validator
+class UserActiveValidator extends JWTValidatorBase {
+  const UserActiveValidator();
+
+  @override
+  ValidationResult validate(Request request, Map<String, dynamic> jwtPayload) {
+    final isActive = jwtPayload['active'] as bool? ?? false;
+    if (!isActive) {
+      return ValidationResult.invalid('User account is not active');
+    }
+    return ValidationResult.valid();
+  }
+
+  @override
+  String get defaultErrorMessage => 'User account must be active';
+}
+
+/// Admin role validator
+class AdminRoleValidator extends JWTValidatorBase {
+  const AdminRoleValidator();
+
+  @override
+  ValidationResult validate(Request request, Map<String, dynamic> jwtPayload) {
+    final role = jwtPayload['role'] as String?;
+    if (role != 'admin') {
+      return ValidationResult.invalid('Administrator role required');
+    }
+    return ValidationResult.valid();
+  }
+
+  @override
+  String get defaultErrorMessage => 'Administrator role required';
+}
+
+/// Admin active validator
+class AdminActiveValidator extends JWTValidatorBase {
+  const AdminActiveValidator();
+
+  @override
+  ValidationResult validate(Request request, Map<String, dynamic> jwtPayload) {
+    final isActive = jwtPayload['active'] as bool? ?? false;
+    final role = jwtPayload['role'] as String?;
+
+    if (!isActive || role != 'admin') {
+      return ValidationResult.invalid('Active administrator account required');
+    }
+    return ValidationResult.valid();
+  }
+
+  @override
+  String get defaultErrorMessage => 'Active administrator account required';
 }

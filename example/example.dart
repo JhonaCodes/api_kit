@@ -1,378 +1,388 @@
 import 'dart:io';
 import 'package:api_kit/api_kit.dart';
-import 'package:api_kit/src/annotations/rest_annotations.dart';
 import 'package:logger_rs/logger_rs.dart';
 
-/// Example demonstration of api_kit framework with a complete REST API server.
+/// 🚀 api_kit Clean Example - Modern Annotation-Based API
 ///
-/// This example showcases the main features of api_kit:
-/// - Annotation-based routing with controllers
-/// - Clean server configuration
-/// - Built-in error handling with Result pattern
-/// - Graceful shutdown handling
-/// - Production-ready development configuration
+/// This example demonstrates the CURRENT BEST PRACTICES for api_kit:
+/// - ✅ Use enhanced parameter annotations (NO Request request needed)
+/// - ✅ Direct Ok/Err pattern with result_controller
+/// - ✅ Clean declarative endpoints
+/// - ✅ JWT authentication integration
+/// - ✅ Comprehensive parameter handling
 ///
-/// ## Running the Example
+/// ## 🎯 Key Features Demonstrated:
+/// - @RequestHeader.all() - All headers automatically
+/// - @QueryParam.all() - All query parameters automatically
+/// - @RequestContext('jwt_payload') - Direct JWT access
+/// - @RequestMethod(), @RequestPath() - Request info directly
+/// - ApiKit.ok() / ApiKit.err() - Direct result creation
+/// - ApiResponseBuilder.fromResult() - Response conversion
 ///
-/// 1. Run with: `dart run example/example.dart`
-/// 2. Test endpoints:
-///    - GET http://localhost:8080/health (health check)
-///    - GET http://localhost:8080/api/v1/users (list users)
-///    - POST http://localhost:8080/api/v1/users (create user)
-///    - GET http://localhost:8080/api/v1/users/1 (get specific user)
-///    - PUT http://localhost:8080/api/v1/users/1 (update user)
-///    - DELETE http://localhost:8080/api/v1/users/1 (delete user)
+/// ## Running the Example:
+/// ```bash
+/// dart run example/example.dart
+/// ```
 ///
-/// ## Server Configuration
+/// ## Test Endpoints:
+/// ```bash
+/// # GET users list
+/// curl "http://localhost:8080/api/v1/users?page=1&limit=10"
 ///
-/// Uses `ServerConfig.development()` which includes:
-/// - Permissive CORS for local development
-/// - Verbose request logging
-/// - Development-friendly error messages
+/// # GET user by ID
+/// curl "http://localhost:8080/api/v1/users/1"
 ///
-/// For production, use `ServerConfig.production()` instead.
+/// # POST create user
+/// curl -X POST "http://localhost:8080/api/v1/users" \
+///   -H "Content-Type: application/json" \
+///   -d '{"name":"John Doe","email":"john@example.com"}'
+///
+/// # PUT update user
+/// curl -X PUT "http://localhost:8080/api/v1/users/1" \
+///   -H "Content-Type: application/json" \
+///   -d '{"name":"Jane Doe"}'
+///
+/// # DELETE user
+/// curl -X DELETE "http://localhost:8080/api/v1/users/1"
+/// ```
+
 void main() async {
   // Create API server with development configuration
-  final server = ApiServer(
-    config: ServerConfig.development(), // Use development for example
-  );
+  final server = ApiServer(config: ServerConfig.development());
 
-  // Start the server with controller list (simple_rest style!)
-  final result = await server.start(
-    host: 'localhost',
-    port: 8080,
-  );
+  // Start server with controller
+  final result = await server.start(host: 'localhost', port: 8080);
 
   result.when(
     ok: (httpServer) {
-      Log.i('Example server running on http://localhost:8080');
-      Log.i('Try: curl http://localhost:8080/health');
-      Log.i('Try: curl http://localhost:8080/api/v1/users');
-      Log.i(
-        'Try: curl -X POST http://localhost:8080/api/v1/users -d \'{"name":"John"}\'',
-      );
+      Log.i('🚀 Clean API Server running on http://localhost:8080');
+      Log.i('📖 API Documentation: http://localhost:8080/api/v1/users');
+      Log.i('🛠️  Test endpoints with curl commands above');
 
-      // Handle graceful shutdown
-      ProcessSignal.sigint.watch().listen((_) async {
-        Log.i('Shutting down server...');
-        await server.stop(httpServer);
+      // Graceful shutdown
+      ProcessSignal.sigint.watch().listen((sig) async {
+        Log.i('🛑 Shutting down server...');
+        await httpServer.close(force: false);
         exit(0);
       });
     },
-    err: (apiErr) {
-      Log.e(
-        'Failed to start server',
-        error: apiErr.exception,
-        stackTrace: apiErr.stackTrace,
-      );
+    err: (error) {
+      Log.e('❌ Failed to start server: ${error.msm}');
       exit(1);
     },
   );
 }
 
-/// Example user controller demonstrating annotation-based REST API routing.
+/// 🎯 Modern REST Controller - NO Request Parameters Needed!
 ///
-/// This controller showcases the main features of api_kit controllers:
-/// - Automatic route registration with `@Controller` annotation
-/// - HTTP method annotations (`@GET`, `@POST`, `@PUT`, `@DELETE`)
-/// - Path parameter extraction with angle brackets (`<id>`)
-/// - Built-in request logging and error handling
-/// - Standardized JSON response format with `ApiResponse`
-///
-/// ## Supported Endpoints
-///
-/// - `GET /api/v1/users` - List all users
-/// - `GET /api/v1/users/<id>` - Get user by ID
-/// - `POST /api/v1/users` - Create new user
-/// - `PUT /api/v1/users/<id>` - Update existing user
-/// - `DELETE /api/v1/users/<id>` - Delete user by ID
-///
-/// ## Implementation Notes
-///
-/// - Uses in-memory storage for demonstration (replace with database in production)
-/// - Includes proper HTTP status codes (200, 201, 404, 400, 500)
-/// - Validates required parameters and request bodies
-/// - Provides consistent error handling and logging
-/// - Returns standardized JSON responses using `ApiResponse` pattern
+/// This controller demonstrates the latest api_kit patterns:
+/// - Enhanced parameter annotations eliminate Request parameter
+/// - Direct result_controller integration
+/// - Clean, declarative endpoint definitions
 @RestController(basePath: '/api/v1/users')
-class UserController extends BaseController {
-  /// In-memory user storage for demonstration purposes.
-  /// In production, replace with proper database integration.
+class UsersController extends BaseController {
+  // In-memory data for demo (use database in production)
   final List<Map<String, dynamic>> _users = [
-    {'id': '1', 'name': 'Alice', 'email': 'alice@example.com'},
-    {'id': '2', 'name': 'Bob', 'email': 'bob@example.com'},
+    {
+      'id': '1',
+      'name': 'Alice Johnson',
+      'email': 'alice@example.com',
+      'created_at': '2024-01-15T10:00:00Z',
+    },
+    {
+      'id': '2',
+      'name': 'Bob Smith',
+      'email': 'bob@example.com',
+      'created_at': '2024-01-16T14:30:00Z',
+    },
+    {
+      'id': '3',
+      'name': 'Carol Brown',
+      'email': 'carol@example.com',
+      'created_at': '2024-01-17T09:15:00Z',
+    },
   ];
 
-  // No need to override router - it's built automatically from annotations!
-
-  /// Retrieves a list of all users.
+  /// 📋 GET /api/v1/users - List all users with filtering
   ///
-  /// Returns a JSON array containing all users with their basic information.
-  /// This endpoint demonstrates the simplest GET request handling.
-  ///
-  /// **HTTP Method:** GET
-  /// **Endpoint:** `/api/v1/users`
-  /// **Response:** 200 OK with user list
-  ///
-  /// Example response:
-  /// ```json
-  /// {
-  ///   "success": true,
-  ///   "message": "Users retrieved successfully",
-  ///   "data": [
-  ///     {"id": "1", "name": "Alice", "email": "alice@example.com"},
-  ///     {"id": "2", "name": "Bob", "email": "bob@example.com"}
-  ///   ]
-  /// }
-  /// ```
+  /// ✅ MODERN PATTERN: No Request parameter needed!
+  /// - @QueryParam.all() captures ALL query parameters
+  /// - @RequestHeader.all() captures ALL headers
+  /// - @RequestMethod() and @RequestPath() for request info
+  /// - Direct ApiKit.ok() result creation
   @Get(path: '/')
-  Future<Response> getUsers(Request request) async {
-    logRequest(request, 'Getting all users');
+  Future<Response> getUsers(
+    @QueryParam.all() Map<String, String> allQueryParams,
+    @RequestHeader.all() Map<String, String> allHeaders,
+    @RequestMethod() String method,
+    @RequestPath() String path,
+  ) async {
+    // Extract pagination parameters
+    final pageStr = allQueryParams['page'] ?? '1';
+    final limitStr = allQueryParams['limit'] ?? '10';
+    final searchQuery = allQueryParams['search'];
 
-    final response = ApiResponse.success(
-      _users,
-      'Users retrieved successfully',
+    final page = int.tryParse(pageStr) ?? 1;
+    final limit = int.tryParse(limitStr) ?? 10;
+
+    // Apply search filter if provided
+    var filteredUsers = _users;
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      filteredUsers = _users
+          .where(
+            (user) =>
+                user['name'].toString().toLowerCase().contains(
+                  searchQuery.toLowerCase(),
+                ) ||
+                user['email'].toString().toLowerCase().contains(
+                  searchQuery.toLowerCase(),
+                ),
+          )
+          .toList();
+    }
+
+    // Apply pagination
+    final startIndex = (page - 1) * limit;
+    final endIndex = startIndex + limit;
+    final paginatedUsers = filteredUsers.sublist(
+      startIndex.clamp(0, filteredUsers.length),
+      endIndex.clamp(0, filteredUsers.length),
     );
-    return jsonResponse(response.toJson());
+
+    // ✅ Direct result creation - no safeExecute needed
+    final result = ApiKit.ok({
+      'users': paginatedUsers,
+      'pagination': {
+        'page': page,
+        'limit': limit,
+        'total': filteredUsers.length,
+        'total_pages': (filteredUsers.length / limit).ceil(),
+      },
+      'filters_applied': {
+        'search': searchQuery,
+        'has_search': searchQuery != null,
+      },
+      'request_info': {
+        'method': method,
+        'path': path,
+        'query_params_count': allQueryParams.length,
+        'headers_count': allHeaders.length,
+      },
+    });
+
+    return ApiResponseBuilder.fromResult(result);
   }
 
-  /// Retrieves a specific user by their ID.
+  /// 👤 GET /api/v1/users/{id} - Get specific user
   ///
-  /// Demonstrates path parameter extraction using angle brackets syntax (`<id>`).
-  /// The framework automatically extracts the ID from the URL path and makes it
-  /// available through `getRequiredParam()`.
-  ///
-  /// **HTTP Method:** GET
-  /// **Endpoint:** `/api/v1/users/<id>`
-  /// **Parameters:**
-  /// - `id` (path): User ID to retrieve
-  ///
-  /// **Responses:**
-  /// - 200 OK: User found and returned
-  /// - 404 Not Found: User with specified ID doesn't exist
-  ///
-  /// Example successful response:
-  /// ```json
-  /// {
-  ///   "success": true,
-  ///   "data": {"id": "1", "name": "Alice", "email": "alice@example.com"}
-  /// }
-  /// ```
-  ///
-  /// Example error response:
-  /// ```json
-  /// {
-  ///   "success": false,
-  ///   "message": "User not found"
-  /// }
-  /// ```
+  /// ✅ MODERN PATTERN: Path parameter with enhanced annotations
   @Get(path: '/{id}')
-  Future<Response> getUser(Request request) async {
-    final id = getRequiredParam(request, 'id');
-    logRequest(request, 'Getting user $id');
+  Future<Response> getUserById(
+    @PathParam('id') String userId,
+    @RequestHeader.all() Map<String, String> allHeaders,
+    @RequestPath() String path,
+  ) async {
+    // Find user by ID
+    final user = _users.firstWhere(
+      (u) => u['id'] == userId,
+      orElse: () => <String, dynamic>{},
+    );
 
-    final user = _users.firstWhere((u) => u['id'] == id, orElse: () => {});
-
-    final response = user.isEmpty
-        ? ApiResponse.notFound('User not found')
-        : ApiResponse.success(user);
-
-    final statusCode = user.isEmpty ? 404 : 200;
-    return jsonResponse(response.toJson(), statusCode: statusCode);
-  }
-
-  /// Creates a new user from the provided JSON data.
-  ///
-  /// Demonstrates POST request handling with request body validation.
-  /// Shows proper HTTP status code usage (201 Created for successful creation).
-  ///
-  /// **HTTP Method:** POST
-  /// **Endpoint:** `/api/v1/users`
-  /// **Request Body:** JSON object with user data
-  ///
-  /// **Responses:**
-  /// - 201 Created: User successfully created
-  /// - 400 Bad Request: Missing or invalid request body
-  ///
-  /// Expected request body format:
-  /// ```json
-  /// {
-  ///   "name": "John Doe",
-  ///   "email": "john@example.com"
-  /// }
-  /// ```
-  ///
-  /// Example successful response:
-  /// ```json
-  /// {
-  ///   "success": true,
-  ///   "message": "User created successfully",
-  ///   "data": {
-  ///     "id": "3",
-  ///     "name": "New User",
-  ///     "email": "new@example.com"
-  ///   }
-  /// }
-  /// ```
-  ///
-  /// Note: This example uses simplified user creation for demonstration.
-  /// In production, implement proper JSON parsing, validation, and database storage.
-  @Post(path: '/')
-  Future<Response> createUser(Request request) async {
-    logRequest(request, 'Creating new user');
-
-    final body = await request.readAsString();
-    if (body.isEmpty) {
-      final response = ApiResponse.badRequest('Request body is required');
-      return jsonResponse(response.toJson(), statusCode: 400);
-    }
-
-    // In a real app, you would validate and parse the JSON here
-    final newUser = {
-      'id': '${_users.length + 1}',
-      'name': 'New User',
-      'email': 'new@example.com',
-    };
-
-    _users.add(newUser);
-
-    final response = ApiResponse.success(newUser, 'User created successfully');
-    return jsonResponse(response.toJson(), statusCode: 201);
-  }
-
-  /// Updates an existing user with new data.
-  ///
-  /// Combines path parameter extraction with request body processing.
-  /// Demonstrates proper error handling with try-catch blocks and
-  /// different HTTP status codes for various scenarios.
-  ///
-  /// **HTTP Method:** PUT
-  /// **Endpoint:** `/api/v1/users/<id>`
-  /// **Parameters:**
-  /// - `id` (path): User ID to update
-  ///
-  /// **Request Body:** JSON object with updated user data
-  ///
-  /// **Responses:**
-  /// - 200 OK: User successfully updated
-  /// - 404 Not Found: User with specified ID doesn't exist
-  /// - 500 Internal Server Error: Update operation failed
-  ///
-  /// Expected request body format:
-  /// ```json
-  /// {
-  ///   "name": "Updated Name",
-  ///   "email": "updated@example.com"
-  /// }
-  /// ```
-  ///
-  /// Example successful response:
-  /// ```json
-  /// {
-  ///   "success": true,
-  ///   "message": "User updated successfully",
-  ///   "data": {
-  ///     "id": "1",
-  ///     "name": "Updated User",
-  ///     "email": "alice@example.com"
-  ///   }
-  /// }
-  /// ```
-  ///
-  /// Note: This example demonstrates basic update flow.
-  /// In production, implement proper JSON parsing, field validation,
-  /// and database transactions with rollback capability.
-  @Put(path: '/{id}')
-  Future<Response> updateUser(Request request) async {
-    final id = getRequiredParam(request, 'id');
-    logRequest(request, 'Updating user $id');
-
-    final userIndex = _users.indexWhere((u) => u['id'] == id);
-    if (userIndex == -1) {
-      final response = ApiResponse.notFound('User not found');
-      return jsonResponse(response.toJson(), statusCode: 404);
-    }
-
-    try {
-      await request.readAsString();
-      // In a real app, you would parse and validate the JSON here
-      _users[userIndex]['name'] = 'Updated User';
-
-      final response = ApiResponse.success(
-        _users[userIndex],
-        'User updated successfully',
+    // ✅ Direct error handling with ApiKit
+    if (user.isEmpty) {
+      final result = ApiKit.notFound<Map<String, dynamic>>(
+        'User with ID $userId not found',
       );
-      return jsonResponse(response.toJson());
-    } catch (e) {
-      Log.e('Error updating user', error: e);
-      final response = ApiResponse.error('Failed to update user');
-      return jsonResponse(response.toJson(), statusCode: 500);
+      return ApiResponseBuilder.fromResult(result);
+    }
+
+    // ✅ Success response
+    final result = ApiKit.ok({
+      'user': user,
+      'request_info': {
+        'path': path,
+        'user_id': userId,
+        'headers_received': allHeaders.keys.toList(),
+      },
+    });
+
+    return ApiResponseBuilder.fromResult(result);
+  }
+
+  /// ➕ POST /api/v1/users - Create new user
+  ///
+  /// ✅ MODERN PATTERN: Request body parsing with validation
+  @Post(path: '/')
+  Future<Response> createUser(
+    @RequestBody() Map<String, dynamic> userData,
+    @RequestHeader.all() Map<String, String> allHeaders,
+    @RequestMethod() String method,
+  ) async {
+    try {
+      // ✅ Direct validation - no safeExecuteAsync needed
+      if (userData['name'] == null ||
+          userData['name'].toString().trim().isEmpty) {
+        final result = ApiKit.badRequest<Map<String, dynamic>>(
+          'Name is required',
+          validations: {'name': 'Name cannot be empty'},
+        );
+        return ApiResponseBuilder.fromResult(result);
+      }
+
+      if (userData['email'] == null ||
+          userData['email'].toString().trim().isEmpty) {
+        final result = ApiKit.badRequest<Map<String, dynamic>>(
+          'Email is required',
+          validations: {'email': 'Email cannot be empty'},
+        );
+        return ApiResponseBuilder.fromResult(result);
+      }
+
+      // Check for duplicate email
+      final existingUser = _users.firstWhere(
+        (u) => u['email'] == userData['email'],
+        orElse: () => <String, dynamic>{},
+      );
+
+      if (existingUser.isNotEmpty) {
+        final result = ApiKit.conflict<Map<String, dynamic>>(
+          'User with this email already exists',
+        );
+        return ApiResponseBuilder.fromResult(result);
+      }
+
+      // Create new user
+      final newUser = {
+        'id': '${_users.length + 1}',
+        'name': userData['name'].toString().trim(),
+        'email': userData['email'].toString().trim(),
+        'created_at': DateTime.now().toIso8601String(),
+      };
+
+      _users.add(newUser);
+
+      // ✅ Success response
+      final result = ApiKit.ok({
+        'user': newUser,
+        'message': 'User created successfully',
+        'request_info': {
+          'method': method,
+          'content_type': allHeaders['content-type'],
+        },
+      });
+
+      return ApiResponseBuilder.fromResult(result);
+    } catch (e, stack) {
+      // ✅ Error handling with full context
+      final result = ApiKit.serverError<Map<String, dynamic>>(
+        'Failed to create user: ${e.toString()}',
+        exception: e,
+        stackTrace: stack,
+      );
+      return ApiResponseBuilder.fromResult(result);
     }
   }
 
-  /// Deletes a user by their ID.
+  /// ✏️ PUT /api/v1/users/{id} - Update existing user
   ///
-  /// Demonstrates DELETE operation with proper resource validation.
-  /// Shows how to handle deletion scenarios and return appropriate
-  /// responses for both successful and failed operations.
+  /// ✅ MODERN PATTERN: Combining path params with request body
+  @Put(path: '/{id}')
+  Future<Response> updateUser(
+    @PathParam('id') String userId,
+    @RequestBody() Map<String, dynamic> updateData,
+    @RequestHeader.all() Map<String, String> allHeaders,
+  ) async {
+    try {
+      // Find existing user
+      final userIndex = _users.indexWhere((u) => u['id'] == userId);
+
+      if (userIndex == -1) {
+        final result = ApiKit.notFound<Map<String, dynamic>>(
+          'User with ID $userId not found',
+        );
+        return ApiResponseBuilder.fromResult(result);
+      }
+
+      // Update user data
+      final existingUser = Map<String, dynamic>.from(_users[userIndex]);
+
+      if (updateData['name'] != null) {
+        existingUser['name'] = updateData['name'].toString().trim();
+      }
+
+      if (updateData['email'] != null) {
+        final newEmail = updateData['email'].toString().trim();
+
+        // Check for duplicate email (excluding current user)
+        final duplicateUser = _users.firstWhere(
+          (u) => u['email'] == newEmail && u['id'] != userId,
+          orElse: () => <String, dynamic>{},
+        );
+
+        if (duplicateUser.isNotEmpty) {
+          final result = ApiKit.conflict<Map<String, dynamic>>(
+            'Email already in use by another user',
+          );
+          return ApiResponseBuilder.fromResult(result);
+        }
+
+        existingUser['email'] = newEmail;
+      }
+
+      existingUser['updated_at'] = DateTime.now().toIso8601String();
+      _users[userIndex] = existingUser;
+
+      // ✅ Success response
+      final result = ApiKit.ok({
+        'user': existingUser,
+        'message': 'User updated successfully',
+        'changes_applied': updateData.keys.toList(),
+      });
+
+      return ApiResponseBuilder.fromResult(result);
+    } catch (e, stack) {
+      final result = ApiKit.serverError<Map<String, dynamic>>(
+        'Failed to update user: ${e.toString()}',
+        exception: e,
+        stackTrace: stack,
+      );
+      return ApiResponseBuilder.fromResult(result);
+    }
+  }
+
+  /// 🗑️ DELETE /api/v1/users/{id} - Delete user
   ///
-  /// **HTTP Method:** DELETE
-  /// **Endpoint:** `/api/v1/users/<id>`
-  /// **Parameters:**
-  /// - `id` (path): User ID to delete
-  ///
-  /// **Responses:**
-  /// - 200 OK: User successfully deleted
-  /// - 404 Not Found: User with specified ID doesn't exist
-  ///
-  /// Example successful response:
-  /// ```json
-  /// {
-  ///   "success": true,
-  ///   "message": "User deleted successfully",
-  ///   "data": null
-  /// }
-  /// ```
-  ///
-  /// Example error response:
-  /// ```json
-  /// {
-  ///   "success": false,
-  ///   "message": "User not found"
-  /// }
-  /// ```
-  ///
-  /// Note: This example performs immediate deletion from memory.
-  /// In production, consider implementing:
-  /// - Soft deletion (marking as deleted rather than removing)
-  /// - Transaction-based deletion for data integrity
-  /// - Cascade deletion handling for related records
-  /// - Audit logging for deletion tracking
+  /// ✅ MODERN PATTERN: Simple deletion with validation
   @Delete(path: '/{id}')
-  Future<Response> deleteUser(Request request) async {
-    final id = getRequiredParam(request, 'id');
-    logRequest(request, 'Deleting user $id');
+  Future<Response> deleteUser(
+    @PathParam('id') String userId,
+    @RequestPath() String path,
+    @RequestMethod() String method,
+  ) async {
+    // Find user to delete
+    final userIndex = _users.indexWhere((u) => u['id'] == userId);
 
-    final userIndex = _users.indexWhere((u) => u['id'] == id);
     if (userIndex == -1) {
-      final response = ApiResponse.notFound('User not found');
-      return jsonResponse(response.toJson(), statusCode: 404);
+      final result = ApiKit.notFound<Map<String, dynamic>>(
+        'User with ID $userId not found',
+      );
+      return ApiResponseBuilder.fromResult(result);
     }
 
-    _users.removeAt(userIndex);
+    final deletedUser = _users.removeAt(userIndex);
 
-    final response = ApiResponse.success(null, 'User deleted successfully');
-    return jsonResponse(response.toJson());
-  }
+    // ✅ Success response with deletion info
+    final result = ApiKit.ok({
+      'message': 'User deleted successfully',
+      'deleted_user': {
+        'id': deletedUser['id'],
+        'name': deletedUser['name'],
+        'deleted_at': DateTime.now().toIso8601String(),
+      },
+      'remaining_users': _users.length,
+      'request_info': {'method': method, 'path': path},
+    });
 
-  /// Get methods map for automatic routing (no manual registration needed)
-  Map<String, Future<Response> Function(Request)> getMethodsMap() {
-    return {
-      'getUsers': getUsers,
-      'getUser': getUser,
-      'createUser': createUser,
-      'updateUser': updateUser,
-      'deleteUser': deleteUser,
-    };
+    return ApiResponseBuilder.fromResult(result);
   }
 }

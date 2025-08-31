@@ -4,15 +4,36 @@ Production-ready REST API framework with annotation-based routing and comprehens
 
 ## Features
 
-- **🚀 Annotation-based routing**: Just add @GET, @POST, etc. and you're done
+- **✨ Enhanced Parameters (NEW!)**: No more `Request request` - direct parameter injection
+- **🚀 Annotation-based routing**: Just add @Get, @Post, etc. and you're done
 - **🔐 JWT Authentication System**: Complete JWT validation with custom validators
 - **⚡ Fast setup**: Perfect for MVPs and rapid prototyping  
-- **📦 Controller lists**: Register controllers like simple_rest
 - **🔄 Result pattern**: Clean error handling with result_controller
 - **📝 Built-in logging**: Structured logging with logger_rs
 - **🛡️ Production security**: Enterprise-grade security features
 - **🎯 Flexible validation**: Custom validators with AND/OR logic
 - **⚖️ Token blacklisting**: Advanced token management system
+- **📋 Complete parameter injection**: @QueryParam.all(), @RequestHeader.all(), @RequestContext()
+- **🎪 Zero boilerplate**: Direct access to JWT payload, headers, query params, and body
+
+## 📚 Quick Navigation
+
+### 🚀 Getting Started
+- [**Getting Started Guide**](docs/getting-started.md) - Zero to production API in 10 minutes!
+- [**Enhanced Parameters**](docs/annotations/enhanced-parameters-annotation.md) - Learn the new parameter injection system
+
+### 🔐 JWT Authentication  
+- [**JWT Annotations**](docs/annotations/jwt-annotations.md) - @JWTPublic, @JWTController, @JWTEndpoint
+- [**JWT Validation System**](docs/jwt-validation-system.md) - Custom validators and business logic
+
+### 📋 HTTP Methods
+- [**@Get**](docs/annotations/get-annotation.md) • [**@Post**](docs/annotations/post-annotation.md) • [**@Put**](docs/annotations/put-annotation.md) • [**@Delete**](docs/annotations/delete-annotation.md) • [**@Patch**](docs/annotations/patch-annotation.md)
+
+### 🎯 Use Cases
+- [**Complete CRUD API**](docs/use-cases/complete-crud-api.md) - Full production-ready example
+- [**All Documentation**](docs/README.md) - Complete documentation hub
+
+---
 
 ## Getting started
 
@@ -20,8 +41,10 @@ Add this to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  api_kit: ^0.0.4
+  api_kit: ^0.0.5
 ```
+
+📚 **Need detailed setup help?** → [**Complete Getting Started Guide**](docs/getting-started.md)
 
 ## Quick Start
 
@@ -40,44 +63,226 @@ void main() async {
     excludePaths: ['/api/public', '/health'],
   );
 
-  // Start server with controllers
-  final result = await server.start(
+  // Start server with auto-discovery
+  await server.start(
     host: 'localhost',
     port: 8080,
-    controllerList: [UserController(), AdminController()],
   );
   
-  result.when(
-    ok: (httpServer) => print('🚀 Server running on http://localhost:8080'),
-    err: (error) => print('❌ Failed to start: ${error.msm}'),
-  );
+  print('🚀 Server running on http://localhost:8080');
 }
 ```
 
-## Basic Controller
+## Enhanced Parameters Controller (NEW!)
+
+> 📖 **Want to learn all Enhanced Parameters?** → [**Enhanced Parameters Documentation**](docs/annotations/enhanced-parameters-annotation.md)
 
 ```dart
-@Controller('/api/v1/users')
+@RestController(basePath: '/api/v1/users')
 class UserController extends BaseController {
 
-  @GET('/') // GET /api/v1/users/
-  Future<Response> getUsers(Request request) async {
-    logRequest(request, 'Getting users');
+  @Get(path: '/') // GET /api/v1/users/
+  Future<Response> getUsers(
+    @QueryParam.all() Map<String, String> allParams,
+    @RequestHeader.all() Map<String, String> headers,
+  ) async {
+    // Direct access to all query parameters and headers
+    final limit = int.tryParse(allParams['limit'] ?? '10') ?? 10;
+    final contentType = headers['content-type'];
     
-    final response = ApiResponse.success(['user1', 'user2']);
-    return jsonResponse(response.toJson());
+    // Validate parameters
+    if (limit <= 0) {
+      return ApiKit.err(ApiErr(
+        code: 'INVALID_LIMIT',
+        message: 'Limit must be greater than 0',
+        details: {'limit': 'Must be a positive number'},
+      )).toHttpResponse();
+    }
+    
+    // Business logic - simulate data fetching
+    final users = ['user1', 'user2'];
+    
+    return ApiKit.ok({
+      'users': users,
+      'total': users.length,
+      'limit': limit,
+      'content_type': contentType,
+      'filters_applied': allParams,
+    }).toHttpResponse();
   }
 
-  @GET('/<id>') // GET /api/v1/users/<id>
-  Future<Response> getUser(Request request) async {
-    final id = getRequiredParam(request, 'id');
-    final response = ApiResponse.success({'id': id, 'name': 'User $id'});
-    return jsonResponse(response.toJson());
+  @Get(path: '/{id}') // GET /api/v1/users/{id}
+  Future<Response> getUser(
+    @PathParam('id') String userId,
+    @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload, // Direct JWT access
+  ) async {
+    // No more manual extraction - everything is injected directly!
+    final requestingUser = jwtPayload['user_id'];
+    
+    // Validate user ID
+    if (userId.isEmpty) {
+      return ApiKit.err(ApiErr(
+        code: 'INVALID_USER_ID',
+        message: 'User ID cannot be empty',
+        details: {'userId': 'User ID is required'},
+      )).toHttpResponse();
+    }
+    
+    // Business logic - simulate user fetch
+    return ApiKit.ok({
+      'id': userId, 
+      'name': 'User $userId',
+      'requested_by': requestingUser,
+      'profile_url': '/api/users/$userId/profile',
+    }).toHttpResponse();
   }
+}
+```
+
+## 🆕 Enhanced Parameters System
+
+> 📋 **See all Enhanced Parameters annotations:** [`@QueryParam.all()`](docs/annotations/queryparam-annotation.md) • [`@RequestHeader.all()`](docs/annotations/requestheader-annotation.md) • [`@RequestBody()`](docs/annotations/requestbody-annotation.md) • [`@PathParam()`](docs/annotations/pathparam-annotation.md)
+
+### Traditional vs Enhanced Approach
+
+#### ❌ Traditional (Old Way)
+```dart
+@Get(path: '/users')
+Future<Response> getUsers(Request request) async {
+  // Manual extraction required + try-catch boilerplate
+  try {
+    final limit = request.url.queryParameters['limit'];
+    final offset = request.url.queryParameters['offset'];
+    final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
+    final userAgent = request.headers['user-agent'];
+    
+    return jsonResponse(jsonEncode({
+      'success': true,
+      'data': {'users': [], 'total': 100}
+    }));
+  } catch (e, stack) {
+    return jsonResponse(jsonEncode({
+      'success': false,
+      'error': {'message': e.toString()}
+    }), statusCode: 500);
+  }
+}
+```
+
+#### ✅ Enhanced (New Way) - CENTRALIZED PATTERN
+```dart
+@Get(path: '/users')
+Future<Response> getUsers(
+  @QueryParam('limit') String? limit,
+  @QueryParam('offset') String? offset,
+  @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload, // Direct JWT access
+  @RequestHeader('user-agent') String? userAgent,
+) async {
+  // Everything is injected automatically - zero boilerplate!
+  final limitNum = int.tryParse(limit ?? '10') ?? 10;
+  final offsetNum = int.tryParse(offset ?? '0') ?? 0;
+  
+  return ApiKit.ok({
+    'users': [], 
+    'total': 100, 
+    'pagination': {'limit': limitNum, 'offset': offsetNum},
+    'user_info': jwtPayload['user_id']
+  }).toHttpResponse();
+}
+```
+
+### Bulk Parameter Access
+
+```dart
+@Get(path: '/search')
+Future<Response> searchUsers(
+  @QueryParam.all() Map<String, String> allQueryParams,
+  @RequestHeader.all() Map<String, String> allHeaders,
+  @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload,
+) async {
+  // Access ALL parameters at once - Enhanced Parameters power!
+  final filters = allQueryParams; // {'name': 'john', 'age': '25', 'city': 'NYC'}
+  final headers = allHeaders;     // {'user-agent': '...', 'accept': '...'}
+  final user = jwtPayload['user_id']; // Direct JWT payload access
+  
+  // Validation
+  if (filters.isEmpty) {
+    return ApiKit.err(ApiErr(
+      code: 'NO_SEARCH_CRITERIA',
+      message: 'At least one search parameter is required',
+      details: {'query': 'Search parameters cannot be empty'},
+    )).toHttpResponse();
+  }
+  
+  // Business logic - simulate search
+  final results = await filterUsers(filters);
+  
+  return ApiKit.ok({
+    'results': results,
+    'user_agent': headers['user-agent'],
+    'requested_by': user,
+    'filters_applied': filters,
+    'search_metadata': {
+      'total_filters': filters.length,
+      'search_time': DateTime.now().toIso8601String(),
+    }
+  }).toHttpResponse();
+}
+```
+
+### POST with Enhanced Parameters
+
+```dart
+@Post(path: '/users')
+Future<Response> createUser(
+  @RequestBody() Map<String, dynamic> userData, // Direct body injection
+  @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload, // JWT context
+  @RequestHeader('content-type') String? contentType,
+  @QueryParam.all() Map<String, String> queryParams,
+) async {
+  final createdBy = jwtPayload['user_id'];
+  final version = queryParams['version'] ?? 'v1';
+  
+  // Validate required fields
+  if (userData['name'] == null || userData['email'] == null) {
+    return ApiKit.err(ApiErr(
+      code: 'VALIDATION_ERROR',
+      message: 'Name and email are required fields',
+      details: {
+        if (userData['name'] == null) 'name': 'Name is required',
+        if (userData['email'] == null) 'email': 'Email is required',
+      },
+    )).toHttpResponse();
+  }
+  
+  // Additional validation
+  final email = userData['email'] as String;
+  if (!email.contains('@')) {
+    return ApiKit.err(ApiErr(
+      code: 'INVALID_EMAIL',
+      message: 'Invalid email format provided',
+      details: {'email': 'Must be a valid email address'},
+    )).toHttpResponse();
+  }
+  
+  // Business logic - create user
+  final newUser = await createUserLogic(userData, createdBy, version);
+  
+  return ApiKit.ok({
+    'user': newUser,
+    'created_by': createdBy,
+    'api_version': version,
+    'creation_metadata': {
+      'created_at': DateTime.now().toIso8601String(),
+      'content_type': contentType,
+    }
+  }).toHttpResponse();
 }
 ```
 
 ## JWT Authentication System
+
+> 🔐 **Complete JWT Documentation:** [**JWT Annotations Guide**](docs/annotations/jwt-annotations.md) • [**JWT Validation System**](docs/jwt-validation-system.md)
 
 ### JWT Annotations
 
@@ -85,59 +290,101 @@ api_kit provides three powerful JWT annotations for complete access control:
 
 #### **@JWTPublic** - Public Endpoints
 ```dart
-@Controller('/api/public')
+@RestController(basePath: '/api/public')
 class PublicController extends BaseController {
-  @GET('/info')
+  @Get(path: '/info')
   @JWTPublic() // ✅ No JWT required - always accessible
-  Future<Response> getPublicInfo(Request request) async {
-    return jsonResponse({'message': 'Public data'});
+  Future<Response> getPublicInfo() async {
+    return ApiKit.ok({'message': 'Public data', 'version': '1.0'}).toHttpResponse();
   }
 }
 ```
 
 #### **@JWTController** - Controller-Level Protection
 ```dart
-@Controller('/api/admin')
+@RestController(basePath: '/api/admin')
 @JWTController([
   const MyAdminValidator(),
   const MyBusinessHoursValidator(),
 ], requireAll: true) // 🔒 ALL validators must pass (AND logic)
 class AdminController extends BaseController {
   
-  @GET('/users')
-  Future<Response> getUsers(Request request) async {
-    // Protected by controller-level validation
-    final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
-    return jsonResponse({'users': [], 'admin': jwtPayload['name']});
+  @Get(path: '/users')
+  Future<Response> getUsers(
+    @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload, // Enhanced: Direct JWT injection
+    @QueryParam.all() Map<String, String> filters,
+  ) async {
+    // Protected by controller-level validation - no manual extraction needed!
+    final users = await fetchUsers(filters); // Simulate data fetching
+    
+    return ApiKit.ok({
+      'users': users, 
+      'admin': jwtPayload['name'],
+      'admin_permissions': jwtPayload['permissions'],
+      'filters_applied': filters
+    }).toHttpResponse();
   }
 }
 ```
 
 #### **@JWTEndpoint** - Endpoint-Level Override
 ```dart
-@Controller('/api/finance')
+@RestController(basePath: '/api/finance')
 @JWTController([
   const MyDepartmentValidator(allowedDepartments: ['finance']),
 ])
 class FinanceController extends BaseController {
   
-  @GET('/reports')
-  Future<Response> getReports(Request request) async {
+  @Get(path: '/reports')
+  Future<Response> getReports(
+    @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload,
+  ) async {
     // Uses controller validation (department = finance)
+    return ApiKit.ok({'reports': []}).toHttpResponse();
   }
   
-  @POST('/transactions')
+  @Post(path: '/transactions')
   @JWTEndpoint([
     const MyFinancialValidator(minimumAmount: 10000),
     const MyAdminValidator(),
   ], requireAll: false) // 🔀 Either validator can pass (OR logic)
-  Future<Response> createTransaction(Request request) async {
+  Future<Response> createTransaction(
+    @RequestBody() Map<String, dynamic> transactionData, // Enhanced: Direct body
+    @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload, // Enhanced: Direct JWT
+  ) async {
     // Override: Either financial validator OR admin validator
+    final amount = transactionData['amount'] as double?;
+    final createdBy = jwtPayload['user_id'];
+    
+    // Validate amount
+    if (amount == null || amount <= 0) {
+      return ApiKit.err(ApiErr(
+        code: 'INVALID_TRANSACTION',
+        message: 'Transaction amount must be greater than 0',
+        details: {'amount': 'Amount is required and must be positive'},
+      )).toHttpResponse();
+    }
+    
+    // Create transaction
+    final transactionId = 'txn_${DateTime.now().millisecondsSinceEpoch}';
+    
+    return ApiKit.ok({
+      'transaction_id': transactionId,
+      'amount': amount,
+      'created_by': createdBy,
+      'user_role': jwtPayload['role'],
+      'transaction_metadata': {
+        'created_at': DateTime.now().toIso8601String(),
+        'validation_passed': 'financial_or_admin',
+      }
+    }).toHttpResponse();
   }
 }
 ```
 
 ### Custom JWT Validators
+
+> 📖 **Learn to create advanced validators:** [**JWT Validation System Documentation**](docs/jwt-validation-system.md)
 
 Create your own validators by extending `JWTValidatorBase`:
 
@@ -237,28 +484,46 @@ void main() async {
 }
 ```
 
-### JWT Payload Access
+### JWT Payload Access with Enhanced Parameters
 
-Access JWT data in your endpoints:
+Access JWT data directly with Enhanced Parameters:
 
 ```dart
-@GET('/profile')
-Future<Response> getProfile(Request request) async {
-  // Full JWT payload
-  final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
+@Get(path: '/profile')
+Future<Response> getProfile(
+  @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload, // Enhanced: Direct injection
+  @RequestHeader.all() Map<String, String> headers,
+  @QueryParam.all() Map<String, String> params,
+) async {
+  // Direct access - no manual extraction needed!
+  final userId = jwtPayload['user_id'];
+  final userEmail = jwtPayload['email'];
+  final userRole = jwtPayload['role'];
   
-  // Convenient shortcuts
-  final userId = request.context['user_id'] as String?;
-  final userEmail = request.context['user_email'] as String?;
-  final userRole = request.context['user_role'] as String?;
+  // Validate required JWT fields
+  if (userId == null || userEmail == null) {
+    return ApiKit.err(ApiErr(
+      code: 'INVALID_JWT_PAYLOAD',
+      message: 'Missing required user information in token',
+      details: {
+        if (userId == null) 'user_id': 'User ID is required in JWT',
+        if (userEmail == null) 'email': 'Email is required in JWT',
+      },
+    )).toHttpResponse();
+  }
   
-  return jsonResponse({
-    'user_id': jwtPayload['user_id'],
-    'email': jwtPayload['email'],
+  return ApiKit.ok({
+    'user_id': userId,
+    'email': userEmail,
     'name': jwtPayload['name'],
+    'role': userRole,
     'custom_data': jwtPayload['custom_field'],
-    // All JWT claims available
-  });
+    'request_info': {
+      'user_agent': headers['user-agent'],
+      'include_permissions': params['include_permissions'] == 'true',
+    }
+    // All JWT claims and request data available directly
+  }).toHttpResponse();
 }
 ```
 
@@ -316,10 +581,9 @@ Consistent error handling with detailed information:
   "error": {
     "code": "UNAUTHORIZED",
     "message": "JWT token required",
-    "status_code": 401
+    "details": {}
   },
-  "timestamp": "2024-01-15T10:30:00.000Z",
-  "request_id": "req_123456"
+  "timestamp": "2024-01-15T10:30:00.000Z"
 }
 ```
 
@@ -330,46 +594,84 @@ Consistent error handling with detailed information:
   "error": {
     "code": "FORBIDDEN",
     "message": "Administrator access required",
-    "status_code": 403,
     "details": {
       "validation_mode": "require_all",
       "validators_count": 2,
       "failed_validations": ["Administrator role required"]
     }
   },
-  "timestamp": "2024-01-15T10:30:00.000Z",
-  "request_id": "req_123456"
+  "timestamp": "2024-01-15T10:30:00.000Z"
 }
 ```
 
 ## Available Annotations
 
 ### HTTP Methods
-- `@GET('/path')`, `@POST('/path')`, `@PUT('/path')`, `@DELETE('/path')`, `@PATCH('/path')`
+- [`@Get(path: '/path')`](docs/annotations/get-annotation.md) - GET request handling
+- [`@Post(path: '/path')`](docs/annotations/post-annotation.md) - POST request handling  
+- [`@Put(path: '/path')`](docs/annotations/put-annotation.md) - PUT request handling
+- [`@Delete(path: '/path')`](docs/annotations/delete-annotation.md) - DELETE request handling
+- [`@Patch(path: '/path')`](docs/annotations/patch-annotation.md) - PATCH request handling
 
 ### JWT Authentication
-- `@JWTPublic()` - Public endpoint (no JWT required)
-- `@JWTController([validators], requireAll: bool)` - Controller-level protection
-- `@JWTEndpoint([validators], requireAll: bool)` - Endpoint-level protection
+- [`@JWTPublic()`](docs/annotations/jwt-annotations.md#jwtpublic---endpoint-público) - Public endpoint (no JWT required)
+- [`@JWTController([validators], requireAll: bool)`](docs/annotations/jwt-annotations.md#jwtcontroller---validación-a-nivel-de-controller) - Controller-level protection
+- [`@JWTEndpoint([validators], requireAll: bool)`](docs/annotations/jwt-annotations.md#jwtendpoint---validación-específica-de-endpoint) - Endpoint-level protection
 
 ### Controllers
-- `@Controller('/base/path')` - Define base path for controller
+- [`@RestController(basePath: '/base/path')`](docs/annotations/restcontroller-annotation.md) - Define base path for controller
 
-## Path Parameters
+### 🆕 Enhanced Parameter Annotations
+- [`@PathParam('name')`](docs/annotations/pathparam-annotation.md) - Extract specific path parameter
+- [`@QueryParam('name')`](docs/annotations/queryparam-annotation.md) - Extract specific query parameter
+- [`@QueryParam.all()`](docs/annotations/queryparam-annotation.md) - Get all query parameters as Map<String, String>
+- [`@RequestHeader('name')`](docs/annotations/requestheader-annotation.md) - Extract specific header
+- [`@RequestHeader.all()`](docs/annotations/requestheader-annotation.md) - Get all headers as Map<String, String>
+- [`@RequestBody()`](docs/annotations/requestbody-annotation.md) - Direct body injection as Map<String, dynamic>
+- [`@RequestContext('jwt_payload')`](docs/annotations/enhanced-parameters-annotation.md#request-context) - Direct JWT payload access
+- [`@RequestContext.all()`](docs/annotations/enhanced-parameters-annotation.md#request-context) - Get all context as Map<String, dynamic>
+- [`@RequestMethod()`](docs/annotations/enhanced-parameters-annotation.md#request-components) - Get HTTP method (GET, POST, etc.)
+- [`@RequestPath()`](docs/annotations/enhanced-parameters-annotation.md#request-components) - Get full request path
+- [`@RequestHost()`](docs/annotations/enhanced-parameters-annotation.md#request-components) - Get request host
+- [`@RequestUrl()`](docs/annotations/enhanced-parameters-annotation.md#request-components) - Get complete request URL
 
-Access path parameters using helper methods:
+## Path Parameters with Enhanced Parameters
+
+> 📖 **Learn all about path parameters:** [**PathParam Annotation Documentation**](docs/annotations/pathparam-annotation.md)
+
+Access path parameters directly with Enhanced Parameters:
 
 ```dart
-@GET('/users/<userId>/posts/<postId>')
-Future<Response> getUserPost(Request request) async {
-  final userId = getRequiredParam(request, 'userId');
-  final postId = getRequiredParam(request, 'postId');
+@Get(path: '/users/{userId}/posts/{postId}')
+Future<Response> getUserPost(
+  @PathParam('userId') String userId, // Enhanced: Direct injection
+  @PathParam('postId') String postId, // Enhanced: Direct injection
+  @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload, // Enhanced: JWT context
+) async {
+  // No manual extraction needed!
+  final requestingUser = jwtPayload['user_id'];
   
-  return jsonResponse({
+  // Validate path parameters
+  if (userId.isEmpty || postId.isEmpty) {
+    return ApiKit.err(ApiErr(
+      code: 'INVALID_PARAMETERS',
+      message: 'User ID and Post ID cannot be empty',
+      details: {
+        if (userId.isEmpty) 'userId': 'User ID is required',
+        if (postId.isEmpty) 'postId': 'Post ID is required',
+      },
+    )).toHttpResponse();
+  }
+  
+  // Simulate data fetching
+  final postData = await fetchUserPost(userId, postId);
+  
+  return ApiKit.ok({
     'user_id': userId,
     'post_id': postId,
-    'data': 'User $userId post $postId'
-  });
+    'post_data': postData,
+    'requested_by': requestingUser,
+  }).toHttpResponse();
 }
 ```
 
@@ -403,36 +705,6 @@ final config = ServerConfig(
     maxRequestsPerIP: 1000,
   ),
 );
-```
-
-## Reflection Support
-
-The framework automatically detects if reflection is available:
-
-- **Static Analysis** (AOT Compatible): Annotations work automatically via static analysis
-- **Without Reflection** (Flutter Web): Falls back to manual route registration
-
-```dart
-@Controller('/api/v1/products')
-class ProductController extends BaseController {
-  @override
-  Router get router {
-    if (ReflectionHelper.isReflectionAvailable) {
-      return super.router; // Automatic annotation-based routing
-    }
-    
-    // Manual fallback for Flutter Web
-    final router = Router();
-    router.get('/', getProducts);
-    router.post('/', createProduct);
-    return router;
-  }
-
-  @GET('/')
-  Future<Response> getProducts(Request request) async {
-    // Works in both reflection and non-reflection environments
-  }
-}
 ```
 
 ## Configuration
@@ -524,33 +796,68 @@ genhtml coverage/lcov.info -o coverage/html
 - **139/139 tests passing** with 100% success rate
 - **Concurrent request handling** tested and validated
 - **Token blacklisting** with efficient lookup
-- **Reflection-based routing** with fallback support
 - **Production-grade error handling**
+- **Enhanced Parameters** zero-overhead direct injection
 
-## Migration from v0.0.1
+## 📚 Complete Documentation
 
-### Before (Old Authentication)
+### 🎯 Annotation Reference
+- **[GET Annotation](docs/annotations/get-annotation.md)** - GET request handling with Enhanced Parameters
+- **[POST Annotation](docs/annotations/post-annotation.md)** - POST request handling and body injection
+- **[PUT Annotation](docs/annotations/put-annotation.md)** - PUT request handling for complete updates
+- **[PATCH Annotation](docs/annotations/patch-annotation.md)** - PATCH request handling for partial updates
+- **[DELETE Annotation](docs/annotations/delete-annotation.md)** - DELETE request handling with audit
+- **[RestController Annotation](docs/annotations/restcontroller-annotation.md)** - Controller organization and structure
+
+### 🔐 JWT Authentication Reference
+- **[JWT Annotations](docs/annotations/jwt-annotations.md)** - @JWTPublic, @JWTController, @JWTEndpoint
+- **[JWT Validation System](docs/jwt-validation-system.md)** - Custom validators and business logic
+
+### 🆕 Enhanced Parameters Reference
+- **[QueryParam Annotation](docs/annotations/queryparam-annotation.md)** - Query parameter extraction and .all() access
+- **[RequestHeader Annotation](docs/annotations/requestheader-annotation.md)** - Header extraction and .all() access
+- **[PathParam Annotation](docs/annotations/pathparam-annotation.md)** - Path parameter extraction
+- **[RequestBody Annotation](docs/annotations/requestbody-annotation.md)** - Direct body injection
+- **[Enhanced Parameters](docs/annotations/enhanced-parameters-annotation.md)** - Complete enhanced parameters guide
+
+### 📋 Use Cases & Examples  
+- **[Complete CRUD API](docs/use-cases/complete-crud-api.md)** - Full CRUD with Enhanced Parameters
+- **[Complete CRUD Enhanced](docs/use-cases/complete-crud-api-enhanced.md)** - Enhanced version with new patterns
+- **[Framework Limitations](docs/use-cases/framework-limitations.md)** - Current limitations and future improvements
+
+### 🚀 Getting Started
+- **[Getting Started Guide](docs/getting-started.md)** - Complete tutorial: Zero to production API in 10 minutes!
+
+## Migration Guide
+
+### Before (Old Pattern)
 ```dart
 @Controller('/api/admin')
 class AdminController extends BaseController {
   @GET('/users')
-  @RequireAuth(role: 'admin')  // ❌ Old system
   Future<Response> getUsers(Request request) async {
-    // ...
+    // Manual extraction + try-catch
+    try {
+      final jwtPayload = request.context['jwt_payload'];
+      return jsonResponse({'users': []});
+    } catch (e) {
+      return jsonResponse({'error': e.toString()});
+    }
   }
 }
 ```
 
-### After (New JWT System)
+### After (New Pattern)
 ```dart
-@Controller('/api/admin')
-@JWTController([
-  const MyAdminValidator(),
-], requireAll: true)  // ✅ New JWT system
+@RestController(basePath: '/api/admin')
+@JWTController([const MyAdminValidator()])
 class AdminController extends BaseController {
-  @GET('/users')
-  Future<Response> getUsers(Request request) async {
-    // JWT payload automatically available in request.context
+  @Get(path: '/users')
+  Future<Response> getUsers(
+    @RequestContext('jwt_payload') Map<String, dynamic> jwt,
+  ) async {
+    // Direct injection + standardized responses
+    return ApiKit.ok({'users': []}).toHttpResponse();
   }
 }
 ```
@@ -561,7 +868,8 @@ class AdminController extends BaseController {
 - [x] Token blacklisting and management
 - [x] Comprehensive test coverage (139 tests)
 - [x] Production-ready security headers
-- [x] Error handling and logging
+- [x] Enhanced Parameters system
+- [x] Result pattern standardization
 - [ ] Database integration helpers
 - [ ] WebSocket support with JWT
 - [ ] Metrics and monitoring
@@ -586,4 +894,25 @@ MIT License - see LICENSE file for details.
 
 ---
 
-**Built with ❤️ for Jhonacode who need production-ready APIs fast.**
+## 📚 Explore Complete Documentation
+
+**Ready to dive deeper?** Our comprehensive documentation covers every aspect:
+
+### 🎯 **Start Here**
+- **[Documentation Hub](docs/README.md)** - Complete navigation and overview
+- **[Getting Started](docs/getting-started.md)** - Step-by-step tutorial
+
+### 🔥 **Master the Framework**
+- **[All HTTP Annotations](docs/annotations/)** - Complete annotation reference
+- **[Enhanced Parameters](docs/annotations/enhanced-parameters-annotation.md)** - Zero-boilerplate parameter injection
+- **[JWT System](docs/annotations/jwt-annotations.md)** - Production-ready authentication
+
+### 🎆 **Production Examples** 
+- **[Complete CRUD API](docs/use-cases/complete-crud-api.md)** - Real-world implementation
+- **[Framework Limitations](docs/use-cases/framework-limitations.md)** - Understand current boundaries
+
+**🚀 Start building production-ready APIs today!**
+
+---
+
+**Built with ❤️ for developers who need production-ready APIs fast.**

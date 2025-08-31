@@ -13,12 +13,12 @@ class AnnotationResult {
   int get totalAnnotations => annotationList.length;
 
   Map<String, int> get annotationStats {
-
-    final Map<String, int> stats = <String, int> {};
+    final Map<String, int> stats = <String, int>{};
 
     /// Obtiene lo stats en un map
     for (final annotation in annotationList) {
-      stats[annotation.annotationType] = (stats[annotation.annotationType] ?? 0) + 1;
+      stats[annotation.annotationType] =
+          (stats[annotation.annotationType] ?? 0) + 1;
     }
 
     return stats;

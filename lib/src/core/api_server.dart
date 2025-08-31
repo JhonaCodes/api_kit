@@ -27,29 +27,31 @@ class ApiServer {
 
   // Token blacklist for JWT revocation
   final Set<String> _blacklistedTokens = <String>{};
-  
+
   // Display configuration
   bool _showEndpointsInConsole = false;
-  
 
   ApiServer._({required this.config, this.middleware = const []}) {
     pipeline = _buildSecurePipeline(middleware);
   }
-  
+
   /// Creates a new ApiServer instance with fluent configuration support
-  factory ApiServer.create({ServerConfig? config, List<Middleware> middleware = const []}) {
+  factory ApiServer.create({
+    ServerConfig? config,
+    List<Middleware> middleware = const [],
+  }) {
     return ApiServer._(
       config: config ?? ServerConfig.development(),
       middleware: middleware,
     );
   }
-  
+
   /// Legacy constructor for backward compatibility
-  factory ApiServer({required ServerConfig config, List<Middleware> middleware = const []}) {
-    return ApiServer._(
-      config: config,
-      middleware: middleware,
-    );
+  factory ApiServer({
+    required ServerConfig config,
+    List<Middleware> middleware = const [],
+  }) {
+    return ApiServer._(config: config, middleware: middleware);
   }
 
   /// Builds the secure middleware pipeline with JWT support
@@ -165,7 +167,7 @@ class ApiServer {
 
   /// Obtiene el número de tokens blacklisteados
   int get blacklistedTokensCount => _blacklistedTokens.length;
-  
+
   /// Configures JWT authentication with fluent interface
   ApiServer configureJWT({
     required String jwtSecret,
@@ -185,10 +187,10 @@ class ApiServer {
     Log.i('🔐 JWT authentication configured');
     Log.d('   Secret: ${jwtSecret.substring(0, 8)}...');
     Log.d('   Excluded paths: ${excludePaths.join(', ')}');
-    
+
     return this;
   }
-  
+
   /// Configures environment variables loading
   ApiServer configureEnvironment({bool loadEnvFile = true}) {
     if (loadEnvFile) {
@@ -196,7 +198,7 @@ class ApiServer {
     }
     return this;
   }
-  
+
   /// Configures endpoint display in console
   ApiServer configureEndpointDisplay({bool showInConsole = false}) {
     _showEndpointsInConsole = showInConsole;
@@ -213,11 +215,13 @@ class ApiServer {
   }) async {
     try {
       Log.i('🚀 Starting secure API server on $host:$port');
-      
+
       // Auto-discover controllers using static analysis
       Log.i('🔍 Auto-discovering controllers...');
-      final controllerList = await ControllerRegistry.discoverControllers(projectPath);
-      
+      final controllerList = await ControllerRegistry.discoverControllers(
+        projectPath,
+      );
+
       if (controllerList.isEmpty) {
         Log.w('⚠️  No controllers found - server will start with no endpoints');
       }
@@ -228,7 +232,10 @@ class ApiServer {
       // Register each auto-discovered controller with JWT validation
       int totalEndpoints = 0;
       for (final controller in controllerList) {
-        final endpointCount = await _registerControllerWithJWT(mainRouter, controller);
+        final endpointCount = await _registerControllerWithJWT(
+          mainRouter,
+          controller,
+        );
         totalEndpoints += endpointCount;
       }
 
@@ -250,13 +257,15 @@ class ApiServer {
       final server = await io.serve(handler, host, port);
 
       Log.i('🎯 Server started successfully');
-      Log.i('📊 Auto-discovered ${controllerList.length} controllers with $totalEndpoints endpoints');
-      
+      Log.i(
+        '📊 Auto-discovered ${controllerList.length} controllers with $totalEndpoints endpoints',
+      );
+
       // Display endpoints table if configured
       if (_showEndpointsInConsole && controllerList.isNotEmpty) {
         await _displayEndpointsTable(controllerList);
       }
-      
+
       Log.i('✅ AOT Compatible (Static Analysis)');
 
       return ApiResult.ok(server);
@@ -286,9 +295,10 @@ class ApiServer {
       Log.d('Registering controller with JWT validation: $controllerTypeName');
 
       // Get the controller's router using static analysis
-      final controllerRouter = await StaticRouterBuilder.buildFromController(
-        controller,
-      ) ?? await controller.buildRouter(); // Fallback to manual router if static analysis fails
+      final controllerRouter =
+          await StaticRouterBuilder.buildFromController(controller) ??
+          await controller
+              .buildRouter(); // Fallback to manual router if static analysis fails
 
       // Determine mount path from controller annotation or default
       String mountPath = await _getControllerMountPath(controller);
@@ -300,13 +310,19 @@ class ApiServer {
 
       // Mount the controller's router
       mainRouter.mount(mountPath, controllerRouter.call);
-      
-      // Count endpoints registered for this controller
-      final routes = await StaticRouterBuilder.getAvailableRoutes(Directory.current.path);
-      final controllerRoutes = routes.where((route) => route.contains(controllerTypeName)).length;
 
-      Log.d('Controller $controllerTypeName registered at: $mountPath ($controllerRoutes endpoints)');
-      
+      // Count endpoints registered for this controller
+      final routes = await StaticRouterBuilder.getAvailableRoutes(
+        Directory.current.path,
+      );
+      final controllerRoutes = routes
+          .where((route) => route.contains(controllerTypeName))
+          .length;
+
+      Log.d(
+        'Controller $controllerTypeName registered at: $mountPath ($controllerRoutes endpoints)',
+      );
+
       return controllerRoutes;
     } catch (e) {
       Log.e('Failed to register controller ${controller.runtimeType}: $e');
@@ -321,8 +337,10 @@ class ApiServer {
     String mountPath,
   ) async {
     try {
-      Log.d('JWT validation configured for ${controllerType.toString()} via static analysis');
-      
+      Log.d(
+        'JWT validation configured for ${controllerType.toString()} via static analysis',
+      );
+
       // JWT validation is now handled automatically by the StaticRouterBuilder
       // through annotation analysis and method dispatcher integration
     } catch (e) {
@@ -336,14 +354,16 @@ class ApiServer {
     try {
       final result = await AnnotationAPI.detectIn(Directory.current.path);
       final controllerName = controller.runtimeType.toString();
-      
+
       // Find RestController annotation for this controller
       final restControllerAnnotation = result.annotationList
-          .where((annotation) => 
-              annotation.annotationType == 'RestController' &&
-              annotation.targetName.contains(controllerName))
+          .where(
+            (annotation) =>
+                annotation.annotationType == 'RestController' &&
+                annotation.targetName.contains(controllerName),
+          )
           .firstOrNull;
-          
+
       if (restControllerAnnotation?.restControllerInfo?.basePath != null) {
         final basePath = restControllerAnnotation!.restControllerInfo!.basePath;
         Log.d('Extracted basePath from @RestController: $basePath');
@@ -364,25 +384,28 @@ class ApiServer {
     try {
       Log.i('');
       Log.i('╭─── API Endpoints ────────────────────────────────╮');
-      
+
       for (final controller in controllers) {
         final controllerName = controller.runtimeType.toString();
         final mountPath = await _getControllerMountPath(controller);
-        
+
         // Get routes for this controller
         final result = await AnnotationAPI.detectIn(Directory.current.path);
-        final routes = StaticRouterBuilder.extractRoutesFromResult(result, controller);
-        
+        final routes = StaticRouterBuilder.extractRoutesFromResult(
+          result,
+          controller,
+        );
+
         for (final route in routes) {
           final fullPath = mountPath + (route.path == '/' ? '' : route.path);
           final method = route.httpMethod.padRight(6);
           final path = fullPath.padRight(25);
           final controllerShort = controllerName.replaceAll('Controller', '');
-          
+
           Log.i('│ $method $path $controllerShort │');
         }
       }
-      
+
       Log.i('╰─────────────────────────────────────────────────╯');
       Log.i('');
     } catch (e) {

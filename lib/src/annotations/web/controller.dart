@@ -20,10 +20,7 @@ final class Service {
   final String? name;
   final String? description;
 
-  const Service({
-    this.name,
-    this.description,
-  });
+  const Service({this.name, this.description});
 }
 
 /// Anotación para repositorios
@@ -31,8 +28,5 @@ final class Repository {
   final String? name;
   final String? description;
 
-  const Repository({
-    this.name,
-    this.description,
-  });
+  const Repository({this.name, this.description});
 }

@@ -1,6 +1,6 @@
 /// Production-ready REST API framework with comprehensive JWT authentication system.
 ///
-/// ## 🚀 v0.0.5+ Features - NOW AOT COMPATIBLE! 
+/// ## 🚀 v0.0.5+ Features - NOW AOT COMPATIBLE!
 /// - ⚡ **Hybrid routing system** - Generated code (AOT) + Mirrors fallback (JIT)
 /// - 🔐 Complete JWT validation with @JWTPublic, @JWTController, @JWTEndpoint annotations
 /// - 🎯 Custom validators extending JWTValidatorBase with AND/OR logic
@@ -35,11 +35,11 @@ export 'src/middleware/enhanced_auth_middleware.dart';
 // Configuration exports
 export 'src/config/server_config.dart';
 
+// Response handling exports
+export 'src/models/api_response.dart';
+
 // JWT Annotations exports (keeping only JWT-specific)
 export 'src/annotations/jwt_annotations.dart';
-
-// Models exports
-export 'src/models/api_response.dart';
 
 // JWT Validation System exports
 export 'src/validators/jwt_validator_base.dart';
@@ -58,4 +58,5 @@ export 'src/core/method_dispatcher.dart';
 
 // External dependencies re-exports (for convenience)
 export 'package:shelf/shelf.dart' show Request, Response;
-export 'package:result_controller/result_controller.dart' show ApiResult;
+export 'package:result_controller/result_controller.dart'
+    show ApiResult, ApiErr;

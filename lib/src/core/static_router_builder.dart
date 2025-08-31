@@ -31,14 +31,14 @@ class RouteInfo {
 }
 
 /// Static Router Builder - AOT Compatible, No Mirrors
-/// 
+///
 /// This replaces the old mirror-based reflection system with static analysis.
 /// Routes are discovered by analyzing the source code at build time.
 class StaticRouterBuilder {
   static const _httpMethods = ['Get', 'Post', 'Put', 'Patch', 'Delete'];
-  
+
   /// Build router from controller using static analysis
-  /// 
+  ///
   /// This method analyzes the source code to find annotated methods
   /// and builds a router without using mirrors.
   static Future<Router?> buildFromController(
@@ -47,32 +47,39 @@ class StaticRouterBuilder {
   }) async {
     try {
       Log.i('Building routes using static analysis...');
-      
+
       // Use current directory if no path specified
       final analysisPath = projectPath ?? Directory.current.path;
-      
+
       // Detect annotations in the project
       final result = await AnnotationAPI.detectIn(analysisPath);
-      
+
       Log.i('Found ${result.totalAnnotations} annotations');
-      
+
       // No need to register - we'll call methods directly from annotations
-      
+
       // Build router from detected annotations
       final router = Router();
-      final routes = extractRoutesFromResult(result, controller, projectPath: analysisPath);
-      
+      final routes = extractRoutesFromResult(
+        result,
+        controller,
+        projectPath: analysisPath,
+      );
+
       // Sort routes by specificity (static routes first)
-      routes.sort((a, b) => _getRouteSpecificity(a.path).compareTo(_getRouteSpecificity(b.path)));
-      
+      routes.sort(
+        (a, b) => _getRouteSpecificity(
+          a.path,
+        ).compareTo(_getRouteSpecificity(b.path)),
+      );
+
       // Register routes
       for (final route in routes) {
         _registerRoute(router, route);
       }
-      
+
       Log.i('Successfully registered ${routes.length} routes');
       return router;
-      
     } catch (e, stackTrace) {
       Log.e(
         'Error building routes with static analysis',
@@ -82,7 +89,7 @@ class StaticRouterBuilder {
       return null;
     }
   }
-  
+
   /// Extract routes from analysis result that match the controller
   static List<RouteInfo> extractRoutesFromResult(
     AnnotationResult result,
@@ -91,7 +98,7 @@ class StaticRouterBuilder {
   }) {
     final routes = <RouteInfo>[];
     final controllerClassName = controller.runtimeType.toString();
-    
+
     // Find the RestController annotation for base path
     String basePath = '';
     final restControllers = result.ofType('RestController');
@@ -101,13 +108,15 @@ class StaticRouterBuilder {
         break;
       }
     }
-    
-    Log.d('Processing controller $controllerClassName with basePath: $basePath');
-    
+
+    Log.d(
+      'Processing controller $controllerClassName with basePath: $basePath',
+    );
+
     // Process HTTP method annotations
     for (final httpMethod in _httpMethods) {
       final methodAnnotations = result.ofType(httpMethod);
-      
+
       for (final annotation in methodAnnotations) {
         // Check if this annotation belongs to our controller
         if (annotation.targetName.startsWith('$controllerClassName.')) {
@@ -123,10 +132,10 @@ class StaticRouterBuilder {
         }
       }
     }
-    
+
     return routes;
   }
-  
+
   /// Create route info from annotation
   static RouteInfo? _createRouteFromAnnotation(
     AnnotationDetails annotation,
@@ -137,7 +146,7 @@ class StaticRouterBuilder {
     try {
       // Extract method name from target (e.g., "UserController.getUsers" -> "getUsers")
       final methodName = annotation.targetName.split('.').last;
-      
+
       // Get path from annotation
       String annotationPath = '';
       switch (annotation.annotationType) {
@@ -157,15 +166,15 @@ class StaticRouterBuilder {
           annotationPath = annotation.deleteInfo?.path ?? '';
           break;
       }
-      
+
       // Use only the annotation path (relative), let ApiServer handle the basePath mount
       // Convert {id} syntax to <id> syntax for Shelf router compatibility
       String relativePath = annotationPath.isEmpty ? '/' : annotationPath;
       relativePath = _convertPathParams(relativePath);
-      
+
       // Create basic handler that calls the method on the controller
       final basicHandler = _createMethodHandler(controller, methodName);
-      
+
       // Create JWT-aware handler using the JWT integration system
       final handler = JWTIntegration.createJWTAwareHandler(
         controller: controller,
@@ -173,9 +182,11 @@ class StaticRouterBuilder {
         originalHandler: (Request request) async => await basicHandler(request),
         projectPath: projectPath,
       );
-      
-      Log.d('Created JWT-aware route: ${annotation.annotationType.toUpperCase()} $relativePath -> $methodName');
-      
+
+      Log.d(
+        'Created JWT-aware route: ${annotation.annotationType.toUpperCase()} $relativePath -> $methodName',
+      );
+
       return RouteInfo(
         httpMethod: annotation.annotationType.toUpperCase(),
         path: relativePath,
@@ -183,29 +194,34 @@ class StaticRouterBuilder {
         handler: handler,
         metadata: annotation.rawData,
       );
-      
     } catch (e) {
-      Log.w('Failed to create route from annotation ${annotation.annotationType}: $e');
+      Log.w(
+        'Failed to create route from annotation ${annotation.annotationType}: $e',
+      );
       return null;
     }
   }
-  
+
   /// Create handler that calls the method directly on the controller
-  static Handler _createMethodHandler(BaseController controller, String methodName) {
+  static Handler _createMethodHandler(
+    BaseController controller,
+    String methodName,
+  ) {
     return (Request request) async {
       try {
         // Call the method directly based on the method name from annotations
         // This is a simple approach that works without mirrors or complex registration
-        
+
         final methodMap = _getControllerMethods(controller);
         final method = methodMap[methodName];
-        
+
         if (method != null) {
           return await method(request);
         } else {
-          return Response.notFound('Method $methodName not found in controller');
+          return Response.notFound(
+            'Method $methodName not found in controller',
+          );
         }
-        
       } catch (e) {
         Log.e('Error in method handler for $methodName: $e');
         return Response.internalServerError(
@@ -215,23 +231,27 @@ class StaticRouterBuilder {
       }
     };
   }
-  
+
   /// Get controller methods mapped by name for direct invocation
-  static Map<String, Future<Response> Function(Request)> _getControllerMethods(BaseController controller) {
+  static Map<String, Future<Response> Function(Request)> _getControllerMethods(
+    BaseController controller,
+  ) {
     // Try to call getMethodsMap() if the controller implements it
     try {
       final dynamic dynamicController = controller;
       if (dynamicController.getMethodsMap != null) {
-        return dynamicController.getMethodsMap() as Map<String, Future<Response> Function(Request)>;
+        return dynamicController.getMethodsMap()
+            as Map<String, Future<Response> Function(Request)>;
       }
     } catch (e) {
-      Log.w('Controller ${controller.runtimeType} does not implement getMethodsMap(): $e');
+      Log.w(
+        'Controller ${controller.runtimeType} does not implement getMethodsMap(): $e',
+      );
     }
-    
+
     return {};
   }
-  
-  
+
   /// Convert path parameters from {param} to <param> format for Shelf router
   static String _convertPathParams(String path) {
     // Convert {param} to <param> for Shelf router compatibility
@@ -239,18 +259,20 @@ class StaticRouterBuilder {
       return '<${match.group(1)}>';
     });
   }
-  
+
   /// Get route specificity for sorting (lower = higher priority)
   static int _getRouteSpecificity(String path) {
     // Static routes have higher priority (lower number)
     // Parameterized routes have lower priority (higher number)
     return path.contains('<') && path.contains('>') ? 1 : 0;
   }
-  
+
   /// Register route in the router
   static void _registerRoute(Router router, RouteInfo route) {
-    Log.d('Registering: ${route.httpMethod} ${route.path} -> ${route.targetName}');
-    
+    Log.d(
+      'Registering: ${route.httpMethod} ${route.path} -> ${route.targetName}',
+    );
+
     switch (route.httpMethod) {
       case 'GET':
         router.get(route.path, route.handler);
@@ -271,13 +293,13 @@ class StaticRouterBuilder {
         Log.w('Unsupported HTTP method: ${route.httpMethod}');
     }
   }
-  
+
   /// Get all available routes from analysis
   static Future<List<String>> getAvailableRoutes(String projectPath) async {
     try {
       final result = await AnnotationAPI.detectIn(projectPath);
       final routes = <String>[];
-      
+
       for (final httpMethod in _httpMethods) {
         final annotations = result.ofType(httpMethod);
         for (final annotation in annotations) {
@@ -299,11 +321,13 @@ class StaticRouterBuilder {
               path = annotation.deleteInfo?.path ?? '';
               break;
           }
-          
-          routes.add('${httpMethod.toUpperCase()} $path -> ${annotation.targetName}');
+
+          routes.add(
+            '${httpMethod.toUpperCase()} $path -> ${annotation.targetName}',
+          );
         }
       }
-      
+
       return routes;
     } catch (e) {
       Log.e('Error getting available routes: $e');
