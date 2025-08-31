@@ -36,6 +36,14 @@ class RouteInfo {
 /// Routes are discovered by analyzing the source code at build time.
 class StaticRouterBuilder {
   static const _httpMethods = ['Get', 'Post', 'Put', 'Patch', 'Delete'];
+  
+  // Cache for annotation results to avoid re-analysis on every controller build
+  static final Map<String, AnnotationResult> annotationCache = <String, AnnotationResult>{};
+  
+  /// Clear the annotation cache (useful for development/testing)
+  static void clearCache() {
+    annotationCache.clear();
+  }
 
   /// Build router from controller using static analysis
   ///
@@ -44,17 +52,28 @@ class StaticRouterBuilder {
   static Future<Router?> buildFromController(
     BaseController controller, {
     String? projectPath,
+    List<String>? includePaths,
   }) async {
     try {
       Log.i('Building routes using static analysis...');
 
       // Use current directory if no path specified
       final analysisPath = projectPath ?? Directory.current.path;
+      
+      // Create cache key based on project path and include paths
+      final cacheKey = '$analysisPath:${includePaths?.join(',') ?? 'default'}';
 
-      // Detect annotations in the project
-      final result = await AnnotationAPI.detectIn(analysisPath);
-
-      Log.i('Found ${result.totalAnnotations} annotations');
+      // Check cache first to avoid re-analysis (O(1) lookup)
+      AnnotationResult result;
+      if (annotationCache.containsKey(cacheKey)) {
+        result = annotationCache[cacheKey]!;
+        Log.d('Using cached annotations (${result.totalAnnotations} annotations)');
+      } else {
+        // First time analysis - cache the result
+        result = await AnnotationAPI.detectIn(analysisPath, includePaths: includePaths);
+        annotationCache[cacheKey] = result;
+        Log.i('Analyzed and cached ${result.totalAnnotations} annotations');
+      }
 
       // Performance optimization: Filter annotations early to avoid processing irrelevant ones
       final controllerClassName = controller.runtimeType.toString();
@@ -333,9 +352,22 @@ class StaticRouterBuilder {
   }
 
   /// Get all available routes from analysis
-  static Future<List<String>> getAvailableRoutes(String projectPath) async {
+  static Future<List<String>> getAvailableRoutes(
+    String projectPath, {
+    List<String>? includePaths,
+  }) async {
     try {
-      final result = await AnnotationAPI.detectIn(projectPath);
+      // Use cache if available
+      final cacheKey = '$projectPath:${includePaths?.join(',') ?? 'default'}';
+      AnnotationResult result;
+      
+      if (annotationCache.containsKey(cacheKey)) {
+        result = annotationCache[cacheKey]!;
+      } else {
+        result = await AnnotationAPI.detectIn(projectPath, includePaths: includePaths);
+        annotationCache[cacheKey] = result;
+      }
+      
       final routes = <String>[];
 
       for (final httpMethod in _httpMethods) {

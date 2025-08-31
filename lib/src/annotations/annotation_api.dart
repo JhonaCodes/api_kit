@@ -13,14 +13,19 @@ class AnnotationAPI {
   }
 
   /// Detects annotations in a specific directory
-  static Future<AnnotationResult> detectIn(String inputPath) async {
+  static Future<AnnotationResult> detectIn(String inputPath, {
+    List<String>? includePaths,
+  }) async {
     // Normalize the path to be absolute
     final absolutePath = path.isAbsolute(inputPath)
         ? path.normalize(inputPath)
         : path.normalize(path.absolute(inputPath));
 
     final projectDir = Directory(absolutePath);
-    final detector = AnnotationDetector(projectRoot: projectDir);
+    final detector = AnnotationDetector(
+      projectRoot: projectDir,
+      includePaths: includePaths,
+    );
     return await detector.detect();
   }
 
@@ -28,21 +33,32 @@ class AnnotationAPI {
   static Future<List<AnnotationDetails>> detectType(
     String annotationType, {
     String? path,
+    List<String>? includePaths,
   }) async {
-    final result = path != null ? await detectIn(path) : await detect();
+    final result = path != null 
+        ? await detectIn(path, includePaths: includePaths) 
+        : await detect();
     return result.annotationList
         .where((annotation) => annotation.annotationType == annotationType)
         .toList();
   }
 
   /// Gets only GET endpoints
-  static Future<List<AnnotationDetails>> getEndpoints({String? path}) async {
-    return await detectType('Get', path: path);
+  static Future<List<AnnotationDetails>> getEndpoints({
+    String? path,
+    List<String>? includePaths,
+  }) async {
+    return await detectType('Get', path: path, includePaths: includePaths);
   }
 
   /// Gets quick stats
-  static Future<Map<String, int>> getStats({String? path}) async {
-    final result = path != null ? await detectIn(path) : await detect();
+  static Future<Map<String, int>> getStats({
+    String? path,
+    List<String>? includePaths,
+  }) async {
+    final result = path != null 
+        ? await detectIn(path, includePaths: includePaths) 
+        : await detect();
     return result.annotationStats;
   }
 }

@@ -5,12 +5,16 @@ import 'package:logger_rs/logger_rs.dart';
 
 import '../annotations/annotation_api.dart';
 import '../annotations/annotation_details.dart';
+import '../annotations/annotation_result.dart';
 import '../validators/jwt_validator_base.dart';
 import 'base_controller.dart';
+import 'static_router_builder.dart';
 
 /// Integration system for automatic JWT validation based on annotations
 /// Connects @JWTController, @JWTEndpoint, @JWTPublic with routing system
 class JWTIntegration {
+  // Cache for JWT configuration to avoid re-analysis on every request
+  static final Map<String, JWTEndpointConfig> _jwtConfigCache = <String, JWTEndpointConfig>{};
   /// Creates a JWT-aware handler that applies validators based on annotations
   static Handler createJWTAwareHandler({
     required BaseController controller,
@@ -75,17 +79,35 @@ class JWTIntegration {
     String? projectPath,
   ) async {
     try {
-      // Run static analysis to get annotations
-      final result = await AnnotationAPI.detectIn(
-        projectPath ?? Directory.current.path,
-      );
       final controllerName = controller.runtimeType.toString();
+      final cacheKey = '$controllerName.$methodName';
+      
+      // Check cache first (O(1) lookup)
+      if (_jwtConfigCache.containsKey(cacheKey)) {
+        return _jwtConfigCache[cacheKey]!;
+      }
+
+      // Use StaticRouterBuilder cache to avoid re-analysis
+      final analysisPath = projectPath ?? Directory.current.path;
+      final builderCacheKey = '$analysisPath:default';
+      
+      AnnotationResult? result;
+      // Try to get from StaticRouterBuilder cache
+      if (StaticRouterBuilder.annotationCache.containsKey(builderCacheKey)) {
+        result = StaticRouterBuilder.annotationCache[builderCacheKey]!;
+      } else {
+        // Fallback: run analysis and cache it
+        result = await AnnotationAPI.detectIn(analysisPath);
+        StaticRouterBuilder.annotationCache[builderCacheKey] = result;
+      }
 
       // Check for @JWTPublic on the specific method
       final publicAnnotations = result.ofType('JWTPublic');
       for (final annotation in publicAnnotations) {
         if (annotation.targetName == '$controllerName.$methodName') {
-          return JWTEndpointConfig.public();
+          final config = JWTEndpointConfig.public();
+          _jwtConfigCache[cacheKey] = config;
+          return config;
         }
       }
 
@@ -93,7 +115,9 @@ class JWTIntegration {
       final endpointAnnotations = result.ofType('JWTEndpoint');
       for (final annotation in endpointAnnotations) {
         if (annotation.targetName == '$controllerName.$methodName') {
-          return _extractJWTEndpointConfig(annotation);
+          final config = _extractJWTEndpointConfig(annotation);
+          _jwtConfigCache[cacheKey] = config;
+          return config;
         }
       }
 
@@ -101,12 +125,16 @@ class JWTIntegration {
       final controllerAnnotations = result.ofType('JWTController');
       for (final annotation in controllerAnnotations) {
         if (annotation.targetName == controllerName) {
-          return _extractJWTControllerConfig(annotation);
+          final config = _extractJWTControllerConfig(annotation);
+          _jwtConfigCache[cacheKey] = config;
+          return config;
         }
       }
 
       // No JWT annotations found - return basic auth requirement
-      return JWTEndpointConfig.basicAuth();
+      final config = JWTEndpointConfig.basicAuth();
+      _jwtConfigCache[cacheKey] = config;
+      return config;
     } catch (e) {
       Log.w('Error getting JWT config for .$methodName: $e');
       return JWTEndpointConfig.basicAuth();
