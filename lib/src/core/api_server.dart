@@ -205,6 +205,14 @@ class ApiServer {
     return this;
   }
 
+  /// Registers a controller manually (required for AOT compilation)
+  void registerController(BaseController controller) {
+    _manualControllers.add(controller);
+  }
+
+  // Manual controller list for AOT compilation
+  final List<BaseController> _manualControllers = [];
+
   /// Starts the server with automatic controller auto-discovery.
   /// No longer requires manual controllerList - discovers controllers automatically
   Future<ApiResult<HttpServer>> start({
@@ -217,15 +225,22 @@ class ApiServer {
     try {
       Log.i('🚀 Starting secure API server on $host:$port');
 
-      // Auto-discover controllers using static analysis
+      // Try auto-discovery first, fallback to manual registration
       Log.i('🔍 Auto-discovering controllers...');
-      final controllerList = await ControllerRegistry.discoverControllers(
+      var controllerList = await ControllerRegistry.discoverControllers(
         projectPath,
         includePaths,
       );
 
+      // If auto-discovery fails (e.g., in AOT mode), use manually registered controllers
+      if (controllerList.isEmpty && _manualControllers.isNotEmpty) {
+        Log.i('📝 Using manually registered controllers (${_manualControllers.length} controllers)');
+        controllerList = _manualControllers;
+      }
+
       if (controllerList.isEmpty) {
         Log.w('⚠️  No controllers found - server will start with no endpoints');
+        Log.w('💡 For AOT compilation, use server.registerController() to register controllers manually');
       }
 
       // Create main router

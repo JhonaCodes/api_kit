@@ -68,62 +68,18 @@ class ControllerRegistry {
     }
   }
 
-  /// Instantiates a controller by class name using mirrors
-  /// This is the only place where mirrors are used, and only for instantiation
+  /// Instantiates a controller by class name without mirrors
+  /// Uses manual registry for AOT compatibility
   static Future<BaseController?> _instantiateController(
     String className,
   ) async {
-    try {
-      // Use mirrors only for controller instantiation
-      // This is a controlled use that can be replaced with code generation later
-      final mirrors = currentMirrorSystem();
-
-      for (final library in mirrors.libraries.values) {
-        for (final classMirror in library.declarations.values) {
-          if (classMirror is ClassMirror &&
-              classMirror.simpleName
-                      .toString()
-                      .replaceAll('Symbol("', '')
-                      .replaceAll('")', '') ==
-                  className) {
-            // Check if extends BaseController
-            if (_extendsBaseController(classMirror)) {
-              final instance = classMirror
-                  .newInstance(Symbol(''), [])
-                  .reflectee;
-              if (instance is BaseController) {
-                return instance;
-              }
-            }
-          }
-        }
-      }
-
-      Log.w('Controller class not found: $className');
-      return null;
-    } catch (e) {
-      Log.e('Error instantiating controller $className: $e');
-      return null;
-    }
+    // For AOT compilation, we cannot use mirrors
+    // Controllers must be registered manually
+    Log.w('Controller auto-instantiation not available in AOT mode: $className');
+    Log.w('Please register controllers manually using server.registerController()');
+    return null;
   }
 
-  /// Checks if a class extends BaseController
-  static bool _extendsBaseController(ClassMirror classMirror) {
-    ClassMirror? current = classMirror;
-
-    while (current != null) {
-      final className = current.simpleName
-          .toString()
-          .replaceAll('Symbol("', '')
-          .replaceAll('")', '');
-      if (className == 'BaseController') {
-        return true;
-      }
-      current = current.superclass;
-    }
-
-    return false;
-  }
 
   /// Gets discovery statistics
   static Map<String, dynamic> getDiscoveryStats() {
