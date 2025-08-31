@@ -1,39 +1,39 @@
-# @Post - Anotación para Endpoints POST
+# @Post - Annotation for POST Endpoints
 
-## 📋 Descripción
+## 📋 Description
 
-La anotación `@Post` se utiliza para marcar métodos como endpoints que responden a peticiones HTTP POST. Es la anotación estándar para operaciones de creación de recursos y envío de datos al servidor.
+The `@Post` annotation is used to mark methods as endpoints that respond to HTTP POST requests. It is the standard annotation for resource creation and data submission operations to the server.
 
-## 🎯 Propósito
+## 🎯 Purpose
 
-- **Crear recursos**: Insertar nuevos registros o entidades
-- **Envío de formularios**: Procesar datos de formularios web
-- **Operaciones de escritura**: Cualquier acción que modifique el estado del servidor
-- **APIs de autenticación**: Login, registro, renovación de tokens
+- **Create resources**: Insert new records or entities
+- **Form submission**: Process data from web forms
+- **Write operations**: Any action that modifies the server's state
+- **Authentication APIs**: Login, registration, token renewal
 
-## 📝 Sintaxis
+## 📝 Syntax
 
 ```dart
 @Post({
-  required String path,           // Ruta del endpoint (OBLIGATORIO)
-  String? description,           // Descripción del endpoint
-  int statusCode = 201,          // Código de respuesta por defecto (Created)
-  bool requiresAuth = false,     // Si requiere autenticación
+  required String path,           // Endpoint path (REQUIRED)
+  String? description,           // Endpoint description
+  int statusCode = 201,          // Default response code (Created)
+  bool requiresAuth = false,     // If it requires authentication
 })
 ```
 
-## 🔧 Parámetros
+## 🔧 Parameters
 
-| Parámetro | Tipo | Obligatorio | Valor por Defecto | Descripción |
+| Parameter | Type | Required | Default Value | Description |
 |-----------|------|-------------|-------------------|-------------|
-| `path` | `String` | ✅ Sí | - | Ruta relativa del endpoint (ej: `/users`, `/products`) |
-| `description` | `String?` | ❌ No | `null` | Descripción legible del propósito del endpoint |
-| `statusCode` | `int` | ❌ No | `201` | Código de estado HTTP de respuesta exitosa (Created) |
-| `requiresAuth` | `bool` | ❌ No | `false` | Indica si el endpoint requiere autenticación |
+| `path` | `String` | ✅ Yes | - | Relative path of the endpoint (e.g., `/users`, `/products`) |
+| `description` | `String?` | ❌ No | `null` | Readable description of the endpoint's purpose |
+| `statusCode` | `int` | ❌ No | `201` | HTTP status code for a successful response (Created) |
+| `requiresAuth` | `bool` | ❌ No | `false` | Indicates if the endpoint requires authentication |
 
-## 🚀 Ejemplos de Uso
+## 🚀 Usage Examples
 
-### Ejemplo Básico
+### Basic Example
 
 #### Traditional Approach - Manual Body Parsing
 ```dart
@@ -75,20 +75,20 @@ class UserController extends BaseController {
 }
 ```
 
-### Ejemplo con RequestBody Tipado
+### Example with Typed RequestBody
 
 #### Traditional Approach
 ```dart
 @Post(
   path: '/users',
-  description: 'Crea un nuevo usuario en el sistema'
+  description: 'Creates a new user in the system'
 )
 Future<Response> createUser(
   Request request,
-  @RequestBody(required: true, description: 'Datos del nuevo usuario') 
+  @RequestBody(required: true, description: 'New user data') 
   Map<String, dynamic> userData,
 ) async {
-  // Validaciones
+  // Validations
   if (userData['name'] == null || userData['email'] == null) {
     return Response.badRequest(body: jsonEncode({
       'error': 'Name and email are required'
@@ -117,15 +117,15 @@ Future<Response> createUser(
 ```dart
 @Post(
   path: '/users',
-  description: 'Crea un nuevo usuario en el sistema'
+  description: 'Creates a new user in the system'
 )
 Future<Response> createUserEnhanced(
-  @RequestBody(required: true, description: 'Datos del nuevo usuario') 
+  @RequestBody(required: true, description: 'New user data') 
   Map<String, dynamic> userData,
   @RequestMethod() String method,
   @RequestHost() String host,
 ) async {
-  // Validaciones
+  // Validations
   if (userData['name'] == null || userData['email'] == null) {
     return Response.badRequest(body: jsonEncode({
       'error': 'Name and email are required'
@@ -152,13 +152,13 @@ Future<Response> createUserEnhanced(
 }
 ```
 
-### Ejemplo con Headers y Auth
+### Example with Headers and Auth
 
 #### Traditional Approach - Manual JWT Extraction
 ```dart
 @Post(
   path: '/products',
-  description: 'Crea un nuevo producto (requiere admin)',
+  description: 'Creates a new product (requires admin)',
   requiresAuth: true
 )
 @JWTEndpoint([MyAdminValidator()])
@@ -169,7 +169,7 @@ Future<Response> createProduct(
   @RequestBody(required: true) Map<String, dynamic> productData,
 ) async {
   
-  // Validar content type
+  // Validate content type
   if (!contentType.contains('application/json')) {
     return Response.badRequest(body: jsonEncode({
       'error': 'Content-Type must be application/json'
@@ -204,7 +204,7 @@ Future<Response> createProduct(
 ```dart
 @Post(
   path: '/products',
-  description: 'Crea un nuevo producto (requiere admin)',
+  description: 'Creates a new product (requires admin)',
   requiresAuth: true
 )
 @JWTEndpoint([MyAdminValidator()])
@@ -218,7 +218,7 @@ Future<Response> createProductEnhanced(
   @RequestPath() String path,
 ) async {
   
-  // Validar content type
+  // Validate content type
   if (!contentType.contains('application/json')) {
     return Response.badRequest(body: jsonEncode({
       'error': 'Content-Type must be application/json'
@@ -253,7 +253,7 @@ Future<Response> createProductEnhanced(
 }
 ```
 
-### Ejemplo con Query Parameters
+### Example with Query Parameters
 
 #### Traditional Approach - Limited Parameters
 ```dart
@@ -326,9 +326,9 @@ Future<Response> createPostEnhanced(
 }
 ```
 
-## 🔗 Combinación con Otras Anotaciones
+## 🔗 Combination with Other Annotations
 
-### Con Múltiples Validadores JWT
+### With Multiple JWT Validators
 
 #### Traditional Approach
 ```dart
@@ -336,12 +336,12 @@ Future<Response> createPostEnhanced(
 @JWTController([
   MyFinancialValidator(minimumAmount: 1000),
   MyBusinessHoursValidator(),
-], requireAll: true) // Ambos validadores deben pasar
+], requireAll: true) // Both validators must pass
 Future<Response> createTransaction(
   Request request,
   @RequestBody(required: true) Map<String, dynamic> transactionData,
 ) async {
-  // Solo se ejecuta si el usuario tiene permisos financieros Y está en horas de negocio
+  // Only executes if the user has financial permissions AND it is during business hours
   return jsonResponse(jsonEncode({
     'message': 'Transaction created successfully'
   }));
@@ -354,7 +354,7 @@ Future<Response> createTransaction(
 @JWTController([
   MyFinancialValidator(minimumAmount: 1000),
   MyBusinessHoursValidator(),
-], requireAll: true) // Ambos validadores deben pasar
+], requireAll: true) // Both validators must pass
 Future<Response> createTransactionEnhanced(
   @RequestBody(required: true) Map<String, dynamic> transactionData,
   @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload,
@@ -381,7 +381,7 @@ Future<Response> createTransactionEnhanced(
 }
 ```
 
-### Con Validación Compleja
+### With Complex Validation
 
 #### Traditional Approach
 ```dart
@@ -488,38 +488,38 @@ Future<Response> uploadFileEnhanced(
 }
 ```
 
-## 💡 Mejores Prácticas
+## 💡 Best Practices
 
-### ✅ Hacer
-- **Validar datos de entrada**: Siempre verificar required fields
-- **Usar códigos de estado apropiados**: 201 para creación, 200 para operaciones
-- **Incluir IDs generados**: Devolver el ID del recurso creado
-- **Manejar errores de validación**: Respuestas claras para datos inválidos
-- **Usar @RequestBody**: Para datos estructurados en JSON
-- **Preferir Enhanced Parameters**: Para mayor flexibilidad y menos boilerplate
-- **Combinar enfoques**: Traditional para validación automática, Enhanced para acceso completo
+### ✅ Do
+- **Validate input data**: Always check required fields
+- **Use appropriate status codes**: 201 for creation, 200 for operations
+- **Include generated IDs**: Return the ID of the created resource
+- **Handle validation errors**: Clear responses for invalid data
+- **Use @RequestBody**: For structured data in JSON
+- **Prefer Enhanced Parameters**: For greater flexibility and less boilerplate
+- **Combine approaches**: Traditional for automatic validation, Enhanced for full access
 
-### ❌ Evitar
-- **Crear sin validación**: No asumir que los datos son válidos
-- **Respuestas inconsistentes**: Mantener formato estándar
-- **Ignorar Content-Type**: Validar que sea application/json cuando sea necesario
-- **No devolver el recurso creado**: El cliente necesita saber qué se creó
-- **Request parameter redundante**: Usar Enhanced Parameters cuando sea posible
+### ❌ Don't
+- **Create without validation**: Do not assume data is valid
+- **Inconsistent responses**: Maintain a standard format
+- **Ignore Content-Type**: Validate that it is application/json when necessary
+- **Not returning the created resource**: The client needs to know what was created
+- **Redundant Request parameter**: Use Enhanced Parameters when possible
 
-### 🎯 Recomendaciones por Escenario
+### 🎯 Recommendations by Scenario
 
-#### Para APIs de Creación Estable
+#### For Stable Creation APIs
 ```dart
-// ✅ Traditional - Validación automática de campos conocidos
+// ✅ Traditional - Automatic validation of known fields
 @Post(path: '/users')
 Future<Response> createUser(
   @RequestBody(required: true) Map<String, dynamic> userData,
 ) async { ... }
 ```
 
-#### Para APIs Dinámicas o Con Muchas Opciones
+#### For Dynamic APIs or with Many Options
 ```dart
-// ✅ Enhanced - Flexibilidad para opciones ilimitadas
+// ✅ Enhanced - Flexibility for unlimited options
 @Post(path: '/posts')
 Future<Response> createPost(
   @RequestBody(required: true) Map<String, dynamic> postData,
@@ -529,9 +529,9 @@ Future<Response> createPost(
 }
 ```
 
-#### Para APIs con JWT Complejo
+#### For APIs with Complex JWT
 ```dart
-// ✅ Enhanced - Acceso directo a contexto JWT
+// ✅ Enhanced - Direct access to JWT context
 @Post(path: '/admin/actions')
 @JWTEndpoint([MyAdminValidator()])
 Future<Response> adminAction(
@@ -542,9 +542,9 @@ Future<Response> adminAction(
 }
 ```
 
-#### Para Upload de Archivos
+#### For File Uploads
 ```dart
-// ✅ Hybrid - Validación específica + opciones dinámicas
+// ✅ Hybrid - Specific validation + dynamic options
 @Post(path: '/upload/{folderId}')
 Future<Response> uploadFile(
   @PathParam('folderId') String folderId,              // Type-safe path
@@ -554,21 +554,21 @@ Future<Response> uploadFile(
 ) async { ... }
 ```
 
-## 🔍 Casos de Uso Comunes
+## 🔍 Common Use Cases
 
-### 1. **Creación de usuario**
+### 1. **User creation**
 
 #### Traditional
 ```dart
-@Post(path: '/register', description: 'Registra un nuevo usuario')
-@JWTPublic() // Endpoint público
+@Post(path: '/register', description: 'Registers a new user')
+@JWTPublic() // Public endpoint
 Future<Response> registerUser(Request request, @RequestBody(required: true) Map<String, dynamic> userData) async { ... }
 ```
 
 #### Enhanced ✨
 ```dart
-@Post(path: '/register', description: 'Registra un nuevo usuario')
-@JWTPublic() // Endpoint público
+@Post(path: '/register', description: 'Registers a new user')
+@JWTPublic() // Public endpoint
 Future<Response> registerUserEnhanced(
   @RequestBody(required: true) Map<String, dynamic> userData,
   @RequestHost() String host,
@@ -578,18 +578,18 @@ Future<Response> registerUserEnhanced(
 }
 ```
 
-### 2. **Login/Autenticación**
+### 2. **Login/Authentication**
 
 #### Traditional
 ```dart
-@Post(path: '/login', description: 'Autentica usuario y devuelve token')
+@Post(path: '/login', description: 'Authenticates user and returns token')
 @JWTPublic()
 Future<Response> loginUser(Request request, @RequestBody(required: true) Map<String, dynamic> credentials) async { ... }
 ```
 
 #### Enhanced ✨
 ```dart
-@Post(path: '/login', description: 'Autentica usuario y devuelve token')
+@Post(path: '/login', description: 'Authenticates user and returns token')
 @JWTPublic()
 Future<Response> loginUserEnhanced(
   @RequestBody(required: true) Map<String, dynamic> credentials,
@@ -613,11 +613,11 @@ Future<Response> loginUserEnhanced(
 }
 ```
 
-### 3. **Creación con relaciones**
+### 3. **Creation with relationships**
 
 #### Traditional
 ```dart
-@Post(path: '/users/{userId}/orders', description: 'Crea orden para usuario específico')
+@Post(path: '/users/{userId}/orders', description: 'Creates an order for a specific user')
 Future<Response> createOrder(
   Request request,
   @PathParam('userId') String userId,
@@ -625,9 +625,9 @@ Future<Response> createOrder(
 ) async { ... }
 ```
 
-#### Enhanced - Con Opciones Dinámicas ✨
+#### Enhanced - With Dynamic Options ✨
 ```dart
-@Post(path: '/users/{userId}/orders', description: 'Crea orden con opciones dinámicas')
+@Post(path: '/users/{userId}/orders', description: 'Creates an order with dynamic options')
 Future<Response> createOrderEnhanced(
   @PathParam('userId') String userId,
   @RequestBody(required: true) Map<String, dynamic> orderData,
@@ -654,11 +654,11 @@ Future<Response> createOrderEnhanced(
 }
 ```
 
-### 4. **Upload de archivos**
+### 4. **File upload**
 
 #### Traditional - Limited
 ```dart
-@Post(path: '/files/upload', description: 'Sube archivo al servidor')
+@Post(path: '/files/upload', description: 'Uploads a file to the server')
 Future<Response> uploadFile(
   Request request,
   @RequestHeader('Content-Type', required: true) String contentType,
@@ -668,7 +668,7 @@ Future<Response> uploadFile(
 
 #### Enhanced - Complete Upload Control ✨
 ```dart
-@Post(path: '/files/upload', description: 'Sube archivo con opciones completas')
+@Post(path: '/files/upload', description: 'Uploads a file with complete options')
 Future<Response> uploadFileEnhanced(
   @RequestHeader('Content-Type', required: true) String contentType,
   @RequestHeader.all() Map<String, String> allHeaders,
@@ -699,11 +699,11 @@ Future<Response> uploadFileEnhanced(
 }
 ```
 
-### 5. **Procesamiento de formularios**
+### 5. **Form processing**
 
 #### Traditional
 ```dart
-@Post(path: '/contact', description: 'Procesa formulario de contacto')
+@Post(path: '/contact', description: 'Processes a contact form')
 @JWTPublic()
 Future<Response> submitContact(
   Request request,
@@ -713,7 +713,7 @@ Future<Response> submitContact(
 
 #### Enhanced - Smart Form Processing ✨
 ```dart
-@Post(path: '/contact', description: 'Procesa formulario inteligente')
+@Post(path: '/contact', description: 'Processes a smart form')
 @JWTPublic()
 Future<Response> submitContactEnhanced(
   @RequestBody(required: true) Map<String, dynamic> contactData,
@@ -746,9 +746,9 @@ Future<Response> submitContactEnhanced(
 }
 ```
 
-### 6. **🆕 Caso Enhanced: API Creation con JWT**
+### 6. **🆕 Enhanced Case: API Creation with JWT**
 ```dart
-@Post(path: '/admin/api-keys', description: 'Crea nueva API key')
+@Post(path: '/admin/api-keys', description: 'Creates a new API key')
 @JWTEndpoint([MyAdminValidator()])
 Future<Response> createApiKeyEnhanced(
   @RequestBody(required: true) Map<String, dynamic> keyData,
@@ -783,27 +783,27 @@ Future<Response> createApiKeyEnhanced(
 }
 ```
 
-## 📊 Códigos de Respuesta Recomendados
+## 📊 Recommended Response Codes
 
-| Situación | Código | Descripción |
+| Situation | Code | Description |
 |-----------|---------|-------------|
-| Recurso creado | `201` | Created - Recurso creado exitosamente |
-| Operación exitosa | `200` | OK - Operación completada |
-| Datos inválidos | `400` | Bad Request - Datos mal formateados |
-| No autorizado | `401` | Unauthorized - Token JWT inválido |
-| Prohibido | `403` | Forbidden - Sin permisos suficientes |
-| Conflicto | `409` | Conflict - Recurso ya existe |
-| Payload muy grande | `413` | Payload Too Large - Archivo muy grande |
-| Error del servidor | `500` | Internal Server Error |
+| Resource created | `201` | Created - Resource created successfully |
+| Successful operation | `200` | OK - Operation completed |
+| Invalid data | `400` | Bad Request - Malformed data |
+| Unauthorized | `401` | Unauthorized - Invalid JWT token |
+| Forbidden | `403` | Forbidden - Insufficient permissions |
+| Conflict | `409` | Conflict - Resource already exists |
+| Payload too large | `413` | Payload Too Large - File too large |
+| Server error | `500` | Internal Server Error |
 
-## 🌐 URL Resultantes
+## 🌐 Resulting URLs
 
-Si tu controller tiene `basePath: '/api/v1'` y usas `@Post(path: '/users')`, la URL final será:
+If your controller has `basePath: '/api/v1'` and you use `@Post(path: '/users')`, the final URL will be:
 ```
 POST http://localhost:8080/api/v1/users
 ```
 
-## 📋 Ejemplo de Request/Response
+## 📋 Request/Response Example
 
 ### Request
 ```http
@@ -837,4 +837,4 @@ Content-Type: application/json
 
 ---
 
-**Siguiente**: [Documentación de @Put](put-annotation.md) | **Anterior**: [Documentación de @Get](get-annotation.md)
+**Next**: [Documentation for @Put](put-annotation.md) | **Previous**: [Documentation for @Get](get-annotation.md)

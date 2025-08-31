@@ -1,72 +1,72 @@
-# JWT Annotations - Sistema de Autenticación JWT
+# JWT Annotations - JWT Authentication System
 
-## 📋 Descripción
+## 📋 Description
 
-Las anotaciones JWT (`@JWTPublic`, `@JWTController`, `@JWTEndpoint`) forman el sistema de autenticación y autorización de `api_kit`. Permiten definir políticas de seguridad granulares a nivel de controlador y endpoint.
+The JWT annotations (`@JWTPublic`, `@JWTController`, `@JWTEndpoint`) form the authentication and authorization system of `api_kit`. They allow defining granular security policies at the controller and endpoint level.
 
-## 🎯 Propósito
+## 🎯 Purpose
 
-- **Seguridad por capas**: Autenticación y autorización a nivel de controller y endpoint
-- **Validadores personalizados**: Lógica de negocio específica para cada contexto
-- **Flexibilidad**: Combinar múltiples validadores con lógica AND/OR
-- **Endpoints públicos**: Marcar endpoints que no requieren autenticación
+- **Layered Security**: Authentication and authorization at the controller and endpoint level.
+- **Custom Validators**: Specific business logic for each context.
+- **Flexibility**: Combine multiple validators with AND/OR logic.
+- **Public Endpoints**: Mark endpoints that do not require authentication.
 
-## 🏗️ Arquitectura del Sistema JWT
+## 🏗️ JWT System Architecture
 
 ```
 Request → JWT Middleware → Validators → Endpoint
                 ↓
          [@JWTPublic] → Skip validation
-         [@JWTController] → Apply to all endpoints  
+         [@JWTController] → Apply to all endpoints
          [@JWTEndpoint] → Override controller validation
 ```
 
-## 📝 Anotaciones Disponibles
+## 📝 Available Annotations
 
-### 1. @JWTPublic - Endpoint Público
+### 1. @JWTPublic - Public Endpoint
 
 ```dart
 @JWTPublic()
 ```
 
-**Propósito**: Marca un endpoint como público, sin validación JWT.
-**Prioridad**: Máxima - sobrescribe cualquier validación de controller.
+**Purpose**: Marks an endpoint as public, without JWT validation.
+**Priority**: Highest - overrides any controller validation.
 
-### 2. @JWTController - Validación a Nivel de Controller
+### 2. @JWTController - Controller-Level Validation
 
 ```dart
 @JWTController(
-  List<JWTValidatorBase> validators,    // Lista de validadores
-  {bool requireAll = true}              // Lógica AND (true) o OR (false)
+  List<JWTValidatorBase> validators,    // List of validators
+  {bool requireAll = true}              // AND (true) or OR (false) logic
 )
 ```
 
-**Propósito**: Aplica validación a todos los endpoints del controller.
-**Herencia**: Los endpoints heredan esta validación automáticamente.
+**Purpose**: Applies validation to all endpoints of the controller.
+**Inheritance**: Endpoints inherit this validation automatically.
 
-### 3. @JWTEndpoint - Validación Específica de Endpoint
+### 3. @JWTEndpoint - Endpoint-Specific Validation
 
 ```dart
 @JWTEndpoint(
-  List<JWTValidatorBase> validators,    // Lista de validadores
-  {bool requireAll = true}              // Lógica AND (true) o OR (false)
+  List<JWTValidatorBase> validators,    // List of validators
+  {bool requireAll = true}              // AND (true) or OR (false) logic
 )
 ```
 
-**Propósito**: Sobrescribe la validación del controller para este endpoint específico.
-**Prioridad**: Media - sobrescribe `@JWTController` pero no `@JWTPublic`.
+**Purpose**: Overrides the controller\'s validation for this specific endpoint.
+**Priority**: Medium - overrides `@JWTController` but not `@JWTPublic`.
 
-## 🚀 Ejemplos de Uso
+## 🚀 Usage Examples
 
-### @JWTPublic - Endpoints Públicos
+### @JWTPublic - Public Endpoints
 
 #### Traditional Approach
 ```dart
 @RestController(basePath: '/api/public')
 class PublicController extends BaseController {
-  
+
   @Get(path: '/health')
-  @JWTPublic()  // No requiere autenticación
+  @JWTPublic()  // No authentication required
   Future<Response> healthCheck(Request request) async {
     return ApiKit.ok({
       'status': 'healthy',
@@ -74,9 +74,9 @@ class PublicController extends BaseController {
       'service': 'api_kit'
     }).toHttpResponse();
   }
-  
+
   @Get(path: '/info')
-  @JWTPublic()  // Información pública
+  @JWTPublic()  // Public information
   Future<Response> getPublicInfo(Request request) async {
     return ApiKit.ok({
       'app_name': 'My API',
@@ -85,21 +85,21 @@ class PublicController extends BaseController {
       'support': 'support@example.com'
     }).toHttpResponse();
   }
-  
+
   @Post(path: '/contact')
-  @JWTPublic()  // Formulario de contacto público
+  @JWTPublic()  // Public contact form
   Future<Response> submitContact(
     Request request,
     @RequestBody(required: true) Map<String, dynamic> contactData,
   ) async {
-    
-    // Validar datos del formulario
+
+    // Validate form data
     final requiredFields = ['name', 'email', 'message'];
     final missingFields = requiredFields
-        .where((field) => !contactData.containsKey(field) || 
+        .where((field) => !contactData.containsKey(field) ||
                          contactData[field].toString().isEmpty)
         .toList();
-    
+
     if (missingFields.isNotEmpty) {
       return ApiKit.err(ApiErr(
         code: 'MISSING_FIELDS',
@@ -107,10 +107,10 @@ class PublicController extends BaseController {
         details: {'missing_fields': missingFields},
       )).toHttpResponse();
     }
-    
-    // Procesar formulario de contacto
+
+    // Process contact form
     final contactId = 'contact_${DateTime.now().millisecondsSinceEpoch}';
-    
+
     return ApiKit.ok({
       'message': 'Contact form submitted successfully',
       'contact_id': contactId,
@@ -124,9 +124,9 @@ class PublicController extends BaseController {
 ```dart
 @RestController(basePath: '/api/public')
 class PublicController extends BaseController {
-  
+
   @Get(path: '/health')
-  @JWTPublic()  // No requiere autenticación
+  @JWTPublic()  // No authentication required
   Future<Response> healthCheckEnhanced(
     @RequestHost() String host,
     @RequestMethod() String method,
@@ -144,9 +144,9 @@ class PublicController extends BaseController {
       'enhanced': true,
     }).toHttpResponse();
   }
-  
+
   @Get(path: '/info')
-  @JWTPublic()  // Información pública
+  @JWTPublic()  // Public information
   Future<Response> getPublicInfoEnhanced(
     @RequestHeader.all() Map<String, String> headers,
     @RequestHost() String host,
@@ -164,22 +164,22 @@ class PublicController extends BaseController {
       'enhanced': true,
     }).toHttpResponse();
   }
-  
+
   @Post(path: '/contact')
-  @JWTPublic()  // Formulario de contacto público
+  @JWTPublic()  // Public contact form
   Future<Response> submitContactEnhanced(
     @RequestBody(required: true) Map<String, dynamic> contactData,
     @RequestHeader.all() Map<String, String> headers,
     @RequestHost() String host,
   ) async {
-    
-    // Validar datos del formulario
+
+    // Validate form data
     final requiredFields = ['name', 'email', 'message'];
     final missingFields = requiredFields
-        .where((field) => !contactData.containsKey(field) || 
+        .where((field) => !contactData.containsKey(field) ||
                          contactData[field].toString().isEmpty)
         .toList();
-    
+
     if (missingFields.isNotEmpty) {
       return ApiKit.err(ApiErr(
         code: 'MISSING_FIELDS',
@@ -187,7 +187,7 @@ class PublicController extends BaseController {
         details: {'missing_fields': missingFields},
       )).toHttpResponse();
     }
-    
+
     // Enhanced: Capture client context for better support
     final contactId = 'contact_${DateTime.now().millisecondsSinceEpoch}';
     final clientContext = {
@@ -196,7 +196,7 @@ class PublicController extends BaseController {
       'host': host,
       'ip': headers['x-forwarded-for'] ?? headers['x-real-ip'],
     };
-    
+
     return ApiKit.ok({
       'message': 'Contact form submitted successfully',
       'contact_id': contactId,
@@ -208,32 +208,32 @@ class PublicController extends BaseController {
 }
 ```
 
-### @JWTController - Validación a Nivel de Controller
+### @JWTController - Controller-Level Validation
 
 #### Traditional Approach - Manual JWT Extraction
 ```dart
 @RestController(basePath: '/api/admin')
 @JWTController([
-  MyAdminValidator(),              // Debe ser administrador
-  MyActiveSessionValidator(),      // Sesión debe estar activa
-], requireAll: true)               // Ambos validadores deben pasar
+  MyAdminValidator(),              // Must be an administrator
+  MyActiveSessionValidator(),      // Session must be active
+], requireAll: true)               // Both validators must pass
 class AdminController extends BaseController {
-  
-  @Get(path: '/users')  // Hereda validación del controller
+
+  @Get(path: '/users')  // Inherits validation from the controller
   Future<Response> getAllUsers(Request request) async {
     // Manual JWT extraction
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     final adminUser = jwtPayload['user_id'];
-    
+
     return ApiKit.ok({
       'message': 'All users retrieved',
       'requested_by': adminUser,
       'validation': 'admin + active_session',
-      'users': [] // En implementación real, obtener de BD
+      'users': [] // In a real implementation, get from DB
     }).toHttpResponse();
   }
-  
-  @Post(path: '/users')  // Hereda validación del controller
+
+  @Post(path: '/users')  // Inherits validation from the controller
   Future<Response> createUser(
     Request request,
     @RequestBody(required: true) Map<String, dynamic> userData,
@@ -241,7 +241,7 @@ class AdminController extends BaseController {
     // Manual JWT extraction
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     final adminUser = jwtPayload['user_id'];
-    
+
     return ApiKit.ok({
       'message': 'User created successfully',
       'created_by': adminUser,
@@ -249,9 +249,9 @@ class AdminController extends BaseController {
       'validation_passed': ['admin', 'active_session']
     }).toHttpResponse();
   }
-  
+
   @Get(path: '/health')
-  @JWTPublic()  // Sobrescribe la validación del controller
+  @JWTPublic()  // Overrides the controller\'s validation
   Future<Response> adminHealthCheck(Request request) async {
     return ApiKit.ok({
       'status': 'healthy',
@@ -266,12 +266,12 @@ class AdminController extends BaseController {
 ```dart
 @RestController(basePath: '/api/admin')
 @JWTController([
-  MyAdminValidator(),              // Debe ser administrador
-  MyActiveSessionValidator(),      // Sesión debe estar activa
-], requireAll: true)               // Ambos validadores deben pasar
+  MyAdminValidator(),              // Must be an administrator
+  MyActiveSessionValidator(),      // Session must be active
+], requireAll: true)               // Both validators must pass
 class AdminController extends BaseController {
-  
-  @Get(path: '/users')  // Hereda validación del controller
+
+  @Get(path: '/users')  // Inherits validation from the controller
   Future<Response> getAllUsersEnhanced(
     @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload, // Direct JWT
     @QueryParam.all() Map<String, String> filters,  // Dynamic filtering
@@ -280,12 +280,12 @@ class AdminController extends BaseController {
     final adminUser = jwtPayload['user_id'];
     final adminRole = jwtPayload['role'];
     final permissions = jwtPayload['permissions'] as List<dynamic>? ?? [];
-    
+
     // Enhanced: Dynamic filtering capabilities
     final page = int.tryParse(filters['page'] ?? '1') ?? 1;
     final limit = int.tryParse(filters['limit'] ?? '10') ?? 10;
     final search = filters['search'];
-    
+
     return ApiKit.ok({
       'message': 'All users retrieved - Enhanced!',
       'requested_by': adminUser,
@@ -304,12 +304,12 @@ class AdminController extends BaseController {
         'user_agent': headers['user-agent'],
       },
       'validation': 'admin + active_session',
-      'users': [], // En implementación real, obtener de BD con filtros
+      'users': [], // In a real implementation, get from DB with filters
       'enhanced': true,
     }).toHttpResponse();
   }
-  
-  @Post(path: '/users')  // Hereda validación del controller
+
+  @Post(path: '/users')  // Inherits validation from the controller
   Future<Response> createUserEnhanced(
     @RequestBody(required: true) Map<String, dynamic> userData,
     @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload, // Direct JWT
@@ -318,7 +318,7 @@ class AdminController extends BaseController {
   ) async {
     final adminUser = jwtPayload['user_id'];
     final adminRole = jwtPayload['role'];
-    
+
     return ApiKit.ok({
       'message': 'User created successfully - Enhanced!',
       'created_by': adminUser,
@@ -333,9 +333,9 @@ class AdminController extends BaseController {
       'enhanced': true,
     }).toHttpResponse();
   }
-  
+
   @Get(path: '/health')
-  @JWTPublic()  // Sobrescribe la validación del controller
+  @JWTPublic()  // Overrides the controller\'s validation
   Future<Response> adminHealthCheckEnhanced(
     @RequestHost() String host,
     @RequestPath() String path,
@@ -355,38 +355,38 @@ class AdminController extends BaseController {
   }
 }
 
-// Validadores personalizados
+// Custom validators
 class MyAdminValidator extends JWTValidatorBase {
   const MyAdminValidator();
-  
+
   @override
   ValidationResult validate(Request request, Map<String, dynamic> jwtPayload) {
     final role = jwtPayload['role'] as String?;
     final permissions = jwtPayload['permissions'] as List<dynamic>? ?? [];
-    
+
     if (role != 'admin' || !permissions.contains('admin_access')) {
       return ValidationResult.invalid('Administrator access required');
     }
-    
+
     return ValidationResult.valid();
   }
-  
+
   @override
   String get defaultErrorMessage => 'Administrator access required';
 }
 
 class MyActiveSessionValidator extends JWTValidatorBase {
   const MyActiveSessionValidator();
-  
+
   @override
   ValidationResult validate(Request request, Map<String, dynamic> jwtPayload) {
     final sessionActive = jwtPayload['session_active'] as bool? ?? false;
     final lastActivity = jwtPayload['last_activity'] as String?;
-    
+
     if (!sessionActive) {
       return ValidationResult.invalid('Session is not active');
     }
-    
+
     if (lastActivity != null) {
       final lastActiveTime = DateTime.tryParse(lastActivity);
       if (lastActiveTime != null) {
@@ -396,25 +396,25 @@ class MyActiveSessionValidator extends JWTValidatorBase {
         }
       }
     }
-    
+
     return ValidationResult.valid();
   }
-  
+
   @override
   String get defaultErrorMessage => 'Active session required';
 }
 ```
 
-### @JWTEndpoint - Validación Específica por Endpoint
+### @JWTEndpoint - Endpoint-Specific Validation
 
 ```dart
 @RestController(basePath: '/api/financial')
 @JWTController([
-  MyUserValidator(),               // Validación básica de usuario
+  MyUserValidator(),               // Basic user validation
 ], requireAll: true)
 class FinancialController extends BaseController {
-  
-  @Get(path: '/balance')  // Solo validación de usuario (hereda del controller)
+
+  @Get(path: '/balance')  // Only user validation (inherited from controller)
   Future<Response> getBalance(Request request) async {
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     return ApiKit.ok({
@@ -423,21 +423,21 @@ class FinancialController extends BaseController {
       'validation_level': 'basic_user'
     }).toHttpResponse();
   }
-  
+
   @Post(path: '/transfer')
   @JWTEndpoint([
-    MyUserValidator(),             // Usuario válido
-    MyFinancialValidator(minimumClearance: 2),  // Clearance financiero nivel 2
-    MyBusinessHoursValidator(),    // Solo en horario de oficina
-  ], requireAll: true)             // TODOS deben pasar
+    MyUserValidator(),             // Valid user
+    MyFinancialValidator(minimumClearance: 2),  // Financial clearance level 2
+    MyBusinessHoursValidator(),    // Only during business hours
+  ], requireAll: true)             // ALL must pass
   Future<Response> makeTransfer(
     Request request,
     @RequestBody(required: true) Map<String, dynamic> transferData,
   ) async {
-    
+
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     final userId = jwtPayload['user_id'];
-    
+
     return ApiKit.ok({
       'message': 'Transfer completed successfully',
       'transfer_id': 'txn_${DateTime.now().millisecondsSinceEpoch}',
@@ -446,19 +446,19 @@ class FinancialController extends BaseController {
       'validation_passed': ['user', 'financial_clearance_2', 'business_hours']
     }).toHttpResponse();
   }
-  
+
   @Delete(path: '/transactions/{transactionId}')
   @JWTEndpoint([
-    MyFinancialValidator(minimumClearance: 5),  // Solo clearance máximo
-    MyAuditValidator(),        // Auditoría requerida
+    MyFinancialValidator(minimumClearance: 5),  // Maximum clearance only
+    MyAuditValidator(),        // Audit required
   ], requireAll: true)
   Future<Response> deleteTransaction(
     Request request,
     @PathParam('transactionId') String transactionId,
   ) async {
-    
+
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
-    
+
     return ApiKit.ok({
       'message': 'Transaction deleted successfully',
       'transaction_id': transactionId,
@@ -466,38 +466,38 @@ class FinancialController extends BaseController {
       'validation_level': 'maximum_clearance_with_audit'
     }).toHttpResponse();
   }
-  
+
   @Get(path: '/reports/summary')
   @JWTEndpoint([
-    MyFinancialValidator(minimumClearance: 1),  // Clearance mínimo
+    MyFinancialValidator(minimumClearance: 1),  // Minimum clearance
     MyDepartmentValidator(allowedDepartments: ['finance', 'accounting']),
-  ], requireAll: false)          // Cualquiera de los dos (OR logic)
+  ], requireAll: false)          // Either of the two (OR logic)
   Future<Response> getFinancialSummary(Request request) async {
-    
+
     return ApiKit.ok({
-      'summary': 'Financial summary data...',
+      'summary': 'Financial summary data...', 
       'validation_logic': 'OR - financial_clearance_1 OR department_finance_accounting'
     }).toHttpResponse();
   }
 }
 
-// Validadores financieros personalizados
+// Custom financial validators
 class MyFinancialValidator extends JWTValidatorBase {
   final int minimumClearance;
-  
+
   const MyFinancialValidator({this.minimumClearance = 1});
-  
+
   @override
   ValidationResult validate(Request request, Map<String, dynamic> jwtPayload) {
     final clearanceLevel = jwtPayload['financial_clearance'] as int? ?? 0;
-    
+
     if (clearanceLevel < minimumClearance) {
       return ValidationResult.invalid(
         'Financial clearance level $minimumClearance required, current: $clearanceLevel'
       );
     }
-    
-    // Validar que el clearance no haya expirado
+
+    // Validate that the clearance has not expired
     final clearanceExpiry = jwtPayload['clearance_expiry'] as String?;
     if (clearanceExpiry != null) {
       final expiryDate = DateTime.tryParse(clearanceExpiry);
@@ -505,113 +505,113 @@ class MyFinancialValidator extends JWTValidatorBase {
         return ValidationResult.invalid('Financial clearance has expired');
       }
     }
-    
+
     return ValidationResult.valid();
   }
-  
+
   @override
   String get defaultErrorMessage => 'Financial clearance level $minimumClearance required';
 }
 
 class MyBusinessHoursValidator extends JWTValidatorBase {
   const MyBusinessHoursValidator();
-  
+
   @override
   ValidationResult validate(Request request, Map<String, dynamic> jwtPayload) {
     final now = DateTime.now();
     final hour = now.hour;
-    final isWeekday = now.weekday >= 1 && now.weekday <= 5; // Lunes a Viernes
-    final isBusinessHour = hour >= 9 && hour <= 17; // 9 AM a 5 PM
-    
+    final isWeekday = now.weekday >= 1 && now.weekday <= 5; // Monday to Friday
+    final isBusinessHour = hour >= 9 && hour <= 17; // 9 AM to 5 PM
+
     if (!isWeekday || !isBusinessHour) {
       return ValidationResult.invalid(
         'Financial operations only allowed during business hours (Mon-Fri, 9 AM - 5 PM)'
       );
     }
-    
+
     return ValidationResult.valid();
   }
-  
+
   @override
   String get defaultErrorMessage => 'Operation only allowed during business hours';
 }
 
 class MyDepartmentValidator extends JWTValidatorBase {
   final List<String> allowedDepartments;
-  
+
   const MyDepartmentValidator({required this.allowedDepartments});
-  
+
   @override
   ValidationResult validate(Request request, Map<String, dynamic> jwtPayload) {
     final userDepartment = jwtPayload['department'] as String?;
-    
+
     if (userDepartment == null || !allowedDepartments.contains(userDepartment)) {
       return ValidationResult.invalid(
         'Access restricted to departments: ${allowedDepartments.join(', ')}'
       );
     }
-    
+
     return ValidationResult.valid();
   }
-  
+
   @override
   String get defaultErrorMessage => 'Department access required';
 }
 
 class MyAuditValidator extends JWTValidatorBase {
   const MyAuditValidator();
-  
+
   @override
   ValidationResult validate(Request request, Map<String, dynamic> jwtPayload) {
-    // En implementación real, registrar en sistema de auditoría
+    // In a real implementation, log to an audit system
     final userId = jwtPayload['user_id'];
     final action = _extractActionFromRequest(request);
-    
-    // Simular registro de auditoría
+
+    // Simulate audit logging
     _logAuditEvent(userId, action, request);
-    
+
     return ValidationResult.valid();
   }
-  
+
   String _extractActionFromRequest(Request request) {
     final method = request.method;
     final path = request.requestedUri.path;
     return '$method $path';
   }
-  
+
   void _logAuditEvent(String userId, String action, Request request) {
-    // En implementación real, guardar en base de datos de auditoría
+    // In a real implementation, save to an audit database
     print('AUDIT: User $userId performed action: $action at ${DateTime.now()}');
   }
-  
+
   @override
   String get defaultErrorMessage => 'Audit logging failed';
 }
 ```
 
-### Ejemplo Complejo: Múltiples Niveles de Validación
+### Complex Example: Multiple Levels of Validation
 
 ```dart
 @RestController(basePath: '/api/enterprise')
 @JWTController([
-  MyEmployeeValidator(),           // Debe ser empleado válido
-  MyCompanyValidator(),           // Debe pertenecer a la empresa
+  MyEmployeeValidator(),           // Must be a valid employee
+  MyCompanyValidator(),           // Must belong to the company
 ], requireAll: true)
 class EnterpriseController extends BaseController {
-  
-  @Get(path: '/dashboard')  // Solo validación de empleado + empresa
+
+  @Get(path: '/dashboard')  // Only employee + company validation
   Future<Response> getDashboard(Request request) async {
     return ApiKit.ok({
       'dashboard': 'employee dashboard data',
       'validation': 'employee + company'
     }).toHttpResponse();
   }
-  
+
   @Get(path: '/hr/employees')
   @JWTEndpoint([
     MyEmployeeValidator(),
-    MyHRValidator(),               // Debe ser de RRHH
-    MyPrivacyValidator(level: 'high'),  // Alto nivel de privacidad
+    MyHRValidator(),               // Must be from HR
+    MyPrivacyValidator(level: 'high'),  // High privacy level
   ], requireAll: true)
   Future<Response> getHREmployees(Request request) async {
     return ApiKit.ok({
@@ -619,20 +619,20 @@ class EnterpriseController extends BaseController {
       'validation': 'employee + hr + high_privacy'
     }).toHttpResponse();
   }
-  
+
   @Post(path: '/finance/budget')
   @JWTEndpoint([
     MyFinancialValidator(minimumClearance: 3),
-    MyManagerValidator(minimumLevel: 2),  // Manager nivel 2+
-    MyBudgetValidator(maxAmount: 100000), // Límite de presupuesto
+    MyManagerValidator(minimumLevel: 2),  // Manager level 2+
+    MyBudgetValidator(maxAmount: 100000), // Budget limit
   ], requireAll: true)
   Future<Response> createBudget(
     Request request,
     @RequestBody(required: true) Map<String, dynamic> budgetData,
   ) async {
-    
+
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
-    
+
     return ApiKit.ok({
       'message': 'Budget created successfully',
       'budget': budgetData,
@@ -640,9 +640,9 @@ class EnterpriseController extends BaseController {
       'validation': 'financial_3 + manager_2 + budget_limit'
     }).toHttpResponse();
   }
-  
+
   @Get(path: '/public/company-info')
-  @JWTPublic()  // Información pública de la empresa
+  @JWTPublic()  // Public company information
   Future<Response> getCompanyInfo(Request request) async {
     return ApiKit.ok({
       'company_name': 'Enterprise Corp',
@@ -654,47 +654,47 @@ class EnterpriseController extends BaseController {
 }
 ```
 
-## 🔄 Flujo de Validación JWT
+## 🔄 JWT Validation Flow
 
-### Orden de Precedencia
-1. **@JWTPublic** - Máxima prioridad, salta toda validación
-2. **@JWTEndpoint** - Sobrescribe validación del controller
-3. **@JWTController** - Validación por defecto para todos los endpoints
-4. **Sin anotación** - Usa configuración del servidor
+### Order of Precedence
+1. **@JWTPublic** - Highest priority, skips all validation.
+2. **@JWTEndpoint** - Overrides controller validation.
+3. **@JWTController** - Default validation for all endpoints.
+4. **No annotation** - Uses server configuration.
 
-### Proceso de Validación
+### Validation Process
 ```
-1. Request llega al endpoint
-2. ¿Tiene @JWTPublic? → Sí: Permitir acceso
-3. ¿Tiene @JWTEndpoint? → Sí: Usar esos validadores
-4. ¿Controller tiene @JWTController? → Sí: Usar esos validadores
-5. Ejecutar validadores según requireAll (AND/OR)
-6. ¿Todos pasan? → Sí: Permitir acceso / No: Denegar
+1. Request arrives at the endpoint
+2. Does it have @JWTPublic? → Yes: Allow access
+3. Does it have @JWTEndpoint? → Yes: Use those validators
+4. Does the controller have @JWTController? → Yes: Use those validators
+5. Execute validators according to requireAll (AND/OR)
+6. Do all pass? → Yes: Allow access / No: Deny
 ```
 
-## 💡 Mejores Prácticas
+## 💡 Best Practices
 
-### ✅ Hacer
-- **Usar @JWTPublic solo cuando sea necesario**: Para endpoints verdaderamente públicos
-- **Aplicar validación granular**: Diferentes validadores para diferentes niveles de acceso
-- **Crear validadores específicos**: Para lógica de negocio específica de tu aplicación
-- **Documentar validadores**: Explicar qué valida cada validador y por qué
-- **Usar requireAll apropiadamente**: AND para validaciones estrictas, OR para flexibilidad
-- **Preferir Enhanced Parameters**: Para acceso directo al JWT payload sin Request parameter
-- **Combinar enfoques**: Traditional para validación robusta, Enhanced para contexto completo
+### ✅ Do
+- **Use @JWTPublic only when necessary**: For truly public endpoints.
+- **Apply granular validation**: Different validators for different access levels.
+- **Create specific validators**: For business logic specific to your application.
+- **Document validators**: Explain what each validator checks and why.
+- **Use requireAll appropriately**: AND for strict validations, OR for flexibility.
+- **Prefer Enhanced Parameters**: for direct access to the JWT payload without the Request parameter.
+- **Combine approaches**: Traditional for robust validation, Enhanced for full context.
 
-### ❌ Evitar
-- **Validadores demasiado genéricos**: Crear validadores específicos para cada caso de uso
-- **No manejar errores específicos**: Proporcionar mensajes claros sobre por qué falló la validación
-- **Validadores lentos**: Las validaciones deben ser rápidas para no afectar performance
-- **No testear validadores**: Crear tests para cada validador personalizado
-- **Request parameter redundante**: Usar Enhanced Parameters cuando sea posible
+### ❌ Don\'t
+- **Overly generic validators**: Create specific validators for each use case.
+- **Not handling specific errors**: Provide clear messages about why validation failed.
+- **Slow validators**: Validations should be fast to not affect performance.
+- **Not testing validators**: Create tests for each custom validator.
+- **Redundant Request parameter**: Use Enhanced Parameters whenever possible.
 
-### 🎯 Recomendaciones Enhanced para JWT
+### 🎯 Enhanced Recommendations for JWT
 
-#### Para Endpoints Públicos con Contexto
+#### For Public Endpoints with Context
 ```dart
-// ✅ Enhanced - Información completa sin JWT
+// ✅ Enhanced - Complete information without JWT
 @Get(path: '/public/status')
 @JWTPublic()
 Future<Response> getPublicStatus(
@@ -712,13 +712,13 @@ Future<Response> getPublicStatus(
 }
 ```
 
-#### Para JWT Controller con Filtros Dinámicos
+#### For JWT Controller with Dynamic Filters
 ```dart
-// ✅ Enhanced - JWT directo + filtros ilimitados
+// ✅ Enhanced - Direct JWT + unlimited filters
 @RestController(basePath: '/api/secure')
 @JWTController([MyUserValidator()])
 class SecureController extends BaseController {
-  
+
   @Get(path: '/data')
   Future<Response> getSecureData(
     @RequestContext('jwt_payload') Map<String, dynamic> jwt,
@@ -727,7 +727,7 @@ class SecureController extends BaseController {
   ) async {
     final userId = jwt['user_id'];
     final userRole = jwt['role'];
-    
+
     return ApiKit.ok({
       'secure_data': [],
       'user_context': {'id': userId, 'role': userRole},
@@ -738,9 +738,9 @@ class SecureController extends BaseController {
 }
 ```
 
-#### Para JWT Endpoint con Validación Compleja
+#### For JWT Endpoint with Complex Validation
 ```dart
-// ✅ Enhanced - Múltiples validadores + contexto completo
+// ✅ Enhanced - Multiple validators + full context
 @Post(path: '/sensitive')
 @JWTEndpoint([
   MyAdminValidator(),
@@ -762,7 +762,7 @@ Future<Response> sensitiveOperation(
     'client_ip': headers['x-forwarded-for'],
     'user_agent': headers['user-agent'],
   };
-  
+
   return ApiKit.ok({
     'message': 'Sensitive operation completed',
     'audit_id': 'audit_${DateTime.now().millisecondsSinceEpoch}',
@@ -770,9 +770,9 @@ Future<Response> sensitiveOperation(
 }
 ```
 
-#### Para Debugging JWT Context
+#### For Debugging JWT Context
 ```dart
-// ✅ Enhanced - Debugging completo del contexto JWT
+// ✅ Enhanced - Complete debugging of JWT context
 @Get(path: '/debug/jwt')
 @JWTEndpoint([MyAdminValidator()])
 Future<Response> debugJWTContext(
@@ -795,49 +795,49 @@ Future<Response> debugJWTContext(
 }
 ```
 
-## 🔍 Ejemplos de Validadores Personalizados
+## 🔍 Custom Validator Examples
 
-### Validador de Rol Simple
+### Simple Role Validator
 ```dart
 class RoleValidator extends JWTValidatorBase {
   final String requiredRole;
-  
+
   const RoleValidator(this.requiredRole);
-  
+
   @override
   ValidationResult validate(Request request, Map<String, dynamic> jwtPayload) {
     final userRole = jwtPayload['role'] as String?;
-    
+
     if (userRole != requiredRole) {
       return ValidationResult.invalid('Role $requiredRole required');
     }
-    
+
     return ValidationResult.valid();
   }
-  
+
   @override
   String get defaultErrorMessage => 'Role $requiredRole required';
 }
 ```
 
-### Validador de Permisos Múltiples
+### Multiple Permissions Validator
 ```dart
 class PermissionsValidator extends JWTValidatorBase {
   final List<String> requiredPermissions;
   final bool requireAll;
-  
+
   const PermissionsValidator(this.requiredPermissions, {this.requireAll = true});
-  
+
   @override
   ValidationResult validate(Request request, Map<String, dynamic> jwtPayload) {
     final userPermissions = (jwtPayload['permissions'] as List<dynamic>?)
         ?.cast<String>() ?? [];
-    
+
     if (requireAll) {
       final missingPermissions = requiredPermissions
           .where((perm) => !userPermissions.contains(perm))
           .toList();
-      
+
       if (missingPermissions.isNotEmpty) {
         return ValidationResult.invalid(
           'Missing permissions: ${missingPermissions.join(', ')}'
@@ -846,34 +846,34 @@ class PermissionsValidator extends JWTValidatorBase {
     } else {
       final hasAnyPermission = requiredPermissions
           .any((perm) => userPermissions.contains(perm));
-      
+
       if (!hasAnyPermission) {
         return ValidationResult.invalid(
           'At least one of these permissions required: ${requiredPermissions.join(', ')}'
         );
       }
     }
-    
+
     return ValidationResult.valid();
   }
-  
+
   @override
   String get defaultErrorMessage => 'Insufficient permissions';
 }
 ```
 
-## 🌐 Configuración del Servidor JWT
+## 🌐 JWT Server Configuration
 
 ```dart
 void main() async {
   final server = ApiServer(config: ServerConfig.production());
-  
-  // Configurar JWT
+
+  // Configure JWT
   server.configureJWTAuth(
     jwtSecret: 'your-256-bit-secret-key-here',
-    excludePaths: ['/api/public', '/health'], // Paths siempre públicos
+    excludePaths: ['/api/public', '/health'], // Always public paths
   );
-  
+
   await server.start(
     host: '0.0.0.0',
     port: 8080,
@@ -881,16 +881,16 @@ void main() async {
 }
 ```
 
-## 📊 Códigos de Respuesta JWT
+## 📊 JWT Response Codes
 
-| Situación | Código | Descripción |
+| Situation | Code | Description |
 |-----------|---------|-------------|
-| Token faltante | `401` | Unauthorized - No JWT token provided |
-| Token inválido | `401` | Unauthorized - Invalid JWT token |
-| Token expirado | `401` | Unauthorized - JWT token expired |
-| Validador falla | `403` | Forbidden - Insufficient permissions |
-| Múltiples validadores fallan | `403` | Forbidden - Multiple validation failures |
+| Missing token | `401` | Unauthorized - No JWT token provided |
+| Invalid token | `401` | Unauthorized - Invalid JWT token |
+| Expired token | `401` | Unauthorized - JWT token expired |
+| Validator fails | `403` | Forbidden - Insufficient permissions |
+| Multiple validators fail | `403` | Forbidden - Multiple validation failures |
 
 ---
 
-**Siguiente**: [Casos de Uso - Documentación](../use-cases/README.md) | **Anterior**: [Documentación de @RequestHeader](requestheader-annotation.md)
+**Next**: [Use Cases - Documentation](../use-cases/README.md) | **Previous**: [@RequestHeader Documentation](requestheader-annotation.md)

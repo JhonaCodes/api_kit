@@ -1,6 +1,6 @@
 import 'annotation_details.dart';
 
-/// Clase que obtiene todos los datos y unidades de las annotaciones.
+/// Class that gets all the data and units of the annotations.
 class AnnotationResult {
   final List<AnnotationDetails> annotationList;
   final Duration processingTime;
@@ -15,7 +15,7 @@ class AnnotationResult {
   Map<String, int> get annotationStats {
     final Map<String, int> stats = <String, int>{};
 
-    /// Obtiene lo stats en un map
+    /// Gets the stats in a map
     for (final annotation in annotationList) {
       stats[annotation.annotationType] =
           (stats[annotation.annotationType] ?? 0) + 1;

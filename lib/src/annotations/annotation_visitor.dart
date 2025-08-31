@@ -45,7 +45,7 @@ class AnnotationVisitor extends RecursiveAstVisitor<void> {
       print('DEBUG: Is from my package: ${node.isFromMyPackage}');
     }
 
-    // Usar extensions genéricas - detecta CUALQUIER anotación de nuestro package
+    // Use generic extensions - detects ANY annotation from our package
     if (node.isFromMyPackage) {
       final context = _getCurrentContext();
       if (context != null) {
@@ -63,7 +63,7 @@ class AnnotationVisitor extends RecursiveAstVisitor<void> {
             annotationType: node.annotationType,
             targetType: context.type,
             annotationData: annotationData,
-            filePath: null, // TODO: Implementar después
+            filePath: null, // TODO: Implement later
             lineNumber: node.offset,
           ),
         );

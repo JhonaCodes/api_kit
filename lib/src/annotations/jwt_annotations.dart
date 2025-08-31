@@ -1,11 +1,11 @@
 import '../validators/jwt_validator_base.dart';
 
-/// Anotación para validación a nivel de controlador
+/// Annotation for controller-level validation
 ///
-/// Todos los endpoints del controlador heredan esta validación a menos que
-/// sean sobrescritos por @JWTEndpoint o @JWTPublic
+/// All endpoints of the controller inherit this validation unless
+/// they are overridden by @JWTEndpoint or @JWTPublic
 ///
-/// Ejemplo:
+/// Example:
 /// ```dart
 /// @Controller('/api/admin')
 /// @JWTController([
@@ -13,58 +13,58 @@ import '../validators/jwt_validator_base.dart';
 ///   MyBusinessHoursValidator(),
 /// ], requireAll: true)
 /// class AdminController extends BaseController {
-///   // Todos los endpoints requieren admin + business hours
+///   // All endpoints require admin + business hours
 /// }
 /// ```
 class JWTController {
-  /// Lista de validadores que se ejecutarán
+  /// List of validators to be executed
   final List<JWTValidatorBase> validators;
 
-  /// Si es true, TODOS los validadores deben pasar (AND logic)
-  /// Si es false, al menos UNO debe pasar (OR logic)
+  /// If true, ALL validators must pass (AND logic)
+  /// If false, at least ONE must pass (OR logic)
   final bool requireAll;
 
   const JWTController(this.validators, {this.requireAll = true});
 }
 
-/// Anotación para validación a nivel de endpoint específico
+/// Annotation for specific endpoint-level validation
 ///
-/// Sobrescribe la validación del controlador si existe.
-/// Permite validaciones específicas por endpoint.
+/// Overrides the controller\'s validation if it exists.
+/// Allows for specific validations per endpoint.
 ///
-/// Ejemplo:
+/// Example:
 /// ```dart
 /// @POST('/transactions')
 /// @JWTEndpoint([
 ///   MyFinancialValidator(minimumAmount: 10000),
-///   MyDepartmentValidator(allowedDepartments: ['finance']),
+///   MyDepartmentValidator(allowedDepartments: [\'finance\']),
 /// ], requireAll: true)
 /// Future<Response> createTransaction(Request request) async {
-///   // Este endpoint requiere validación financiera específica
+///   // This endpoint requires specific financial validation
 /// }
 /// ```
 class JWTEndpoint {
-  /// Lista de validadores que se ejecutarán
+  /// List of validators to be executed
   final List<JWTValidatorBase> validators;
 
-  /// Si es true, TODOS los validadores deben pasar (AND logic)
-  /// Si es false, al menos UNO debe pasar (OR logic)
+  /// If true, ALL validators must pass (AND logic)
+  /// If false, at least ONE must pass (OR logic)
   final bool requireAll;
 
   const JWTEndpoint(this.validators, {this.requireAll = true});
 }
 
-/// Anotación para marcar un endpoint como público (sin validación JWT)
+/// Annotation to mark an endpoint as public (without JWT validation)
 ///
-/// Sobrescribe cualquier validación de controller o endpoint.
-/// Tiene la mayor prioridad en el sistema de validación.
+/// Overrides any controller or endpoint validation.
+/// Has the highest priority in the validation system.
 ///
-/// Ejemplo:
+/// Example:
 /// ```dart
 /// @GET('/health')
 /// @JWTPublic()
 /// Future<Response> healthCheck(Request request) async {
-///   // Endpoint público - sin validación JWT
+///   // Public endpoint - no JWT validation
 /// }
 /// ```
 class JWTPublic {

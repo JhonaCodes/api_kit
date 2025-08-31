@@ -3,19 +3,19 @@ import 'package:logger_rs/logger_rs.dart';
 
 import 'jwt_validator_base.dart';
 
-/// Validador para usuarios administradores
-/// Verifica rol, estado activo y permisos de administrador
+/// Validator for admin users
+/// Verifies role, active status, and admin permissions
 class MyAdminValidator extends JWTValidatorBase {
   const MyAdminValidator();
 
   @override
   ValidationResult validate(Request request, Map<String, dynamic> jwtPayload) {
-    // El desarrollador tiene control total sobre la estructura del JWT
+    // The developer has full control over the JWT structure
     final userRole = jwtPayload['role'] as String?;
     final isActive = jwtPayload['active'] as bool? ?? false;
     final permissions = jwtPayload['permissions'] as List<dynamic>? ?? [];
 
-    // Lógica personalizada del desarrollador
+    // Custom developer logic
     if (userRole != 'admin') {
       return ValidationResult.invalid('User must be an administrator');
     }
@@ -56,8 +56,8 @@ class MyAdminValidator extends JWTValidatorBase {
   }
 }
 
-/// Validador para operaciones financieras
-/// Permite configurar requisitos específicos como montos mínimos
+/// Validator for financial operations
+/// Allows configuring specific requirements such as minimum amounts
 class MyFinancialValidator extends JWTValidatorBase {
   final double minimumAmount;
 
@@ -65,35 +65,35 @@ class MyFinancialValidator extends JWTValidatorBase {
 
   @override
   ValidationResult validate(Request request, Map<String, dynamic> jwtPayload) {
-    // Estructura JWT completamente controlada por el desarrollador
+    // JWT structure completely controlled by the developer
     final userDepartment = jwtPayload['department'] as String?;
     final clearanceLevel = jwtPayload['clearance_level'] as int? ?? 0;
     final certifications = jwtPayload['certifications'] as List<dynamic>? ?? [];
     final maxTransactionAmount =
         jwtPayload['max_transaction_amount'] as double? ?? 0.0;
 
-    // Validación de departamento
+    // Department validation
     if (userDepartment != 'finance' && userDepartment != 'accounting') {
       return ValidationResult.invalid(
         'Access restricted to financial departments',
       );
     }
 
-    // Validación de nivel de autorización
+    // Authorization level validation
     if (clearanceLevel < 3) {
       return ValidationResult.invalid(
         'Insufficient clearance level for financial operations',
       );
     }
 
-    // Validación de certificaciones
+    // Certification validation
     if (!certifications.contains('financial_ops_certified')) {
       return ValidationResult.invalid(
         'Financial operations certification required',
       );
     }
 
-    // Validación específica basada en el monto de la operación
+    // Specific validation based on the operation amount
     if (minimumAmount > 0 && maxTransactionAmount < minimumAmount) {
       return ValidationResult.invalid(
         'Transaction amount exceeds user authorization limit',
@@ -117,8 +117,8 @@ class MyFinancialValidator extends JWTValidatorBase {
   }
 }
 
-/// Validador para departamentos específicos
-/// Permite configurar departamentos permitidos y nivel requerido
+/// Validator for specific departments
+/// Allows configuring allowed departments and required level
 class MyDepartmentValidator extends JWTValidatorBase {
   final List<String> allowedDepartments;
   final bool requireManagerLevel;
@@ -130,11 +130,11 @@ class MyDepartmentValidator extends JWTValidatorBase {
 
   @override
   ValidationResult validate(Request request, Map<String, dynamic> jwtPayload) {
-    // Control total del desarrollador sobre campos JWT
+    // Full developer control over JWT fields
     final userDepartment = jwtPayload['department'] as String?;
     final employeeLevel = jwtPayload['employee_level'] as String?;
 
-    // Validar departamento
+    // Validate department
     if (userDepartment == null ||
         !allowedDepartments.contains(userDepartment)) {
       return ValidationResult.invalid(
@@ -142,7 +142,7 @@ class MyDepartmentValidator extends JWTValidatorBase {
       );
     }
 
-    // Validar nivel gerencial si es requerido
+    // Validate manager level if required
     if (requireManagerLevel) {
       if (employeeLevel != 'manager' && employeeLevel != 'director') {
         return ValidationResult.invalid('Management level access required');
@@ -166,8 +166,8 @@ class MyDepartmentValidator extends JWTValidatorBase {
   }
 }
 
-/// Validador para horarios de trabajo
-/// Verifica que el acceso ocurra dentro de horarios permitidos
+/// Validator for business hours
+/// Verifies that access occurs within allowed hours
 class MyBusinessHoursValidator extends JWTValidatorBase {
   final int startHour;
   final int endHour;
@@ -176,21 +176,21 @@ class MyBusinessHoursValidator extends JWTValidatorBase {
   const MyBusinessHoursValidator({
     this.startHour = 9,
     this.endHour = 17,
-    this.allowedWeekdays = const [1, 2, 3, 4, 5], // Lunes a Viernes
+    this.allowedWeekdays = const [1, 2, 3, 4, 5], // Monday to Friday
   });
 
   @override
   ValidationResult validate(Request request, Map<String, dynamic> jwtPayload) {
     final now = DateTime.now();
 
-    // Validar día de la semana
+    // Validate day of the week
     if (!allowedWeekdays.contains(now.weekday)) {
       return ValidationResult.invalid('Access restricted to business days');
     }
 
-    // Validar horario
+    // Validate time
     if (now.hour < startHour || now.hour >= endHour) {
-      // El JWT puede contener overrides específicos del usuario
+      // The JWT can contain specific user overrides
       final hasAfterHoursAccess =
           jwtPayload['after_hours_access'] as bool? ?? false;
       if (!hasAfterHoursAccess) {

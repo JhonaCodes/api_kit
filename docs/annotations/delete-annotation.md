@@ -1,41 +1,41 @@
-# @Delete - Anotación para Endpoints DELETE
+# @Delete - Annotation for DELETE Endpoints
 
-## 📋 Descripción
+## 📋 Description
 
-La anotación `@Delete` se utiliza para marcar métodos como endpoints que responden a peticiones HTTP DELETE. Es la anotación estándar para operaciones de eliminación de recursos.
+The `@Delete` annotation is used to mark methods as endpoints that respond to HTTP DELETE requests. It is the standard annotation for resource deletion operations.
 
-## 🎯 Propósito
+## 🎯 Purpose
 
-- **Eliminar recursos**: Borrar registros o entidades específicas
-- **Operaciones de limpieza**: Remover datos temporales o obsoletos
-- **Gestión de relaciones**: Eliminar conexiones entre entidades
-- **APIs de desactivación**: Soft delete o cambios de estado
+- **Delete resources**: Delete specific records or entities
+- **Cleanup operations**: Remove temporary or obsolete data
+- **Relationship management**: Remove connections between entities
+- **Deactivation APIs**: Soft delete or state changes
 
-## 📝 Sintaxis
+## 📝 Syntax
 
 ```dart
 @Delete({
-  required String path,           // Ruta del endpoint (OBLIGATORIO)
-  String? description,           // Descripción del endpoint
-  int statusCode = 204,          // Código de respuesta por defecto (No Content)
-  bool requiresAuth = true,      // Requiere autenticación por defecto
+  required String path,           // Endpoint path (REQUIRED)
+  String? description,           // Endpoint description
+  int statusCode = 204,          // Default response code (No Content)
+  bool requiresAuth = true,      // Requires authentication by default
 })
 ```
 
-## 🔧 Parámetros
+## 🔧 Parameters
 
-| Parámetro | Tipo | Obligatorio | Valor por Defecto | Descripción |
+| Parameter | Type | Required | Default Value | Description |
 |-----------|------|-------------|-------------------|-------------|
-| `path` | `String` | ✅ Sí | - | Ruta relativa del endpoint (ej: `/users/{id}`, `/products/{id}`) |
-| `description` | `String?` | ❌ No | `null` | Descripción legible del propósito del endpoint |
-| `statusCode` | `int` | ❌ No | `204` | Código de estado HTTP de respuesta exitosa (No Content) |
-| `requiresAuth` | `bool` | ❌ No | `true` | Indica si el endpoint requiere autenticación |
+| `path` | `String` | ✅ Yes | - | Relative path of the endpoint (e.g., `/users/{id}`, `/products/{id}`) |
+| `description` | `String?` | ❌ No | `null` | Readable description of the endpoint's purpose |
+| `statusCode` | `int` | ❌ No | `204` | HTTP status code for a successful response (No Content) |
+| `requiresAuth` | `bool` | ❌ No | `true` | Indicates if the endpoint requires authentication |
 
-> **Nota**: DELETE requiere autenticación por defecto (`requiresAuth = true`) y devuelve 204 (No Content) ya que es una operación destructiva.
+> **Note**: DELETE requires authentication by default (`requiresAuth = true`) and returns 204 (No Content) as it is a destructive operation.
 
-## 🚀 Ejemplos de Uso
+## 🚀 Usage Examples
 
-### Ejemplo Básico
+### Basic Example
 
 #### Traditional Approach - Manual JWT Extraction
 ```dart
@@ -49,7 +49,7 @@ class UserController extends BaseController {
     @PathParam('id') String userId,
   ) async {
     
-    // Verificar que el usuario existe (en implementación real)
+    // Verify that the user exists (in a real implementation)
     if (userId.isEmpty || !userId.startsWith('user_')) {
       return Response.notFound(jsonEncode({
         'error': 'User not found',
@@ -61,10 +61,10 @@ class UserController extends BaseController {
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     final adminUser = jwtPayload['user_id'];
     
-    // Simular eliminación
-    // En implementación real: await userRepository.delete(userId);
+    // Simulate deletion
+    // In a real implementation: await userRepository.delete(userId);
     
-    return Response(204); // No Content - eliminación exitosa
+    return Response(204); // No Content - successful deletion
   }
 }
 ```
@@ -83,7 +83,7 @@ class UserController extends BaseController {
     @RequestHost() String host,
   ) async {
     
-    // Verificar que el usuario existe (en implementación real)
+    // Verify that the user exists (in a real implementation)
     if (userId.isEmpty || !userId.startsWith('user_')) {
       return Response.notFound(jsonEncode({
         'error': 'User not found',
@@ -105,30 +105,30 @@ class UserController extends BaseController {
       'deleted_at': DateTime.now().toIso8601String(),
     };
     
-    // Simular eliminación y logging
-    // En implementación real: await userRepository.delete(userId);
+    // Simulate deletion and logging
+    // In a real implementation: await userRepository.delete(userId);
     // await auditLogger.logDeletion(deletionLog);
     
-    return Response(204); // No Content - eliminación exitosa
+    return Response(204); // No Content - successful deletion
   }
 }
 ```
 
-### Ejemplo con Confirmación y Log
+### Example with Confirmation and Log
 ```dart
 @Delete(
   path: '/products/{productId}',
-  description: 'Elimina un producto del catálogo',
-  statusCode: 200 // Devolver información de confirmación
+  description: 'Deletes a product from the catalog',
+  statusCode: 200 // Return confirmation information
 )
 @JWTEndpoint([MyAdminValidator()])
 Future<Response> deleteProduct(
   Request request,
-  @PathParam('productId', description: 'ID único del producto') String productId,
-  @QueryParam('force', defaultValue: false, description: 'Forzar eliminación aunque tenga dependencias') bool force,
+  @PathParam('productId', description: 'Unique product ID') String productId,
+  @QueryParam('force', defaultValue: false, description: 'Force deletion even if it has dependencies') bool force,
 ) async {
   
-  // Validar formato del ID
+  // Validate ID format
   if (!productId.startsWith('prod_')) {
     return Response.badRequest(body: jsonEncode({
       'error': 'Invalid product ID format',
@@ -137,12 +137,12 @@ Future<Response> deleteProduct(
     }));
   }
   
-  // Obtener información del JWT
+  // Get JWT information
   final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
   final adminUser = jwtPayload['user_id'];
   
-  // Verificar dependencias (simular check)
-  final hasDependencies = productId == 'prod_123'; // Simular que este producto tiene dependencias
+  // Check dependencies (simulate check)
+  final hasDependencies = productId == 'prod_123'; // Simulate that this product has dependencies
   
   if (hasDependencies && !force) {
     return Response(409, // Conflict
@@ -156,7 +156,7 @@ Future<Response> deleteProduct(
     );
   }
   
-  // Registrar la eliminación
+  // Log the deletion
   final deletionRecord = {
     'product_id': productId,
     'deleted_by': adminUser,
@@ -165,8 +165,8 @@ Future<Response> deleteProduct(
     'had_dependencies': hasDependencies,
   };
   
-  // Simular eliminación
-  // En implementación real: 
+  // Simulate deletion
+  // In a real implementation: 
   // if (force && hasDependencies) await cleanupDependencies(productId);
   // await productRepository.delete(productId);
   
@@ -178,26 +178,26 @@ Future<Response> deleteProduct(
 }
 ```
 
-### Ejemplo de Soft Delete
+### Soft Delete Example
 ```dart
 @Delete(
   path: '/posts/{postId}',
-  description: 'Desactiva un post (soft delete)',
+  description: 'Deactivates a post (soft delete)',
   statusCode: 200
 )
-@JWTEndpoint([MyUserValidator()]) // Solo el autor puede eliminar
+@JWTEndpoint([MyUserValidator()]) // Only the author can delete
 Future<Response> deletePost(
   Request request,
-  @PathParam('postId', description: 'ID del post') String postId,
-  @QueryParam('permanent', defaultValue: false, description: 'Eliminación permanente') bool permanent,
+  @PathParam('postId', description: 'Post ID') String postId,
+  @QueryParam('permanent', defaultValue: false, description: 'Permanent deletion') bool permanent,
 ) async {
   
-  // Obtener información del JWT
+  // Get JWT information
   final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
   final currentUser = jwtPayload['user_id'];
   
-  // En implementación real, verificar que el usuario es el autor del post
-  final postAuthor = 'user_123'; // Simular obtener autor de BD
+  // In a real implementation, verify that the user is the author of the post
+  final postAuthor = 'user_123'; // Simulate getting author from DB
   
   if (currentUser != postAuthor) {
     return Response.forbidden(jsonEncode({
@@ -216,12 +216,12 @@ Future<Response> deletePost(
   };
   
   if (!permanent) {
-    // Soft delete - mantener datos pero marcar como eliminado
+    // Soft delete - keep data but mark as deleted
     deletionResult['status'] = 'deleted';
     deletionResult['recoverable_until'] = DateTime.now().add(Duration(days: 30)).toIso8601String();
     deletionResult['recovery_note'] = 'Post can be recovered within 30 days';
   } else {
-    // Hard delete - eliminar permanentemente
+    // Hard delete - permanently delete
     deletionResult['status'] = 'permanently_deleted';
     deletionResult['recovery_note'] = 'Post cannot be recovered';
   }
@@ -233,21 +233,21 @@ Future<Response> deletePost(
 }
 ```
 
-### Ejemplo de Eliminación en Lote
+### Batch Deletion Example
 ```dart
 @Delete(
   path: '/users/{userId}/notifications',
-  description: 'Elimina todas las notificaciones del usuario'
+  description: 'Deletes all user notifications'
 )
 @JWTEndpoint([MyUserValidator()])
 Future<Response> deleteAllNotifications(
   Request request,
-  @PathParam('userId', description: 'ID del usuario') String userId,
-  @QueryParam('older_than_days', required: false, description: 'Solo eliminar notificaciones más antiguas que X días') int? olderThanDays,
-  @QueryParam('type', required: false, description: 'Tipo de notificaciones a eliminar') String? notificationType,
+  @PathParam('userId', description: 'User ID') String userId,
+  @QueryParam('older_than_days', required: false, description: 'Only delete notifications older than X days') int? olderThanDays,
+  @QueryParam('type', required: false, description: 'Type of notifications to delete') String? notificationType,
 ) async {
   
-  // Validar que el JWT corresponde al usuario
+  // Validate that the JWT corresponds to the user
   final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
   final tokenUserId = jwtPayload['user_id'];
   
@@ -259,10 +259,8 @@ Future<Response> deleteAllNotifications(
     }));
   }
   
-  // Construir filtros para la eliminación
-  final filters = <String, dynamic>{
-    'user_id': userId,
-  };
+  // Build filters for deletion
+  final filters = <String, dynamic>{'user_id': userId};
   
   if (olderThanDays != null) {
     final cutoffDate = DateTime.now().subtract(Duration(days: olderThanDays));
@@ -281,8 +279,8 @@ Future<Response> deleteAllNotifications(
     filters['type'] = notificationType;
   }
   
-  // Simular conteo y eliminación
-  final simulatedCount = olderThanDays != null ? 15 : 45; // Simular cantidad
+  // Simulate count and deletion
+  final simulatedCount = olderThanDays != null ? 15 : 45; // Simulate quantity
   final deletedCount = notificationType != null ? (simulatedCount * 0.3).round() : simulatedCount;
   
   final deletionResult = {
@@ -292,11 +290,9 @@ Future<Response> deleteAllNotifications(
     'deleted_at': DateTime.now().toIso8601String(),
   };
   
-  // Agregar detalles por tipo si se especificó
+  // Add details by type if specified
   if (notificationType != null) {
-    deletionResult['deleted_by_type'] = {
-      notificationType: deletedCount
-    };
+    deletionResult['deleted_by_type'] = {notificationType: deletedCount};
   } else {
     deletionResult['deleted_by_type'] = {
       'email': (deletedCount * 0.4).round(),
@@ -313,21 +309,21 @@ Future<Response> deleteAllNotifications(
 }
 ```
 
-### Ejemplo con Headers de Confirmación
+### Example with Confirmation Headers
 ```dart
 @Delete(
   path: '/files/{fileId}',
-  description: 'Elimina un archivo del sistema'
+  description: 'Deletes a file from the system'
 )
 @JWTEndpoint([MyFileValidator()])
 Future<Response> deleteFile(
   Request request,
-  @PathParam('fileId', description: 'ID único del archivo') String fileId,
-  @RequestHeader('X-Confirm-Delete', required: true, description: 'Confirmación de eliminación (debe ser "yes")') String confirmHeader,
-  @QueryParam('remove_thumbnails', defaultValue: true, description: 'Eliminar thumbnails asociados') bool removeThumbnails,
+  @PathParam('fileId', description: 'Unique file ID') String fileId,
+  @RequestHeader('X-Confirm-Delete', required: true, description: 'Deletion confirmation (must be "yes")') String confirmHeader,
+  @QueryParam('remove_thumbnails', defaultValue: true, description: 'Delete associated thumbnails') bool removeThumbnails,
 ) async {
   
-  // Validar confirmación
+  // Validate confirmation
   if (confirmHeader != 'yes') {
     return Response.badRequest(body: jsonEncode({
       'error': 'Deletion confirmation required',
@@ -337,7 +333,7 @@ Future<Response> deleteFile(
     }));
   }
   
-  // Validar formato del file ID
+  // Validate file ID format
   if (!fileId.startsWith('file_')) {
     return Response.badRequest(body: jsonEncode({
       'error': 'Invalid file ID format',
@@ -346,11 +342,11 @@ Future<Response> deleteFile(
     }));
   }
   
-  // Obtener información del JWT
+  // Get JWT information
   final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
   final currentUser = jwtPayload['user_id'];
   
-  // Simular información del archivo
+  // Simulate file information
   final fileInfo = {
     'id': fileId,
     'filename': 'document.pdf',
@@ -359,7 +355,7 @@ Future<Response> deleteFile(
     'has_thumbnails': fileId.contains('image'),
   };
   
-  // Preparar resultado de eliminación
+  // Prepare deletion result
   final deletionActions = <String>[];
   deletionActions.add('file_deleted');
   
@@ -384,15 +380,15 @@ Future<Response> deleteFile(
 }
 ```
 
-## 🔗 Combinación con Otras Anotaciones
+## 🔗 Combination with Other Annotations
 
-### Con Múltiples Validadores para Operación Crítica
+### With Multiple Validators for Critical Operation
 ```dart
 @Delete(path: '/financial/accounts/{accountId}', statusCode: 200)
 @JWTController([
-  MyFinancialValidator(clearanceLevel: 5), // Máximo nivel requerido
+  MyFinancialValidator(clearanceLevel: 5), // Maximum level required
   MyBusinessHoursValidator(),
-  MyTwoFactorValidator(), // Requiere 2FA
+  MyTwoFactorValidator(), // Requires 2FA
 ], requireAll: true)
 Future<Response> deleteFinancialAccount(
   Request request,
@@ -400,7 +396,7 @@ Future<Response> deleteFinancialAccount(
   @RequestHeader('X-Two-Factor-Token', required: true) String tfaToken,
 ) async {
   
-  // Validaciones extra para operaciones financieras críticas
+  // Extra validations for critical financial operations
   final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
   final financialUser = jwtPayload['user_id'];
   
@@ -414,30 +410,30 @@ Future<Response> deleteFinancialAccount(
 }
 ```
 
-## 💡 Mejores Prácticas
+## 💡 Best Practices
 
-### ✅ Hacer
-- **Validar existencia**: Verificar que el recurso existe antes de eliminar
-- **Confirmar permisos**: Asegurarse de que el usuario puede eliminar el recurso
-- **Registrar la acción**: Log de quién eliminó qué y cuándo
-- **Manejar dependencias**: Verificar relaciones antes de eliminar
-- **Considerar soft delete**: Para recursos importantes que podrían necesitar recuperación
-- **Preferir Enhanced Parameters**: Para acceso completo sin Request parameter
-- **Combinar enfoques**: Traditional para validación, Enhanced para contexto completo
+### ✅ Do
+- **Validate existence**: Verify that the resource exists before deleting
+- **Confirm permissions**: Ensure the user can delete the resource
+- **Log the action**: Log who deleted what and when
+- **Handle dependencies**: Check relationships before deleting
+- **Consider soft delete**: For important resources that might need recovery
+- **Prefer Enhanced Parameters**: For full access without the Request parameter
+- **Combine approaches**: Traditional for validation, Enhanced for context
 
-### ❌ Evitar
-- **Eliminación sin confirmación**: Para recursos críticos, requerir confirmación explícita
-- **No validar permisos**: Siempre verificar autorización
-- **Eliminar sin log**: Mantener registro de eliminaciones
-- **Ignorar dependencias**: Puede crear inconsistencias en los datos
-- **Hard delete por defecto**: Considerar soft delete para recuperabilidad
-- **Request parameter redundante**: Usar Enhanced Parameters cuando sea posible
+### ❌ Don't
+- **Deletion without confirmation**: For critical resources, require explicit confirmation
+- **Not validating permissions**: Always check authorization
+- **Deleting without a log**: Keep a record of deletions
+- **Ignoring dependencies**: Can create data inconsistencies
+- **Hard delete by default**: Consider soft delete for recoverability
+- **Redundant Request parameter**: Use Enhanced Parameters when possible
 
-### 🎯 Recomendaciones Enhanced por Escenario
+### 🎯 Enhanced Recommendations by Scenario
 
-#### Para DELETE Simple con Auditoría
+#### For Simple DELETE with Auditing
 ```dart
-// ✅ Enhanced - Auditoría completa sin Request parameter
+// ✅ Enhanced - Complete auditing without Request parameter
 @Delete(path: '/posts/{id}')
 Future<Response> deletePost(
   @PathParam('id') String id,
@@ -456,9 +452,9 @@ Future<Response> deletePost(
 }
 ```
 
-#### Para DELETE con Opciones Dinámicas
+#### For DELETE with Dynamic Options
 ```dart
-// ✅ Enhanced - Opciones de eliminación flexibles
+// ✅ Enhanced - Flexible deletion options
 @Delete(path: '/files/{id}')
 Future<Response> deleteFile(
   @PathParam('id') String id,
@@ -472,9 +468,9 @@ Future<Response> deleteFile(
 }
 ```
 
-#### Para DELETE Crítico con Confirmación Enhanced
+#### For Critical DELETE with Enhanced Confirmation
 ```dart
-// ✅ Hybrid - Validación específica + contexto completo
+// ✅ Hybrid - Specific validation + full context
 @Delete(path: '/critical/{id}')
 @JWTEndpoint([MyAdminValidator()])
 Future<Response> deleteCritical(
@@ -490,9 +486,9 @@ Future<Response> deleteCritical(
 }
 ```
 
-#### Para Soft DELETE con Recuperación
+#### For Soft DELETE with Recovery
 ```dart
-// ✅ Enhanced - Soft delete con contexto completo
+// ✅ Enhanced - Soft delete with full context
 @Delete(path: '/documents/{id}', statusCode: 200)
 Future<Response> softDeleteDocument(
   @PathParam('id') String id,
@@ -512,22 +508,22 @@ Future<Response> softDeleteDocument(
 }
 ```
 
-## 🔍 Tipos de Eliminación
+## 🔍 Deletion Types
 
-### 1. **Hard Delete (Eliminación Física)**
+### 1. **Hard Delete (Physical Deletion)**
 ```dart
 @Delete(path: '/temp-files/{fileId}')
 Future<Response> deleteTemporaryFile(Request request, @PathParam('fileId') String fileId) async {
-  // Elimina completamente el archivo - no se puede recuperar
+  // Completely deletes the file - cannot be recovered
   return Response(204); // No Content
 }
 ```
 
-### 2. **Soft Delete (Eliminación Lógica)**
+### 2. **Soft Delete (Logical Deletion)**
 ```dart
 @Delete(path: '/posts/{postId}', statusCode: 200)
 Future<Response> deletePost(Request request, @PathParam('postId') String postId) async {
-  // Marca como eliminado pero mantiene los datos
+  // Marks as deleted but keeps the data
   return jsonResponse(jsonEncode({
     'message': 'Post deleted successfully',
     'recoverable_until': DateTime.now().add(Duration(days: 30)).toIso8601String()
@@ -535,7 +531,7 @@ Future<Response> deletePost(Request request, @PathParam('postId') String postId)
 }
 ```
 
-### 3. **Eliminación con Confirmación**
+### 3. **Deletion with Confirmation**
 ```dart
 @Delete(path: '/critical-data/{id}')
 Future<Response> deleteCriticalData(
@@ -546,52 +542,52 @@ Future<Response> deleteCriticalData(
   if (confirmation != 'CONFIRMED') {
     return Response.badRequest(body: 'Confirmation required');
   }
-  // Proceder con eliminación
+  // Proceed with deletion
   return Response(204);
 }
 ```
 
-## 📊 Códigos de Respuesta Recomendados
+## 📊 Recommended Response Codes
 
-| Situación | Código | Descripción |
+| Situation | Code | Description |
 |-----------|---------|-------------|
-| Eliminación exitosa sin contenido | `204` | No Content - Recurso eliminado |
-| Eliminación exitosa con info | `200` | OK - Con detalles de eliminación |
-| Recurso no encontrado | `404` | Not Found - ID no existe |
-| Confirmación requerida | `400` | Bad Request - Falta confirmación |
-| Sin autorización | `401` | Unauthorized - Token JWT inválido |
-| Prohibido | `403` | Forbidden - Sin permisos de eliminación |
-| Tiene dependencias | `409` | Conflict - No se puede eliminar |
-| Error del servidor | `500` | Internal Server Error |
+| Elimination exitosa sin contenido | `204` | No Content - Resource deleted |
+| Elimination exitosa con info | `200` | OK - With deletion details |
+| Resource not found | `404` | Not Found - ID does not exist |
+| Confirmation required | `400` | Bad Request - Missing confirmation |
+| Unauthorized | `401` | Unauthorized - Invalid JWT token |
+| Forbidden | `403` | Forbidden - No deletion permissions |
+| Has dependencies | `409` | Conflict - Cannot be deleted |
+| Server error | `500` | Internal Server Error |
 
 ## 🌐 URL Resultantes
 
-Si tu controller tiene `basePath: '/api/v1'` y usas `@Delete(path: '/users/{id}')`, la URL final será:
+If your controller has `basePath: '/api/v1'` and you use `@Delete(path: '/users/{id}')`, the final URL will be:
 ```
 DELETE http://localhost:8080/api/v1/users/{id}
 ```
 
-## 📋 Ejemplo de Request/Response
+## 📋 Request/Response Example
 
-### Request - Eliminación Simple
+### Request - Simple Deletion
 ```http
 DELETE http://localhost:8080/api/users/user_123
 Authorization: Bearer admin_token_456
 ```
 
-### Response - Sin contenido (204)
+### Response - No content (204)
 ```http
 HTTP/1.1 204 No Content
 ```
 
-### Request - Eliminación con Confirmación
+### Request - Deletion with Confirmation
 ```http
 DELETE http://localhost:8080/api/files/file_789?remove_thumbnails=true
 Authorization: Bearer file_token_456
 X-Confirm-Delete: yes
 ```
 
-### Response - Con información (200)
+### Response - With information (200)
 ```http
 HTTP/1.1 200 OK
 Content-Type: application/json
@@ -612,4 +608,4 @@ Content-Type: application/json
 
 ---
 
-**Siguiente**: [Documentación de @RestController](restcontroller-annotation.md) | **Anterior**: [Documentación de @Patch](patch-annotation.md)
+**Next**: [Documentation for @RestController](restcontroller-annotation.md) | **Previous**: [Documentation for @Patch](patch-annotation.md)

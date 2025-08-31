@@ -1,124 +1,155 @@
-# Limitaciones Actuales y Evolución del Framework
+# Current Limitations and Framework Evolution
 
-## 🤔 Observaciones del Usuario (Muy Válidas)
+## 🤔 User Observations (Very Valid)
 
-Durante la documentación, el usuario señaló limitaciones importantes en el diseño actual de `api_kit`:
+During the documentation process, the user pointed out important limitations in the current design of `api_kit`:
 
-### Problema 1: ¿Por qué `Request` + `@RequestBody`?
+### Problem 1: Why `Request` + `@RequestBody`?
 ```dart
-// ¿Por qué necesito ambos?
-@Post(path: '/users')
+// Why do I need both?
+@Post(path: 
+'/users')
 Future<Response> createUser(
-  Request request,                                        // ← ¿Necesario?
-  @RequestBody(required: true) Map<String, dynamic> data, // ← Ya parseado
+  Request request,                                        // ← Necessary?
+  @RequestBody(required: true) Map<String, dynamic> data, // ← Already parsed
 ) async {
-  // ¿No debería ser automático?
+  // Shouldn't it be automatic?
 }
 ```
 
-### Problema 2: JWT ya validado, ¿por qué extraer manualmente?
+### Problem 2: JWT already validated, why extract it manually?
 ```dart
-@JWTEndpoint([MyUserValidator()]) // ← Ya validó el JWT
+@JWTEndpoint([MyUserValidator()]) // ← Already validated the JWT
 Future<Response> updateUser(Request request) async {
-  // ¿Por qué extraer manualmente si ya se validó arriba?
-  final jwt = request.context['jwt_payload'] as Map<String, dynamic>;
+  // Why extract manually if it has already been validated above?
+  final jwt = request.context[
+'jwt_payload'
+] as Map<String, dynamic>;
 }
 ```
 
-### Problema 3: Validadores sin contexto del request
+### Problem 3: Validators without request context
 ```dart
 class MyValidator extends JWTValidatorBase {
   ValidationResult validate(Request request, Map<String, dynamic> jwt) {
-    // ¿No puedo acceder al body parseado o path params aquí?
-    // ¿Solo headers y JWT?
+    // Can't I access the parsed body or path params here?
+    // Only headers and JWT?
   }
 }
 ```
 
-## ✅ El Usuario Tiene Razón
+## ✅ The User is Right
 
-Estas observaciones reflejan limitaciones reales del framework actual y muestran cómo debería evolucionar hacia un diseño más moderno.
+These observations reflect real limitations of the current framework and show how it should evolve towards a more modern design.
 
-## 🎯 Estado Actual vs Estado Ideal
+## 🎯 Current State vs Ideal State
 
-### 🔴 Estado Actual (Subóptimo)
+### 🔴 Current State (Suboptimal)
 ```dart
-@RestController(basePath: '/api/users')
+@RestController(basePath: 
+'/api/users')
 class UserController extends BaseController {
   
-  @Put(path: '/{userId}')
+  @Put(path: 
+'/{userId}')
   @JWTEndpoint([MyUserValidator()])
   Future<Response> updateUser(
-    Request request,                                    // Obligatorio para JWT
-    @PathParam('userId') String userId,                 // OK
-    @RequestBody(required: true) Map<String, dynamic> data, // Parseado pero necesito Request también
+    Request request,                                    // Required for JWT
+    @PathParam(
+'userId'
+) String userId,                 // OK
+    @RequestBody(required: true) Map<String, dynamic> data, // Parsed but I need Request too
   ) async {
     
-    // Extraer JWT manualmente (redundante)
-    final jwt = request.context['jwt_payload'] as Map<String, dynamic>;
-    final currentUserId = jwt['user_id'];
+    // Manually extract JWT (redundant)
+    final jwt = request.context[
+'jwt_payload'
+] as Map<String, dynamic>;
+    final currentUserId = jwt[
+'user_id'
+];
     
-    // Validar manualmente (debería estar en el validador)
+    // Manually validate (should be in the validator)
     if (currentUserId != userId) {
-      return Response.forbidden(jsonEncode({'error': 'Cannot update other users'}));
+      return Response.forbidden(jsonEncode({
+'error'
+: 'Cannot update other users'}));
     }
     
-    // Procesar actualización
-    return jsonResponse(jsonEncode({'status': 'updated'}));
+    // Process update
+    return jsonResponse(jsonEncode({
+'status'
+: 'updated'}));
   }
 }
 
-// Validador limitado
+// Limited validator
 class MyUserValidator extends JWTValidatorBase {
   ValidationResult validate(Request request, Map<String, dynamic> jwt) {
-    // No puedo validar path params aquí
-    // No puedo validar request body aquí
-    // Solo JWT + headers
+    // I can't validate path params here
+    // I can't validate request body here
+    // Only JWT + headers
     return ValidationResult.valid();
   }
 }
 ```
 
-### 🟢 Estado Ideal (Cómo Debería Ser)
+### 🟢 Ideal State (How It Should Be)
 ```dart
-@RestController(basePath: '/api/users')
+@RestController(basePath: 
+'/api/users')
 class UserController extends BaseController {
   
-  @Put(path: '/{userId}')
+  @Put(path: 
+'/{userId}')
   @JWTEndpoint([SmartUserValidator()])
   Future<Response> updateUser(
-    @PathParam('userId') String userId,
+    @PathParam(
+'userId'
+) String userId,
     @RequestBody() Map<String, dynamic> data,
-    @JWTPayload() Map<String, dynamic> jwt,        // Inyectado automáticamente
-    @RequestContext() RequestMetadata context,     // Headers, IP, etc. si se necesita
+    @JWTPayload() Map<String, dynamic> jwt,        // Automatically injected
+    @RequestContext() RequestMetadata context,     // Headers, IP, etc. if needed
   ) async {
     
-    // JWT ya disponible, validación ya hecha en SmartUserValidator
-    final currentUserId = jwt['user_id'];
+    // JWT already available, validation already done in SmartUserValidator
+    final currentUserId = jwt[
+'user_id'
+];
     
-    // Procesar actualización (validación ya hecha)
-    return jsonResponse(jsonEncode({'status': 'updated'}));
+    // Process update (validation already done)
+    return jsonResponse(jsonEncode({
+'status'
+: 'updated'}));
   }
 }
 
-// Validador inteligente con contexto completo
+// Smart validator with full context
 class SmartUserValidator extends ContextualValidator {
   ValidationResult validate(ValidationContext context) {
     final jwt = context.jwtPayload;
     final pathParams = context.pathParams;
     final body = context.requestBody;
     
-    // Validar que el usuario solo puede modificarse a sí mismo
-    final currentUserId = jwt['user_id'];
-    final targetUserId = pathParams['userId'];
+    // Validate that the user can only modify themselves
+    final currentUserId = jwt[
+'user_id'
+];
+    final targetUserId = pathParams[
+'userId'
+];
     
     if (currentUserId != targetUserId) {
-      return ValidationResult.invalid('Cannot update other users');
+      return ValidationResult.invalid(
+'Cannot update other users'
+);
     }
     
-    // Validar datos del body si es necesario
-    if (body != null && body['email'] != null) {
-      // Validaciones específicas del contenido
+    // Validate body data if necessary
+    if (body != null && body[
+'email'
+] != null) {
+      // Specific content validations
     }
     
     return ValidationResult.valid();
@@ -126,95 +157,111 @@ class SmartUserValidator extends ContextualValidator {
 }
 ```
 
-## 🚀 Roadmap de Evolución Sugerido
+## 🚀 Suggested Evolution Roadmap
 
-### Fase 1: Eliminación de Redundancias
+### Phase 1: Elimination of Redundancies
 ```dart
-// Permitir endpoints sin Request explícito
-@Post(path: '/users')
+// Allow endpoints without explicit Request
+@Post(path: 
+'/users')
 Future<Response> createUser(
   @RequestBody() UserCreateDto userData,
   @JWTPayload() JWTData jwt,
 ) async {
-  // Sin Request crudo
+  // No raw Request
 }
 ```
 
-### Fase 2: Validadores Contextuales
+### Phase 2: Contextual Validators
 ```dart
 class AdvancedValidator extends ContextualJWTValidator {
   ValidationResult validate(FullValidationContext context) {
-    // Acceso a TODO: JWT, body, path params, query params, headers
+    // Access to EVERYTHING: JWT, body, path params, query params, headers
     return ValidationResult.valid();
   }
 }
 ```
 
-### Fase 3: DTOs Tipados
+### Phase 3: Typed DTOs
 ```dart
-@Post(path: '/users')
+@Post(path: 
+'/users')
 Future<ApiResponse<User>> createUser(
   @RequestBody() CreateUserRequest request,
   @JWTPayload() AuthenticatedUser user,
 ) async {
-  // Tipos específicos en lugar de Map<String, dynamic>
+  // Specific types instead of Map<String, dynamic>
 }
 ```
 
-## 💡 Workarounds Actuales
+## 💡 Current Workarounds
 
-Mientras el framework evoluciona, estas son las mejores prácticas actuales:
+While the framework evolves, these are the current best practices:
 
-### ✅ Mejor Práctica Actual
+### ✅ Current Best Practice
 ```dart
-@Post(path: '/users')
+@Post(path: 
+'/users')
 @JWTEndpoint([MyValidator()])
 Future<Response> createUser(
-  Request request, // ⚠️ Necesario por limitación actual
-  @RequestBody(required: true) Map<String, dynamic> userData, // ✅ Usar esto, no parsing manual
+  Request request, // ⚠️ Necessary due to current limitation
+  @RequestBody(required: true) Map<String, dynamic> userData, // ✅ Use this, not manual parsing
 ) async {
   
-  // ⚠️ Extracción manual necesaria (por ahora)
-  final jwt = request.context['jwt_payload'] as Map<String, dynamic>;
+  // ⚠️ Manual extraction necessary (for now)
+  final jwt = request.context[
+'jwt_payload'
+] as Map<String, dynamic>;
   
-  // ✅ usar userData directamente - ya está parseado
-  final name = userData['name']; // No hacer jsonDecode manual
+  // ✅ use userData directly - it's already parsed
+  final name = userData[
+'name'
+]; // Don't do manual jsonDecode
   
-  return jsonResponse(jsonEncode({'user_created': true}));
+  return jsonResponse(jsonEncode({
+'user_created'
+: true}));
 }
 ```
 
-### ❌ Prácticas a Evitar
+### ❌ Practices to Avoid
 ```dart
-@Post(path: '/users')
+@Post(path: 
+'/users')
 Future<Response> createUser(
   Request request,
-  @RequestBody() Map<String, dynamic> userData, // Ya parseado
+  @RequestBody() Map<String, dynamic> userData, // Already parsed
 ) async {
   
-  // ❌ No hacer parsing manual si ya tienes @RequestBody
-  final body = await request.readAsString(); // Redundante
-  final manualData = jsonDecode(body); // Innecesario
+  // ❌ Don't do manual parsing if you already have @RequestBody
+  final body = await request.readAsString(); // Redundant
+  final manualData = jsonDecode(body); // Unnecessary
   
-  return jsonResponse(jsonEncode({'status': 'bad_practice'}));
+  return jsonResponse(jsonEncode({
+'status'
+: 'bad_practice'}));
 }
 ```
 
-## 📝 Contribución al Framework
+## 📝 Contribution to the Framework
 
-Estas observaciones son valiosas para la evolución de `api_kit`. Sugerencias para los mantenedores:
+These observations are valuable for the evolution of `api_kit`. Suggestions for the maintainers:
 
-1. **Issue #1**: Eliminar necesidad de `Request` cuando se usan anotaciones
-2. **Issue #2**: Inyección automática de JWT payload validado
-3. **Issue #3**: Validadores con acceso a contexto completo del request
-4. **Issue #4**: DTOs tipados en lugar de `Map<String, dynamic>`
+1. **Issue #1**: Eliminate the need for `Request` when using annotations
+2. **Issue #2**: Automatic injection of validated JWT payload
+3. **Issue #3**: Validators with access to the full request context
+4. **Issue #4**: Typed DTOs instead of `Map<String, dynamic>`
 
-## 🎯 Conclusión
+## 🎯 Conclusion
 
-El usuario identificó correctamente limitaciones del diseño actual que hacen el código más verboso y redundante de lo necesario. Estas son áreas de mejora legítimas para futuras versiones del framework.
+The user correctly identified limitations of the current design that make the code more verbose and redundant than necessary. These are legitimate areas of improvement for future versions of the framework.
 
-La evolución natural sería hacia un sistema más declarativo y con menos boilerplate, similar a Spring Boot, FastAPI, o frameworks modernos de otros lenguajes.
+The natural evolution would be towards a more declarative system with less boilerplate, similar to Spring Boot, FastAPI, or modern frameworks in other languages.
 
 ---
 
-**Nota**: Esta documentación reconoce limitaciones actuales y propone direcciones de evolución basadas en feedback real del usuario.
+**Note**: This documentation acknowledges current limitations and proposes directions for evolution based on real user feedback.
+
+---
+
+**Next**: [Complete E-commerce API](ecommerce-api.md) | **Previous**: [Complete CRUD Use Case](complete-crud-api.md)

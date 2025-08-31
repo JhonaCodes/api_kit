@@ -1,6 +1,6 @@
 // lib/annotations/params/params.dart
 
-/// Anotación para parámetros generales
+/// Annotation for general parameters
 final class Param {
   final String name;
   final bool required;
@@ -15,7 +15,7 @@ final class Param {
   });
 }
 
-/// Anotación para parámetros de path (/users/{id})
+/// Annotation for path parameters (/users/{id})
 final class PathParam {
   final String name;
   final String? description;
@@ -23,17 +23,17 @@ final class PathParam {
   const PathParam(this.name, {this.description});
 }
 
-/// Anotación para parámetros de query (?page=1&size=10)
+/// Annotation for query parameters (?page=1&size=10)
 ///
-/// Uso específico: @QueryParam('page') int page
-/// Uso para todos: @QueryParam.all() ```Map<String, String>``` allParams
+/// Specific use: @QueryParam('page') int page
+/// Use for all: @QueryParam.all() ```Map<String, String>``` allParams
 final class QueryParam {
-  final String? name; // Opcional ahora - null significa "todos los params"
+  final String? name; // Optional now - null means "all params"
   final bool required;
   final dynamic defaultValue;
   final String? description;
 
-  /// Constructor para parámetro específico (comportamiento actual)
+  /// Constructor for a specific parameter (current behavior)
   const QueryParam(
     this.name, {
     this.required = false,
@@ -41,8 +41,8 @@ final class QueryParam {
     this.description,
   });
 
-  /// Constructor para obtener TODOS los query parameters como ```Map<String, String>```
-  /// Ejemplo: ```@QueryParam.all() Map<String, String> allQueryParams```
+  /// Constructor to get ALL query parameters as ```Map<String, String>```
+  /// Example: ```@QueryParam.all() Map<String, String> allQueryParams```
   const QueryParam.all({
     this.required = false,
     this.description = 'All query parameters as Map<String, String>',
@@ -50,7 +50,7 @@ final class QueryParam {
        defaultValue = null;
 }
 
-/// Anotación para el body de la request
+/// Annotation for the request body
 final class RequestBody {
   final bool required;
   final String? description;
@@ -58,17 +58,17 @@ final class RequestBody {
   const RequestBody({this.required = true, this.description});
 }
 
-/// Anotación para headers HTTP
+/// Annotation for HTTP headers
 ///
-/// Uso específico: @RequestHeader('Authorization') String authHeader
-/// Uso para todos: ```@RequestHeader.all() Map<String, String> allHeaders```
+/// Specific use: @RequestHeader('Authorization') String authHeader
+/// Use for all: ```@RequestHeader.all() Map<String, String> allHeaders```
 final class RequestHeader {
-  final String? name; // Opcional ahora - null significa "todos los headers"
+  final String? name; // Optional now - null means "all headers"
   final bool required;
   final String? defaultValue;
   final String? description;
 
-  /// Constructor para header específico (comportamiento actual)
+  /// Constructor for a specific header (current behavior)
   const RequestHeader(
     this.name, {
     this.required = false,
@@ -76,8 +76,8 @@ final class RequestHeader {
     this.description,
   });
 
-  /// Constructor para obtener TODOS los headers como ```Map<String, String>```
-  /// Ejemplo: ```@RequestHeader.all() Map<String, String> allHeaders```
+  /// Constructor to get ALL headers as ```Map<String, String>```
+  /// Example: ```@RequestHeader.all() Map<String, String> allHeaders```
   const RequestHeader.all({
     this.required = false,
     this.description = 'All HTTP headers as Map<String, String>',
@@ -85,78 +85,78 @@ final class RequestHeader {
        defaultValue = null;
 }
 
-/// Anotación para el método HTTP (GET, POST, PUT, etc.)
+/// Annotation for the HTTP method (GET, POST, PUT, etc.)
 final class RequestMethod {
   final String? description;
 
-  /// Obtiene el método HTTP como String (GET, POST, PUT, DELETE, etc.)
-  /// Ejemplo: @RequestMethod() String httpMethod
+  /// Gets the HTTP method as a String (GET, POST, PUT, DELETE, etc.)
+  /// Example: @RequestMethod() String httpMethod
   const RequestMethod({
     this.description = 'HTTP method (GET, POST, PUT, DELETE, etc.)',
   });
 }
 
-/// Anotación para la ruta/path de la request
+/// Annotation for the request path
 final class RequestPath {
   final String? description;
 
-  /// Obtiene la ruta completa de la request como String
-  /// Ejemplo: @RequestPath() String requestPath
+  /// Gets the full request path as a String
+  /// Example: @RequestPath() String requestPath
   const RequestPath({this.description = 'Request path (e.g., /api/users/123)'});
 }
 
-/// Anotación para el host del request
+/// Annotation for the request host
 final class RequestHost {
   final String? description;
 
-  /// Obtiene el host del request como String
-  /// Ejemplo: @RequestHost() String host
+  /// Gets the request host as a String
+  /// Example: @RequestHost() String host
   const RequestHost({
     this.description = 'Request host (e.g., localhost, api.example.com)',
   });
 }
 
-/// Anotación para el puerto del request
+/// Annotation for the request port
 final class RequestPort {
   final String? description;
 
-  /// Obtiene el puerto del request como int
-  /// Ejemplo: @RequestPort() int port
+  /// Gets the request port as an int
+  /// Example: @RequestPort() int port
   const RequestPort({this.description = 'Request port (e.g., 8080, 443)'});
 }
 
-/// Anotación para el scheme del request (http/https)
+/// Annotation for the request scheme (http/https)
 final class RequestScheme {
   final String? description;
 
-  /// Obtiene el scheme del request como String (http o https)
-  /// Ejemplo: @RequestScheme() String scheme
+  /// Gets the request scheme as a String (http or https)
+  /// Example: @RequestScheme() String scheme
   const RequestScheme({this.description = 'Request scheme (http or https)'});
 }
 
-/// Anotación para la URL completa del request
+/// Annotation for the full request URL
 final class RequestUrl {
   final String? description;
 
-  /// Obtiene la URL completa del request como Uri
-  /// Ejemplo: @RequestUrl() Uri fullUrl
+  /// Gets the full request URL as a Uri
+  /// Example: @RequestUrl() Uri fullUrl
   const RequestUrl({this.description = 'Complete request URL as Uri object'});
 }
 
-/// Anotación para el context del request
+/// Annotation for the request context
 ///
-/// Uso específico: ```@RequestContext('jwt_payload') Map<String, dynamic> jwt```
-/// Uso para todos: ```@RequestContext.all() Map<String, dynamic> allContext```
+/// Specific use: ```@RequestContext('jwt_payload') Map<String, dynamic> jwt```
+/// Use for all: ```@RequestContext.all() Map<String, dynamic> allContext```
 final class RequestContext {
-  final String? key; // Si se especifica key, obtiene solo ese valor del context
+  final String? key; // If key is specified, gets only that value from the context
   final String? description;
 
-  /// Constructor para obtener un valor específico del context
-  /// Ejemplo: ```@RequestContext('jwt_payload') Map<String, dynamic> jwtData```
+  /// Constructor to get a specific value from the context
+  /// Example: ```@RequestContext('jwt_payload') Map<String, dynamic> jwtData```
   const RequestContext(this.key, {this.description});
 
-  /// Constructor para obtener TODO el context como ```Map<String, dynamic>```
-  /// Ejemplo: ```@RequestContext.all() Map<String, dynamic> allContext```
+  /// Constructor to get the ENTIRE context as ```Map<String, dynamic>```
+  /// Example: ```@RequestContext.all() Map<String, dynamic> allContext```
   const RequestContext.all({
     this.description = 'Complete request context as Map<String, dynamic>',
   }) : key = null;

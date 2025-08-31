@@ -2,7 +2,7 @@ import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 
-/// Extension para detectar anotaciones de forma genérica
+/// Extension to detect annotations generically
 extension AnnotationExtension on Annotation {
   static final List<String> _myPackageUris = [
     'package:api_kit/src/annotations/annotations.dart',
@@ -13,7 +13,7 @@ extension AnnotationExtension on Annotation {
     'package:api_kit/src/annotations/jwt_annotations.dart',
   ];
 
-  /// Verifica si es una anotación de nuestro package
+  /// Checks if it is an annotation from our package
   bool get isFromMyPackage {
     final libraryId = elementAnnotation?.element?.library?.identifier;
     if (libraryId == null) return false;
@@ -21,12 +21,12 @@ extension AnnotationExtension on Annotation {
     return _myPackageUris.any((uri) => libraryId == uri);
   }
 
-  /// Obtiene el tipo de anotación automáticamente
+  /// Gets the annotation type automatically
   String get annotationType {
     return name.name; // 'Get', 'Post', 'AutoDoc', etc.
   }
 
-  /// Extrae todos los datos de la anotación automáticamente
+  /// Extracts all data from the annotation automatically
   Map<String, dynamic> get allAnnotationData {
     final evaluatedAnnotation = elementAnnotation?.computeConstantValue();
     if (evaluatedAnnotation == null) return <String, dynamic>{};
@@ -35,14 +35,14 @@ extension AnnotationExtension on Annotation {
   }
 }
 
-/// Extension para convertir DartObject a Map
+/// Extension to convert DartObject to Map
 extension DartObejctExtension on DartObject {
   Map<String, dynamic> toMap() {
     final map = <String, dynamic>{};
     final objectType = type;
 
     if (objectType?.element case InterfaceElement element) {
-      // Usar pattern matching (Dart 3.0+)
+      // Use pattern matching (Dart 3.0+)
       for (final field in element.fields) {
         if (!field.isSynthetic) {
           final fieldValue = getField(field.name);
@@ -105,7 +105,7 @@ extension DartObejctExtension on DartObject {
           // For complex objects, just return type info to avoid deep recursion
           final typeName =
               dartObject.type?.getDisplayString(withNullability: false) ??
-              'Unknown';
+                  'Unknown';
           return {'_type': typeName};
         }(),
         _ => dartObject.toString(),

@@ -1,35 +1,35 @@
-# @RequestBody - Anotación para Cuerpo de Request
+# @RequestBody - Annotation for Request Body
 
-## 📋 Descripción
+## 📋 Description
 
-La anotación `@RequestBody` se utiliza para capturar y procesar el cuerpo (body) de las peticiones HTTP. Permite recibir datos estructurados enviados por el cliente, especialmente útil para operaciones POST, PUT y PATCH.
+The `@RequestBody` annotation is used to capture and process the body of HTTP requests. It allows receiving structured data sent by the client, especially useful for POST, PUT, and PATCH operations.
 
-## 🎯 Propósito
+## 🎯 Purpose
 
-- **Recibir datos estructurados**: Capturar JSON, XML u otros formatos de datos
-- **Creación de recursos**: Procesar datos para crear nuevos registros
-- **Actualización de datos**: Recibir información para modificar recursos existentes
-- **Operaciones complejas**: Manejar payloads con múltiples campos y validaciones
+- **Receive structured data**: Capture JSON, XML, or other data formats
+- **Resource creation**: Process data to create new records
+- **Data update**: Receive information to modify existing resources
+- **Complex operations**: Handle payloads with multiple fields and validations
 
-## 📝 Sintaxis
+## 📝 Syntax
 
 ```dart
 @RequestBody({
-  bool required = true,           // Si el body es obligatorio
-  String? description,            // Descripción del contenido esperado
+  bool required = true,           // If the body is mandatory
+  String? description,            // Description of the expected content
 })
 ```
 
-## 🔧 Parámetros
+## 🔧 Parameters
 
-| Parámetro | Tipo | Obligatorio | Valor por Defecto | Descripción |
+| Parameter | Type | Required | Default Value | Description |
 |-----------|------|-------------|-------------------|-------------|
-| `required` | `bool` | ❌ No | `true` | Si el cuerpo de la petición debe estar presente |
-| `description` | `String?` | ❌ No | `null` | Descripción del formato y contenido esperado |
+| `required` | `bool` | ❌ No | `true` | If the request body must be present |
+| `description` | `String?` | ❌ No | `null` | Description of the expected format and content |
 
-## 🚀 Ejemplos de Uso
+## 🚀 Usage Examples
 
-### Ejemplo Básico - Creación de Usuario
+### Basic Example - User Creation
 ```dart
 @RestController(basePath: '/api/users')
 class UserController extends BaseController {
@@ -37,11 +37,11 @@ class UserController extends BaseController {
   @Post(path: '/create')
   Future<Response> createUser(
     Request request,
-    @RequestBody(required: true, description: 'Datos del nuevo usuario') 
+    @RequestBody(required: true, description: 'New user data') 
     Map<String, dynamic> userData,
   ) async {
     
-    // Validar campos obligatorios
+    // Validate required fields
     final requiredFields = ['name', 'email'];
     final missingFields = <String>[];
     
@@ -59,7 +59,7 @@ class UserController extends BaseController {
       }));
     }
     
-    // Validar formato de email
+    // Validate email format
     final email = userData['email'] as String;
     if (!email.contains('@') || !email.contains('.')) {
       return Response.badRequest(body: jsonEncode({
@@ -69,12 +69,12 @@ class UserController extends BaseController {
       }));
     }
     
-    // Crear usuario
+    // Create user
     final newUser = {
       'id': 'user_${DateTime.now().millisecondsSinceEpoch}',
       'name': userData['name'],
       'email': userData['email'],
-      'phone': userData['phone'], // Opcional
+      'phone': userData['phone'], // Optional
       'created_at': DateTime.now().toIso8601String(),
     };
     
@@ -88,7 +88,7 @@ class UserController extends BaseController {
   }
 }
 
-// Ejemplo de request:
+// Request example:
 // POST /api/users/create
 // Content-Type: application/json
 // 
@@ -99,7 +99,7 @@ class UserController extends BaseController {
 // }
 ```
 
-### Ejemplo con Validación Compleja
+### Example with Complex Validation
 ```dart
 @Post(path: '/products')
 @JWTEndpoint([MyAdminValidator()])
@@ -107,14 +107,14 @@ Future<Response> createProduct(
   Request request,
   @RequestBody(
     required: true, 
-    description: 'Datos completos del producto incluyendo nombre, precio, categoría y especificaciones'
+    description: 'Complete product data including name, price, category, and specifications'
   ) Map<String, dynamic> productData,
 ) async {
   
-  // Validaciones de estructura
+  // Structure validations
   final validationErrors = <String>[];
   
-  // Validar nombre
+  // Validate name
   final name = productData['name'] as String?;
   if (name == null || name.trim().isEmpty) {
     validationErrors.add('Product name is required and cannot be empty');
@@ -124,7 +124,7 @@ Future<Response> createProduct(
     validationErrors.add('Product name cannot exceed 100 characters');
   }
   
-  // Validar precio
+  // Validate price
   final price = productData['price'];
   if (price == null) {
     validationErrors.add('Product price is required');
@@ -136,26 +136,26 @@ Future<Response> createProduct(
     validationErrors.add('Product price cannot exceed 999,999.99');
   }
   
-  // Validar categoría
+  // Validate category
   final category = productData['category'] as String?;
   final validCategories = ['electronics', 'clothing', 'books', 'home', 'sports'];
   if (category == null || !validCategories.contains(category)) {
     validationErrors.add('Product category must be one of: ${validCategories.join(', ')}');
   }
   
-  // Validar stock (opcional)
+  // Validate stock (optional)
   final stock = productData['stock'];
   if (stock != null && (stock is! int || stock < 0)) {
     validationErrors.add('Stock must be a non-negative integer');
   }
   
-  // Validar especificaciones (opcional)
+  // Validate specifications (optional)
   final specifications = productData['specifications'];
   if (specifications != null && specifications is! Map<String, dynamic>) {
     validationErrors.add('Specifications must be an object with key-value pairs');
   }
   
-  // Validar tags (opcional)
+  // Validate tags (optional)
   final tags = productData['tags'];
   if (tags != null) {
     if (tags is! List) {
@@ -171,7 +171,7 @@ Future<Response> createProduct(
     }
   }
   
-  // Retornar errores si existen
+  // Return errors if they exist
   if (validationErrors.isNotEmpty) {
     return Response.badRequest(body: jsonEncode({
       'error': 'Product validation failed',
@@ -192,11 +192,11 @@ Future<Response> createProduct(
     }));
   }
   
-  // Obtener información del JWT
+  // Get JWT information
   final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
   final adminUser = jwtPayload['user_id'];
   
-  // Crear producto
+  // Create product
   final newProduct = {
     'id': 'prod_${DateTime.now().millisecondsSinceEpoch}',
     'name': name!.trim(),
@@ -224,7 +224,7 @@ Future<Response> createProduct(
 }
 ```
 
-### Ejemplo de Actualización Parcial (PATCH)
+### Partial Update Example (PATCH)
 ```dart
 @Patch(path: '/users/{userId}')
 @JWTEndpoint([MyUserValidator()])
@@ -233,11 +233,11 @@ Future<Response> updateUser(
   @PathParam('userId') String userId,
   @RequestBody(
     required: true,
-    description: 'Campos del usuario a actualizar (solo incluir campos que se quieren modificar)'
+    description: 'User fields to update (only include fields to be modified)'
   ) Map<String, dynamic> updates,
 ) async {
   
-  // Verificar que hay algo que actualizar
+  // Check that there is something to update
   if (updates.isEmpty) {
     return Response.badRequest(body: jsonEncode({
       'error': 'No fields to update',
@@ -246,7 +246,7 @@ Future<Response> updateUser(
     }));
   }
   
-  // Validar que el usuario del JWT coincide con el del path
+  // Validate that the JWT user matches the path user
   final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
   final tokenUserId = jwtPayload['user_id'];
   
@@ -258,13 +258,13 @@ Future<Response> updateUser(
     }));
   }
   
-  // Campos válidos para actualización
+  // Valid fields for update
   final validFields = ['name', 'email', 'phone', 'preferences'];
   final updatedFields = <String>[];
   final invalidFields = <String>[];
   final validationErrors = <String>[];
   
-  // Validar cada campo enviado
+  // Validate each sent field
   for (final field in updates.keys) {
     if (!validFields.contains(field)) {
       invalidFields.add(field);
@@ -273,7 +273,7 @@ Future<Response> updateUser(
     
     final value = updates[field];
     
-    // Validaciones específicas por campo
+    // Specific validations per field
     switch (field) {
       case 'name':
         if (value is! String || value.trim().isEmpty) {
@@ -311,7 +311,7 @@ Future<Response> updateUser(
     }
   }
   
-  // Retornar errores si existen
+  // Return errors if they exist
   if (invalidFields.isNotEmpty || validationErrors.isNotEmpty) {
     return Response.badRequest(body: jsonEncode({
       'error': 'Update validation failed',
@@ -321,13 +321,13 @@ Future<Response> updateUser(
     }));
   }
   
-  // Construir respuesta con campos actualizados
+  // Build response with updated fields
   final userUpdate = <String, dynamic>{
     'user_id': userId,
     'updated_at': DateTime.now().toIso8601String(),
   };
   
-  // Agregar solo los campos que se actualizaron
+  // Add only the fields that were updated
   for (final field in updatedFields) {
     userUpdate[field] = updates[field];
   }
@@ -344,7 +344,7 @@ Future<Response> updateUser(
 }
 ```
 
-### Ejemplo con Múltiples Tipos de Body
+### Example with Multiple Body Types
 ```dart
 @Post(path: '/files/upload')
 @JWTEndpoint([MyFileValidator()])
@@ -353,12 +353,12 @@ Future<Response> uploadFile(
   @RequestHeader('Content-Type', required: true) String contentType,
   @RequestBody(
     required: true,
-    description: 'Metadatos del archivo o contenido base64 dependiendo del Content-Type'
+    description: 'File metadata or base64 content depending on Content-Type'
   ) Map<String, dynamic> fileData,
 ) async {
   
   if (contentType.contains('application/json')) {
-    // Modo metadatos - el archivo se sube por separado
+    // Metadata mode - the file is uploaded separately
     final requiredMetadata = ['filename', 'size', 'content_type'];
     final missingMetadata = requiredMetadata
         .where((field) => !fileData.containsKey(field))
@@ -376,7 +376,7 @@ Future<Response> uploadFile(
     final size = fileData['size'] as int;
     final fileContentType = fileData['content_type'] as String;
     
-    // Validar tamaño
+    // Validate size
     const maxSize = 50 * 1024 * 1024; // 50MB
     if (size > maxSize) {
       return Response.badRequest(body: jsonEncode({
@@ -400,7 +400,7 @@ Future<Response> uploadFile(
     }));
     
   } else if (contentType.contains('multipart/form-data')) {
-    // Modo upload directo (simulado)
+    // Direct upload mode (simulated)
     return jsonResponse(jsonEncode({
       'message': 'Multipart upload not implemented in this example',
       'hint': 'Use application/json with metadata first'
@@ -416,20 +416,20 @@ Future<Response> uploadFile(
 }
 ```
 
-### Ejemplo con Validación de Schema
+### Example with Schema Validation
 ```dart
 @Post(path: '/webhooks/payment')
-@JWTPublic() // Los webhooks pueden venir sin JWT
+@JWTPublic() // Webhooks may come without JWT
 Future<Response> handlePaymentWebhook(
   Request request,
   @RequestHeader('X-Webhook-Signature', required: true) String signature,
   @RequestBody(
     required: true,
-    description: 'Payload del webhook de pago con evento y datos'
+    description: 'Payment webhook payload with event and data'
   ) Map<String, dynamic> webhookPayload,
 ) async {
   
-  // Validar estructura básica del webhook
+  // Validate basic webhook structure
   final requiredFields = ['event', 'data', 'timestamp'];
   final missingFields = requiredFields
       .where((field) => !webhookPayload.containsKey(field))
@@ -451,7 +451,7 @@ Future<Response> handlePaymentWebhook(
   final data = webhookPayload['data'] as Map<String, dynamic>;
   final timestamp = webhookPayload['timestamp'] as String;
   
-  // Validar evento
+  // Validate event
   final validEvents = ['payment.completed', 'payment.failed', 'payment.refunded'];
   if (!validEvents.contains(event)) {
     return Response.badRequest(body: jsonEncode({
@@ -461,7 +461,7 @@ Future<Response> handlePaymentWebhook(
     }));
   }
   
-  // Validar timestamp
+  // Validate timestamp
   DateTime eventTime;
   try {
     eventTime = DateTime.parse(timestamp);
@@ -473,7 +473,7 @@ Future<Response> handlePaymentWebhook(
     }));
   }
   
-  // Validar que el evento no sea muy antiguo (más de 5 minutos)
+  // Validate that the event is not too old (more than 5 minutes)
   final now = DateTime.now();
   if (now.difference(eventTime).inMinutes > 5) {
     return Response.badRequest(body: jsonEncode({
@@ -484,7 +484,7 @@ Future<Response> handlePaymentWebhook(
     }));
   }
   
-  // Validar datos según el tipo de evento
+  // Validate data according to event type
   final requiredDataFields = <String>[];
   switch (event) {
     case 'payment.completed':
@@ -511,11 +511,11 @@ Future<Response> handlePaymentWebhook(
     }));
   }
   
-  // TODO: Verificar signature del webhook para seguridad
+  // TODO: Verify webhook signature for security
   // final calculatedSignature = calculateWebhookSignature(webhookPayload);
   // if (signature != calculatedSignature) { ... }
   
-  // Procesar el webhook
+  // Process the webhook
   final webhookId = 'webhook_${DateTime.now().millisecondsSinceEpoch}';
   
   return jsonResponse(jsonEncode({
@@ -527,15 +527,15 @@ Future<Response> handlePaymentWebhook(
       'structure_valid': true,
       'timestamp_valid': true,
       'data_fields_valid': true,
-      'signature_verified': true, // Simulado
+      'signature_verified': true, // Simulated
     }
   }));
 }
 ```
 
-## 🔗 Combinación con Otras Anotaciones
+## 🔗 Combination with Other Annotations
 
-### Con Path Parameters y Headers
+### With Path Parameters and Headers
 ```dart
 @Put(path: '/stores/{storeId}/products/{productId}')
 Future<Response> updateStoreProduct(
@@ -551,16 +551,16 @@ Future<Response> updateStoreProduct(
   // Request Body
   @RequestBody(
     required: true,
-    description: 'Datos actualizados del producto'
+    description: 'Updated product data'
   ) Map<String, dynamic> productUpdates,
 ) async {
   
-  // Validar content type
+  // Validate content type
   if (!contentType.contains('application/json')) {
     return Response.badRequest(body: 'Content-Type must be application/json');
   }
   
-  // El resto de la lógica...
+  // The rest of the logic...
   return jsonResponse(jsonEncode({
     'message': 'Product updated successfully',
     'store_id': storeId,
@@ -570,23 +570,23 @@ Future<Response> updateStoreProduct(
 }
 ```
 
-## ❓ FAQ: ¿Por qué Request + @RequestBody?
+## ❓ FAQ: Why Request + @RequestBody?
 
-### Duda Común
-"¿Por qué necesito tanto `Request request` como `@RequestBody()`? ¿No debería ser automático como en Spring Boot?"
+### Common Doubt
+"Why do I need both `Request request` and `@RequestBody()`? Shouldn't it be automatic like in Spring Boot?"
 
-### Respuesta
-**¡Tienes razón!** - El framework ha evolucionado y ya **NO necesitas** el `Request request` redundante. Ahora puedes usar **Enhanced Parameters** para acceso directo:
+### Answer
+**You are right!** - The framework has evolved and you **NO LONGER need** the redundant `Request request` parameter. You can now use **Enhanced Parameters** for direct access:
 
-- **`@RequestBody()`**: Parsea automáticamente el JSON del body
-- **Enhanced Parameters**: Acceso directo a JWT, headers, contexto **SIN** Request parameter
+- **`@RequestBody()`**: Automatically parses the JSON from the body
+- **Enhanced Parameters**: Direct access to JWT, headers, context **WITHOUT** the Request parameter
 
-### ❌ Enfoque Anterior (Redundante)
+### ❌ Previous Approach (Redundant)
 ```dart
 @Post(path: '/users')
 @JWTEndpoint([MyUserValidator()])
 Future<Response> createUser(
-  Request request, // ❌ YA NO ES NECESARIO
+  Request request, // ❌ NO LONGER NECESSARY
   @RequestBody(required: true) Map<String, dynamic> userData,
 ) async {
   // Manual JWT extraction
@@ -597,7 +597,7 @@ Future<Response> createUser(
 }
 ```
 
-### ✅ Enfoque Actual (Enhanced Parameters) ✨
+### ✅ Current Approach (Enhanced Parameters) ✨
 ```dart
 @Post(path: '/users')
 @JWTEndpoint([MyUserValidator()])
@@ -621,14 +621,14 @@ Future<Response> createUserEnhanced(
 }
 ```
 
-### 💫 Beneficios del Enhanced Approach
-1. **Sin Request parameter** - Eliminamos la redundancia
-2. **Acceso directo al JWT** - `@RequestContext('jwt_payload')` inyecta directamente
-3. **Headers completos** - `@RequestHeader.all()` da acceso a todo
-4. **Información de request** - `@RequestHost()`, `@RequestMethod()`, etc.
-5. **Código más limpio** - Menos boilerplate, más declarativo
+### 💫 Benefits of the Enhanced Approach
+1. **No Request parameter** - We eliminate redundancy
+2. **Direct JWT access** - `@RequestContext('jwt_payload')` injects directly
+3. **Complete headers** - `@RequestHeader.all()` gives access to everything
+4. **Request information** - `@RequestHost()`, `@RequestMethod()`, etc.
+5. **Cleaner code** - Less boilerplate, more declarative
 
-### 🔄 Comparación Completa
+### 🔄 Complete Comparison
 
 #### Traditional (Verbose)
 ```dart
@@ -675,28 +675,28 @@ Future<Response> createProductEnhanced(
 }
 ```
 
-## 💡 Mejores Prácticas
+## 💡 Best Practices
 
-### ✅ Hacer
-- **Usar @RequestBody cuando esté disponible**: Evita parsing manual
-- **Preferir Enhanced Parameters**: Elimina el Request parameter redundante
-- **Combinar enfoques**: @RequestBody + Enhanced Parameters para contexto completo
-- **Validar siempre**: Verificar estructura, tipos y valores de los datos
-- **Proporcionar ejemplos**: En descripciones y mensajes de error
-- **Documentar estructura esperada**: Especificar campos obligatorios y opcionales
+### ✅ Do
+- **Use @RequestBody when available**: Avoids manual parsing
+- **Prefer Enhanced Parameters**: Eliminates the redundant Request parameter
+- **Combine approaches**: @RequestBody + Enhanced Parameters for full context
+- **Always validate**: Check structure, types, and values of the data
+- **Provide examples**: In descriptions and error messages
+- **Document expected structure**: Specify mandatory and optional fields
 
-### ❌ Evitar
-- **Parsing manual con @RequestBody presente**: Es redundante y confuso
-- **Request parameter redundante**: Usar Enhanced Parameters cuando sea posible
-- **Usar solo Request para todo**: Aprovecha las anotaciones automáticas
-- **Mensajes de error genéricos**: Ser específico sobre qué está mal
-- **No sanitizar entrada**: Validar y limpiar datos de entrada
+### ❌ Don't
+- **Manual parsing with @RequestBody present**: It is redundant and confusing
+- **Redundant Request parameter**: Use Enhanced Parameters when possible
+- **Using only Request for everything**: Take advantage of automatic annotations
+- **Generic error messages**: Be specific about what is wrong
+- **Not sanitizing input**: Validate and clean input data
 
-### 🎯 Recomendaciones Enhanced por Escenario
+### 🎯 Enhanced Recommendations by Scenario
 
-#### Para Creación de Recursos con JWT
+#### For Resource Creation with JWT
 ```dart
-// ✅ Enhanced - Sin Request parameter
+// ✅ Enhanced - No Request parameter
 @Post(path: '/posts')
 @JWTEndpoint([MyUserValidator()])
 Future<Response> createPost(
@@ -715,9 +715,9 @@ Future<Response> createPost(
 }
 ```
 
-#### Para Actualización con Validación Compleja
+#### For Update with Complex Validation
 ```dart
-// ✅ Enhanced - Contexto completo para auditoría
+// ✅ Enhanced - Full context for auditing
 @Put(path: '/products/{id}')
 @JWTEndpoint([MyAdminValidator()])
 Future<Response> updateProduct(
@@ -745,9 +745,9 @@ Future<Response> updateProduct(
 }
 ```
 
-#### Para APIs Públicas con Contexto
+#### For Public APIs with Context
 ```dart
-// ✅ Enhanced - Información completa sin JWT
+// ✅ Enhanced - Complete information without JWT
 @Post(path: '/contact')
 @JWTPublic()
 Future<Response> submitContact(
@@ -773,9 +773,9 @@ Future<Response> submitContact(
 }
 ```
 
-#### Para Webhooks con Validación Enhanced
+#### For Webhooks with Enhanced Validation
 ```dart
-// ✅ Enhanced - Webhook processing con contexto completo
+// ✅ Enhanced - Webhook processing with full context
 @Post(path: '/webhooks/payment')
 @JWTPublic()
 Future<Response> processWebhook(
@@ -803,44 +803,44 @@ Future<Response> processWebhook(
 }
 ```
 
-## 🔍 Tipos de Request Body
+## 🔍 Request Body Types
 
-### 1. **Creación de recursos**
+### 1. **Resource creation**
 ```dart
-@RequestBody(required: true, description: 'Datos completos para crear el recurso')
+@RequestBody(required: true, description: 'Complete data to create the resource')
 Map<String, dynamic> resourceData,
 ```
 
-### 2. **Actualización parcial**
+### 2. **Partial update**
 ```dart
-@RequestBody(required: true, description: 'Campos a actualizar (solo incluir los modificados)')
+@RequestBody(required: true, description: 'Fields to update (only include modified ones)')
 Map<String, dynamic> updates,
 ```
 
-### 3. **Configuración/Settings**
+### 3. **Configuration/Settings**
 ```dart
-@RequestBody(required: true, description: 'Configuración completa o parcial')
+@RequestBody(required: true, description: 'Full or partial configuration')
 Map<String, dynamic> settings,
 ```
 
-### 4. **Operaciones complejas**
+### 4. **Complex operations**
 ```dart
-@RequestBody(required: true, description: 'Parámetros de la operación compleja')
+@RequestBody(required: true, description: 'Parameters for the complex operation')
 Map<String, dynamic> operationParams,
 ```
 
-## 📊 Códigos de Respuesta Recomendados
+## 📊 Recommended Response Codes
 
-| Situación | Código | Descripción |
+| Situation | Code | Description |
 |-----------|---------|-------------|
-| Body requerido faltante | `400` | Bad Request - Request body required |
-| JSON malformado | `400` | Bad Request - Invalid JSON format |
-| Campos obligatorios faltantes | `400` | Bad Request - Required fields missing |
-| Tipos de datos incorrectos | `400` | Bad Request - Invalid data types |
-| Valores fuera de rango | `400` | Bad Request - Values out of valid range |
-| Body demasiado grande | `413` | Payload Too Large |
+| Missing required body | `400` | Bad Request - Request body required |
+| Malformed JSON | `400` | Bad Request - Invalid JSON format |
+| Missing required fields | `400` | Bad Request - Required fields missing |
+| Incorrect data types | `400` | Bad Request - Invalid data types |
+| Values out of range | `400` | Bad Request - Values out of valid range |
+| Body too large | `413` | Payload Too Large |
 
-## 🌐 Ejemplo de Request/Response
+## 🌐 Request/Response Example
 
 ### Request
 ```http
@@ -886,6 +886,6 @@ Content-Type: application/json
 }
 ```
 
----
+--- 
 
-**Siguiente**: [Documentación de @RequestHeader](requestheader-annotation.md) | **Anterior**: [Documentación de @QueryParam](queryparam-annotation.md)
+**Next**: [Documentation for @RequestHeader](requestheader-annotation.md) | **Previous**: [Documentation for @QueryParam](queryparam-annotation.md)

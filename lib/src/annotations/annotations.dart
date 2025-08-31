@@ -1,4 +1,4 @@
-/// Anotación para endpoints GET
+/// Annotation for GET endpoints
 final class Get {
   final String path;
 

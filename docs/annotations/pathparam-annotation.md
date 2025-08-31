@@ -1,68 +1,68 @@
-# @PathParam - Anotación para Parámetros de Path
+# @PathParam - Annotation for Path Parameters
 
-## 📋 Descripción
+## 📋 Description
 
-La anotación `@PathParam` se utiliza para capturar valores dinámicos de la URL del endpoint. Permite extraer segmentos variables de la ruta y convertirlos automáticamente a parámetros de método.
+The `@PathParam` annotation is used to capture dynamic values from the endpoint URL. It allows extracting variable segments from the path and automatically converting them to method parameters.
 
-## 🎯 Propósito
+## 🎯 Purpose
 
-- **Capturar IDs**: Obtener identificadores únicos de recursos (`/users/{id}`)
-- **Rutas dinámicas**: Manejar segmentos variables en URLs (`/stores/{storeId}/products/{productId}`)
-- **Navegación jerárquica**: Rutas anidadas con múltiples parámetros
-- **APIs RESTful**: Seguir patrones REST estándar para recursos
+- **Capture IDs**: Get unique identifiers of resources (`/users/{id}`)
+- **Dynamic routes**: Handle variable segments in URLs (`/stores/{storeId}/products/{productId}`)
+- **Hierarchical navigation**: Nested routes with multiple parameters
+- **RESTful APIs**: Follow standard REST patterns for resources
 
-## 📝 Sintaxis
+## 📝 Syntax
 
 ```dart
 @PathParam(
-  String name,                    // Nombre del parámetro en la URL (OBLIGATORIO)
-  {String? description}           // Descripción del parámetro
+  String name,                    // Name of the parameter in the URL (REQUIRED)
+  {String? description}           // Description of the parameter
 )
 ```
 
-## 🔧 Parámetros
+## 🔧 Parameters
 
-| Parámetro | Tipo | Obligatorio | Descripción |
+| Parameter | Type | Required | Description |
 |-----------|------|-------------|-------------|
-| `name` | `String` | ✅ Sí | Nombre exacto del parámetro definido en la ruta entre `{}` |
-| `description` | `String?` | ❌ No | Descripción del propósito y formato esperado del parámetro |
+| `name` | `String` | ✅ Yes | Exact name of the parameter defined in the route between `{}` |
+| `description` | `String?` | ❌ No | Description of the purpose and expected format of the parameter |
 
-## 🚀 Ejemplos de Uso
+## 🚀 Usage Examples
 
-### Ejemplo Básico - Un Parámetro
+### Basic Example - One Parameter
 ```dart
 @RestController(basePath: '/api/users')
 class UserController extends BaseController {
   
-  @Get(path: '/{id}')  // Ruta: /api/users/{id}
+  @Get(path: '/{id}')  // Route: /api/users/{id}
   Future<Response> getUserById(
     Request request,
-    @PathParam('id') String userId,  // Captura el valor de {id}
+    @PathParam('id') String userId,  // Captures the value of {id}
   ) async {
     
     return jsonResponse(jsonEncode({
       'message': 'User retrieved successfully',
-      'user_id': userId,  // userId contiene el valor de la URL
+      'user_id': userId,  // userId contains the value from the URL
       'url_path': '/api/users/$userId'
     }));
   }
 }
 
-// Ejemplo de uso:
+// Usage example:
 // GET /api/users/user_123 -> userId = "user_123"
 // GET /api/users/456      -> userId = "456"
 ```
 
-### Ejemplo con Descripción
+### Example with Description
 ```dart
 @Get(path: '/products/{productId}')
 Future<Response> getProduct(
   Request request,
-  @PathParam('productId', description: 'ID único del producto en formato prod_*') 
+  @PathParam('productId', description: 'Unique product ID in prod_* format') 
   String productId,
 ) async {
   
-  // Validar formato del ID
+  // Validate ID format
   if (!productId.startsWith('prod_')) {
     return Response.badRequest(body: jsonEncode({
       'error': 'Invalid product ID format',
@@ -78,12 +78,12 @@ Future<Response> getProduct(
   }));
 }
 
-// Ejemplos de uso:
-// GET /products/prod_123 -> ✅ Válido
-// GET /products/123      -> ❌ Error de formato
+// Usage examples:
+// GET /products/prod_123 -> ✅ Valid
+// GET /products/123      -> ❌ Format error
 ```
 
-### Ejemplo con Múltiples Parámetros
+### Example with Multiple Parameters
 ```dart
 @RestController(basePath: '/api/stores')
 class StoreController extends BaseController {
@@ -91,9 +91,9 @@ class StoreController extends BaseController {
   @Get(path: '/{storeId}/categories/{categoryId}/products/{productId}')
   Future<Response> getStoreProduct(
     Request request,
-    @PathParam('storeId', description: 'ID único de la tienda') String storeId,
-    @PathParam('categoryId', description: 'ID de la categoría de productos') String categoryId,
-    @PathParam('productId', description: 'ID específico del producto') String productId,
+    @PathParam('storeId', description: 'Unique store ID') String storeId,
+    @PathParam('categoryId', description: 'Product category ID') String categoryId,
+    @PathParam('productId', description: 'Specific product ID') String productId,
   ) async {
     
     return jsonResponse(jsonEncode({
@@ -108,23 +108,23 @@ class StoreController extends BaseController {
   }
 }
 
-// Ejemplo de uso:
+// Usage example:
 // GET /api/stores/store_456/categories/electronics/products/prod_789
 // storeId = "store_456"
 // categoryId = "electronics" 
 // productId = "prod_789"
 ```
 
-### Ejemplo con Validación de Tipos
+### Example with Type Validation
 ```dart
 @Get(path: '/orders/{orderId}/items/{itemNumber}')
 Future<Response> getOrderItem(
   Request request,
-  @PathParam('orderId', description: 'ID de la orden') String orderId,
-  @PathParam('itemNumber', description: 'Número de item (1-99)') String itemNumberStr,
+  @PathParam('orderId', description: 'Order ID') String orderId,
+  @PathParam('itemNumber', description: 'Item number (1-99)') String itemNumberStr,
 ) async {
   
-  // Convertir y validar itemNumber
+  // Convert and validate itemNumber
   final itemNumber = int.tryParse(itemNumberStr);
   if (itemNumber == null || itemNumber < 1 || itemNumber > 99) {
     return Response.badRequest(body: jsonEncode({
@@ -137,32 +137,32 @@ Future<Response> getOrderItem(
   
   return jsonResponse(jsonEncode({
     'order_id': orderId,
-    'item_number': itemNumber,  // Convertido a int
-    'item_number_string': itemNumberStr,  // Valor original
+    'item_number': itemNumber,  // Converted to int
+    'item_number_string': itemNumberStr,  // Original value
   }));
 }
 
-// Ejemplos:
+// Examples:
 // GET /orders/order_123/items/5  -> ✅ itemNumber = 5
-// GET /orders/order_123/items/abc -> ❌ Error de tipo
-// GET /orders/order_123/items/100 -> ❌ Fuera de rango
+// GET /orders/order_123/items/abc -> ❌ Type error
+// GET /orders/order_123/items/100 -> ❌ Out of range
 ```
 
-### Ejemplo con Parámetros y Query Parameters
+### Example with Parameters and Query Parameters
 ```dart
 @Get(path: '/users/{userId}/posts/{postId}')
 Future<Response> getUserPost(
   Request request,
   // Path Parameters
-  @PathParam('userId', description: 'ID del usuario propietario') String userId,
-  @PathParam('postId', description: 'ID del post específico') String postId,
+  @PathParam('userId', description: 'Owner user ID') String userId,
+  @PathParam('postId', description: 'Specific post ID') String postId,
   
-  // Query Parameters adicionales
+  // Additional Query Parameters
   @QueryParam('include_comments', defaultValue: false) bool includeComments,
   @QueryParam('format', defaultValue: 'json') String format,
 ) async {
   
-  // Validar que el usuario puede acceder al post
+  // Validate that the user can access the post
   final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>?;
   final currentUser = jwtPayload?['user_id'];
   
@@ -194,11 +194,11 @@ Future<Response> getUserPost(
   }));
 }
 
-// Ejemplo de uso:
+// Usage example:
 // GET /users/user_123/posts/post_456?include_comments=true&format=detailed
 ```
 
-### Ejemplo con Validación JWT y Path
+### Example with JWT and Path Validation
 
 #### Traditional Approach - Manual JWT Extraction
 ```dart
@@ -206,7 +206,7 @@ Future<Response> getUserPost(
 @JWTEndpoint([MyUserValidator()])
 Future<Response> updateUserSettings(
   Request request,
-  @PathParam('userId', description: 'ID del usuario a actualizar') String userId,
+  @PathParam('userId', description: 'ID of the user to update') String userId,
   @RequestBody(required: true) Map<String, dynamic> settings,
 ) async {
   
@@ -214,7 +214,7 @@ Future<Response> updateUserSettings(
   final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
   final tokenUserId = jwtPayload['user_id'];
   
-  // Validar que el usuario solo puede actualizar sus propios settings
+  // Validate that the user can only update their own settings
   if (tokenUserId != userId) {
     return Response.forbidden(jsonEncode({
       'error': 'Cannot update settings for other users',
@@ -239,7 +239,7 @@ Future<Response> updateUserSettings(
 @Put(path: '/users/{userId}/settings')
 @JWTEndpoint([MyUserValidator()])
 Future<Response> updateUserSettingsEnhanced(
-  @PathParam('userId', description: 'ID del usuario a actualizar') String userId,
+  @PathParam('userId', description: 'ID of the user to update') String userId,
   @RequestBody(required: true) Map<String, dynamic> settings,
   @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload, // Direct JWT
   @RequestHeader.all() Map<String, String> headers,
@@ -250,7 +250,7 @@ Future<Response> updateUserSettingsEnhanced(
   final tokenUserId = jwtPayload['user_id'];
   final userRole = jwtPayload['role'];
   
-  // Validar que el usuario solo puede actualizar sus propios settings
+  // Validate that the user can only update their own settings
   if (tokenUserId != userId) {
     return Response.forbidden(jsonEncode({
       'error': 'Cannot update settings for other users',
@@ -280,21 +280,21 @@ Future<Response> updateUserSettingsEnhanced(
   }));
 }
 
-// Ejemplo correcto:
-// PUT /users/user_123/settings (con JWT de user_123) -> ✅ Autorizado
-// PUT /users/user_456/settings (con JWT de user_123) -> ❌ Prohibido
+// Correct example:
+// PUT /users/user_123/settings (with JWT of user_123) -> ✅ Authorized
+// PUT /users/user_456/settings (with JWT of user_123) -> ❌ Forbidden
 ```
 
-### Ejemplo con Parámetros de Archivo/Slug
+### Example with File/Slug Parameters
 ```dart
 @Get(path: '/docs/{category}/{filename}')
 Future<Response> getDocumentFile(
   Request request,
-  @PathParam('category', description: 'Categoría del documento') String category,
-  @PathParam('filename', description: 'Nombre del archivo con extensión') String filename,
+  @PathParam('category', description: 'Document category') String category,
+  @PathParam('filename', description: 'File name with extension') String filename,
 ) async {
   
-  // Validar categoría
+  // Validate category
   final validCategories = ['api', 'tutorials', 'guides', 'reference'];
   if (!validCategories.contains(category)) {
     return Response.notFound(jsonEncode({
@@ -304,7 +304,7 @@ Future<Response> getDocumentFile(
     }));
   }
   
-  // Validar extensión de archivo
+  // Validate file extension
   final allowedExtensions = ['.md', '.pdf', '.txt', '.html'];
   final hasValidExtension = allowedExtensions.any((ext) => filename.endsWith(ext));
   
@@ -316,7 +316,7 @@ Future<Response> getDocumentFile(
     }));
   }
   
-  // Construir path del archivo
+  // Build file path
   final filePath = 'docs/$category/$filename';
   
   return jsonResponse(jsonEncode({
@@ -328,22 +328,22 @@ Future<Response> getDocumentFile(
   }));
 }
 
-// Ejemplos de uso:
-// GET /docs/api/authentication.md     -> ✅ Válido
-// GET /docs/tutorials/getting-started.pdf -> ✅ Válido  
-// GET /docs/invalid/file.exe          -> ❌ Categoría y extensión inválidas
+// Usage examples:
+// GET /docs/api/authentication.md     -> ✅ Valid
+// GET /docs/tutorials/getting-started.pdf -> ✅ Valid  
+// GET /docs/invalid/file.exe          -> ❌ Invalid category and extension
 ```
 
-## 🔗 Combinación con Otras Anotaciones
+## 🔗 Combination with Other Annotations
 
-### Con RequestBody y Headers
+### With RequestBody and Headers
 ```dart
 @Put(path: '/stores/{storeId}/products/{productId}')
 Future<Response> updateStoreProduct(
   Request request,
   // Path Parameters
-  @PathParam('storeId', description: 'ID de la tienda') String storeId,
-  @PathParam('productId', description: 'ID del producto') String productId,
+  @PathParam('storeId', description: 'Store ID') String storeId,
+  @PathParam('productId', description: 'Product ID') String productId,
   
   // Headers
   @RequestHeader('X-Store-Verification', required: true) String storeVerification,
@@ -352,7 +352,7 @@ Future<Response> updateStoreProduct(
   @RequestBody(required: true) Map<String, dynamic> productData,
 ) async {
   
-  // Validar que el header coincide con el path parameter
+  // Validate that the header matches the path parameter
   if (storeVerification != storeId) {
     return Response.badRequest(body: jsonEncode({
       'error': 'Store verification mismatch',
@@ -370,29 +370,29 @@ Future<Response> updateStoreProduct(
 }
 ```
 
-## 💡 Mejores Prácticas
+## 💡 Best Practices
 
-### ✅ Hacer
-- **Usar nombres descriptivos**: `userId` en lugar de solo `id`
-- **Incluir descripciones**: Especificar formato esperado y ejemplos
-- **Validar formato**: Verificar que los IDs siguen el formato esperado
-- **Manejar errores**: Respuestas claras para IDs inválidos o no encontrados
-- **Ser consistente**: Usar el mismo formato para tipos similares de IDs
-- **Combinar con Enhanced Parameters**: Para acceso completo al contexto sin Request
-- **Preferir enfoque híbrido**: @PathParam específico + Enhanced Parameters para contexto
+### ✅ Do
+- **Use descriptive names**: `userId` instead of just `id`
+- **Include descriptions**: Specify expected format and examples
+- **Validate format**: Verify that IDs follow the expected format
+- **Handle errors**: Clear responses for invalid or not found IDs
+- **Be consistent**: Use the same format for similar types of IDs
+- **Combine with Enhanced Parameters**: For full context access without Request
+- **Prefer hybrid approach**: Specific @PathParam + Enhanced Parameters for context
 
-### ❌ Evitar
-- **Nombres genéricos**: `id` cuando hay múltiples parámetros
-- **No validar formato**: Asumir que todos los valores son válidos
-- **IDs sensibles en URL**: Evitar poner información sensible en path parameters
-- **Rutas muy largas**: No abusar de parámetros anidados
-- **Request parameter redundante**: Usar Enhanced Parameters cuando sea posible
+### ❌ Don't
+- **Generic names**: `id` when there are multiple parameters
+- **Not validating format**: Assuming all values are valid
+- **Sensitive IDs in URL**: Avoid putting sensitive information in path parameters
+- **Very long routes**: Do not abuse nested parameters
+- **Redundant Request parameter**: Use Enhanced Parameters when possible
 
-### 🎯 Recomendaciones Enhanced para PathParam
+### 🎯 Enhanced Recommendations for PathParam
 
-#### Para Recursos con JWT Validation
+#### For Resources with JWT Validation
 ```dart
-// ✅ Enhanced - PathParam específico + JWT directo
+// ✅ Enhanced - Specific PathParam + direct JWT
 @Get(path: '/users/{userId}/profile')
 @JWTEndpoint([MyUserValidator()])
 Future<Response> getUserProfile(
@@ -411,9 +411,9 @@ Future<Response> getUserProfile(
 }
 ```
 
-#### Para Multi-level Resource Hierarchies
+#### For Multi-level Resource Hierarchies
 ```dart
-// ✅ Enhanced - Múltiples PathParams + contexto completo
+// ✅ Enhanced - Multiple PathParams + full context
 @Get(path: '/stores/{storeId}/categories/{categoryId}/products/{productId}')
 Future<Response> getStoreProductEnhanced(
   @PathParam('storeId') String storeId,
@@ -438,7 +438,7 @@ Future<Response> getStoreProductEnhanced(
 }
 ```
 
-#### Para File/Document Access
+#### For File/Document Access
 ```dart
 // ✅ Enhanced - File params + security headers
 @Get(path: '/files/{folder}/{filename}')
@@ -471,7 +471,7 @@ Future<Response> getFileEnhanced(
 }
 ```
 
-#### Para User-specific Resources
+#### For User-specific Resources
 ```dart
 // ✅ Enhanced - User ownership validation
 @Put(path: '/users/{userId}/documents/{docId}')
@@ -508,15 +508,15 @@ Future<Response> updateUserDocument(
 }
 ```
 
-## 🔍 Casos de Uso Comunes
+## 🔍 Common Use Cases
 
-### 1. **Recurso por ID**
+### 1. **Resource by ID**
 ```dart
 @Get(path: '/users/{userId}')
 Future<Response> getUser(Request request, @PathParam('userId') String userId) async { ... }
 ```
 
-### 2. **Recurso anidado**
+### 2. **Nested resource**
 ```dart
 @Get(path: '/users/{userId}/orders/{orderId}')
 Future<Response> getUserOrder(
@@ -526,7 +526,7 @@ Future<Response> getUserOrder(
 ) async { ... }
 ```
 
-### 3. **Categorías/Slugs**
+### 3. **Categories/Slugs**
 ```dart
 @Get(path: '/blog/{category}/{slug}')
 Future<Response> getBlogPost(
@@ -536,7 +536,7 @@ Future<Response> getBlogPost(
 ) async { ... }
 ```
 
-### 4. **Archivos/Rutas**
+### 4. **Files/Routes**
 ```dart
 @Get(path: '/files/{folder}/{filename}')
 Future<Response> getFile(
@@ -546,30 +546,30 @@ Future<Response> getFile(
 ) async { ... }
 ```
 
-## 📊 Validaciones Recomendadas
+## 📊 Recommended Validations
 
-### Validación de Formato
+### Format Validation
 ```dart
-// Validar IDs con formato específico
+// Validate IDs with a specific format
 if (!userId.startsWith('user_') || userId.length < 10) {
   return Response.badRequest(body: 'Invalid user ID format');
 }
 
-// Validar IDs numéricos
+// Validate numeric IDs
 final numericId = int.tryParse(productId);
 if (numericId == null || numericId <= 0) {
   return Response.badRequest(body: 'Product ID must be a positive integer');
 }
 
-// Validar slugs/nombres de archivo
+// Validate slugs/filenames
 if (filename.contains('..') || filename.contains('/')) {
   return Response.badRequest(body: 'Invalid filename');
 }
 ```
 
-### Validación de Existencia
+### Existence Validation
 ```dart
-// En implementación real, verificar en base de datos
+// In a real implementation, check in the database
 final user = await userRepository.findById(userId);
 if (user == null) {
   return Response.notFound(jsonEncode({
@@ -581,12 +581,12 @@ if (user == null) {
 
 ## 🌐 URL Mapping
 
-### Ejemplos de Mapeo
+### Mapping Examples
 ```dart
-// Definición
+// Definition
 @Get(path: '/stores/{storeId}/products/{productId}')
 
-// URLs válidas:
+// Valid URLs:
 // /stores/store_123/products/prod_456
 // -> storeId = "store_123", productId = "prod_456"
 
@@ -594,11 +594,11 @@ if (user == null) {
 // -> storeId = "my-store", productId = "special-item"
 ```
 
-### Caracteres Especiales
-- **Permitidos en path params**: letras, números, `-`, `_`
-- **Automáticamente URL-decoded**: espacios y caracteres especiales
+### Special Characters
+- **Allowed in path params**: letters, numbers, `-`, `_`
+- **Automatically URL-decoded**: spaces and special characters
 - **Case-sensitive**: `Store_123` ≠ `store_123`
 
 ---
 
-**Siguiente**: [Documentación de @QueryParam](queryparam-annotation.md) | **Anterior**: [Documentación de @RestController](restcontroller-annotation.md)
+**Next**: [Documentation for @QueryParam](queryparam-annotation.md) | **Previous**: [Documentation for @RestController](restcontroller-annotation.md)

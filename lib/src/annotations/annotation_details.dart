@@ -1,9 +1,7 @@
 /*
 
- El enum me ayuda definir los tipos de target en el analisis.
+The enum helps me define the target types in the analysis.
  */
-
-import 'annotation_data.dart';
 
 enum AnnotationTargetType {
   topLevelFunction,
@@ -14,16 +12,16 @@ enum AnnotationTargetType {
   variable,
 }
 
-/// Clase que contiene todos los datos de una anotación encontrada
+/// Class that contains all the data of a found annotation
 class AnnotationDetails {
-  final String targetName; // Nombre del elemento anotado (ej: 'getUsers')
-  final String annotationType; // Tipo de anotación (ej: 'Get')
+  final String targetName; // Name of the annotated element (e.g., 'getUsers')
+  final String annotationType; // Type of annotation (e.g., 'Get')
   final AnnotationTargetType
-  targetType; // Tipo de elemento (función, método, clase)
-  final AnnotationData data; // Datos tipados de la anotación
-  final Map<String, dynamic> rawData; // Datos raw por compatibilidad
-  final String? filePath; // Archivo donde se encontró
-  final int? lineNumber; // Línea donde se encontró
+  targetType; // Type of element (function, method, class)
+  final AnnotationData data; // Typed data of the annotation
+  final Map<String, dynamic> rawData; // Raw data for compatibility
+  final String? filePath; // File where it was found
+  final int? lineNumber; // Line where it was found
 
   const AnnotationDetails({
     required this.targetName,
@@ -35,7 +33,7 @@ class AnnotationDetails {
     this.lineNumber,
   });
 
-  /// Constructor factory que crea la instancia con datos tipados
+  /// Factory constructor that creates the instance with typed data
   factory AnnotationDetails.create({
     required String targetName,
     required String annotationType,
@@ -57,57 +55,57 @@ class AnnotationDetails {
 
   // === HTTP METHOD GETTERS ===
 
-  /// Getter específico para @Get
+  /// Specific getter for @Get
   GetData? get getInfo => data is GetData ? data as GetData : null;
 
-  /// Getter específico para @Post
+  /// Specific getter for @Post
   PostData? get postInfo => data is PostData ? data as PostData : null;
 
-  /// Getter específico para @Put
+  /// Specific getter for @Put
   PutData? get putInfo => data is PutData ? data as PutData : null;
 
-  /// Getter específico para @Patch
+  /// Specific getter for @Patch
   PatchData? get patchInfo => data is PatchData ? data as PatchData : null;
 
-  /// Getter específico para @Delete
+  /// Specific getter for @Delete
   DeleteData? get deleteInfo => data is DeleteData ? data as DeleteData : null;
 
   // === CONTROLLER GETTERS ===
 
-  /// Getter específico para @RestController
+  /// Specific getter for @RestController
   RestControllerData? get restControllerInfo =>
       data is RestControllerData ? data as RestControllerData : null;
 
-  /// Getter específico para @Service
+  /// Specific getter for @Service
   ServiceData? get serviceInfo =>
       data is ServiceData ? data as ServiceData : null;
 
-  /// Getter específico para @Repository
+  /// Specific getter for @Repository
   RepositoryData? get repositoryInfo =>
       data is RepositoryData ? data as RepositoryData : null;
 
   // === PARAMETER GETTERS ===
 
-  /// Getter específico para @Param
+  /// Specific getter for @Param
   ParamData? get paramInfo => data is ParamData ? data as ParamData : null;
 
-  /// Getter específico para @PathParam
+  /// Specific getter for @PathParam
   PathParamData? get pathParamInfo =>
       data is PathParamData ? data as PathParamData : null;
 
-  /// Getter específico para @QueryParam
+  /// Specific getter for @QueryParam
   QueryParamData? get queryParamInfo =>
       data is QueryParamData ? data as QueryParamData : null;
 
-  /// Getter específico para @RequestBody
+  /// Specific getter for @RequestBody
   RequestBodyData? get requestBodyInfo =>
       data is RequestBodyData ? data as RequestBodyData : null;
 
-  /// Getter específico para @RequestHeader
+  /// Specific getter for @RequestHeader
   RequestHeaderData? get requestHeaderInfo =>
       data is RequestHeaderData ? data as RequestHeaderData : null;
 
-  /// Acceso backward-compatible al Map
+  /// Backward-compatible access to the Map
   Map<String, dynamic> get annotationData => rawData;
 
   @override

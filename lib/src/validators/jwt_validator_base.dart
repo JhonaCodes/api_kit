@@ -1,70 +1,70 @@
 import 'package:shelf/shelf.dart';
 
-/// Base abstracta para todos los validadores JWT personalizados.
+/// Base abstract class for all custom JWT validators.
 ///
-/// Los desarrolladores extienden esta clase para crear validadores específicos
-/// con control total sobre la estructura del JWT y la lógica de validación.
+/// Developers extend this class to create specific validators
+/// with full control over the JWT structure and validation logic.
 abstract class JWTValidatorBase {
-  /// Constructor const para permitir validadores const en anotaciones
+  /// Const constructor to allow const validators in annotations
   const JWTValidatorBase();
 
-  /// Método obligatorio que implementa la lógica de validación
+  /// Mandatory method that implements the validation logic
   ///
-  /// [request] - El request HTTP actual
-  /// [jwtPayload] - El payload decodificado del JWT
+  /// [request] - The current HTTP request
+  /// [jwtPayload] - The decoded payload of the JWT
   ///
-  /// Retorna [ValidationResult] indicando éxito o falla con mensaje
+  /// Returns [ValidationResult] indicating success or failure with a message
   ValidationResult validate(Request request, Map<String, dynamic> jwtPayload);
 
-  /// Mensaje de error por defecto cuando la validación falla
+  /// Default error message when validation fails
   ///
-  /// Este mensaje se usa si [ValidationResult.invalid()] es llamado sin mensaje específico
+  /// This message is used if [ValidationResult.invalid()] is called without a specific message
   String get defaultErrorMessage;
 
-  /// Callback opcional ejecutado cuando la validación es exitosa
+  /// Optional callback executed when validation is successful
   ///
-  /// Útil para logging, auditoría, o lógica de negocio adicional
+  /// Useful for logging, auditing, or additional business logic
   void onValidationSuccess(Request request, Map<String, dynamic> jwtPayload) {
-    // Implementación opcional por el desarrollador
+    // Optional implementation by the developer
   }
 
-  /// Callback opcional ejecutado cuando la validación falla
+  /// Optional callback executed when validation fails
   ///
-  /// [reason] - El mensaje específico de por qué falló la validación
+  /// [reason] - The specific message why the validation failed
   ///
-  /// Útil para logging de fallos, auditoría de seguridad, o alertas
+  /// Useful for logging failures, security auditing, or alerts
   void onValidationFailed(
     Request request,
     Map<String, dynamic> jwtPayload,
     String reason,
   ) {
-    // Implementación opcional por el desarrollador
+    // Optional implementation by the developer
   }
 }
 
-/// Resultado de validación usando Result Pattern
+/// Validation result using the Result Pattern
 ///
-/// Proporciona respuestas claras sobre el éxito o falla de la validación
+/// Provides clear responses about the success or failure of the validation
 class ValidationResult {
   final bool isValid;
   final String? errorMessage;
 
   ValidationResult._(this.isValid, this.errorMessage);
 
-  /// Crea un resultado exitoso
+  /// Creates a successful result
   ///
-  /// Indica que la validación pasó exitosamente
+  /// Indicates that the validation passed successfully
   static ValidationResult valid() => ValidationResult._(true, null);
 
-  /// Crea un resultado fallido con mensaje personalizado
+  /// Creates a failed result with a custom message
   ///
-  /// [message] - Mensaje específico describiendo por qué falló la validación
+  /// [message] - Specific message describing why the validation failed
   static ValidationResult invalid(String message) =>
       ValidationResult._(false, message);
 
-  /// Verifica si la validación fue exitosa
+  /// Checks if the validation was successful
   bool get isSuccess => isValid;
 
-  /// Verifica si la validación falló
+  /// Checks if the validation failed
   bool get isFailure => !isValid;
 }

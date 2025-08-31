@@ -5,16 +5,16 @@ import 'detector.dart';
 import 'annotation_result.dart';
 import 'annotation_details.dart';
 
-/// API Simple para detectar anotaciones
+/// Simple API to detect annotations
 class AnnotationAPI {
-  /// Detecta anotaciones en el directorio actual
+  /// Detects annotations in the current directory
   static Future<AnnotationResult> detect() async {
     return detectIn(Directory.current.path);
   }
 
-  /// Detecta anotaciones en un directorio específico
+  /// Detects annotations in a specific directory
   static Future<AnnotationResult> detectIn(String inputPath) async {
-    // Normalizar la ruta para que sea absoluta
+    // Normalize the path to be absolute
     final absolutePath = path.isAbsolute(inputPath)
         ? path.normalize(inputPath)
         : path.normalize(path.absolute(inputPath));
@@ -24,7 +24,7 @@ class AnnotationAPI {
     return await detector.detect();
   }
 
-  /// Detecta solo anotaciones de un tipo específico
+  /// Detects only annotations of a specific type
   static Future<List<AnnotationDetails>> detectType(
     String annotationType, {
     String? path,
@@ -35,31 +35,31 @@ class AnnotationAPI {
         .toList();
   }
 
-  /// Obtiene solo los endpoints GET
+  /// Gets only GET endpoints
   static Future<List<AnnotationDetails>> getEndpoints({String? path}) async {
     return await detectType('Get', path: path);
   }
 
-  /// Obtiene estadísticas rápidas
+  /// Gets quick stats
   static Future<Map<String, int>> getStats({String? path}) async {
     final result = path != null ? await detectIn(path) : await detect();
     return result.annotationStats;
   }
 }
 
-/// Extensions para facilitar el uso
+/// Extensions to facilitate use
 extension AnnotationResultExtensions on AnnotationResult {
-  /// Obtiene solo anotaciones de un tipo
+  /// Gets only annotations of a type
   List<AnnotationDetails> ofType(String type) {
     return annotationList.where((a) => a.annotationType == type).toList();
   }
 
-  /// Obtiene solo endpoints GET
+  /// Gets only GET endpoints
   List<AnnotationDetails> get getEndpoints {
     return ofType('Get');
   }
 
-  /// Imprime resultados de forma simple
+  /// Prints results in a simple way
   void printResults() {
     print('📊 Total: $totalAnnotations annotations');
     print('⏱️  Time: ${processingTime.inMilliseconds}ms');
@@ -80,13 +80,13 @@ extension AnnotationResultExtensions on AnnotationResult {
     }
   }
 
-  /// Imprime solo endpoints GET de forma clara
+  /// Prints only GET endpoints clearly
   void printEndpoints() {
     final endpoints = getEndpoints;
     print('🌐 REST Endpoints (${endpoints.length}):');
 
     for (final endpoint in endpoints) {
-      // Usar propiedades tipadas
+      // Use typed properties
       final path =
           endpoint.getInfo?.path ??
           endpoint.annotationData['path']?.toString() ??

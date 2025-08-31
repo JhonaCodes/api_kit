@@ -1,6 +1,6 @@
 // lib/annotations/web/controller.dart
 
-/// Anotación para marcar clases como controladores REST
+/// Annotation to mark classes as REST controllers
 final class RestController {
   final String basePath;
   final String? description;
@@ -15,7 +15,7 @@ final class RestController {
   });
 }
 
-/// Anotación para componentes de servicio
+/// Annotation for service components
 final class Service {
   final String? name;
   final String? description;
@@ -23,7 +23,7 @@ final class Service {
   const Service({this.name, this.description});
 }
 
-/// Anotación para repositorios
+/// Annotation for repositories
 final class Repository {
   final String? name;
   final String? description;

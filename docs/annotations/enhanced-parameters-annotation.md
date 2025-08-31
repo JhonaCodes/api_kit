@@ -1,67 +1,67 @@
 # 🚀 Enhanced Parameters - "All" Mode Support
 
-## 🎯 Nueva Funcionalidad: Captura de Parámetros "All"
+## 🎯 New Feature: "All" Parameter Capture
 
-api_kit ahora soporta capturar **TODOS** los parámetros de un tipo sin especificar keys individuales, eliminando la necesidad del parámetro `Request request` en la mayoría de casos.
+api_kit now supports capturing **ALL** parameters of a certain type without specifying individual keys, eliminating the need for the `Request request` parameter in most cases.
 
-## 📋 Anotaciones Mejoradas
+## 📋 Enhanced Annotations
 
-### 1. `@RequestHeader.all()` - Todos los Headers
+### 1. `@RequestHeader.all()` - All Headers
 
 ```dart
-/// ❌ ANTES - Solo headers específicos
+/// ❌ BEFORE - Only specific headers
 @Get(path: '/endpoint')
 Future<Response> oldWay(
-  Request request,  // ← Necesario para headers
+  Request request,  // ← Necessary for headers
   @RequestHeader('Authorization') String auth,
   @RequestHeader('User-Agent') String userAgent,
 ) async {
-  // Manual extraction para otros headers
+  // Manual extraction for other headers
   final allHeaders = request.headers;
 }
 
-/// ✅ AHORA - Todos los headers automáticamente
+/// ✅ NOW - All headers automatically
 @Get(path: '/endpoint')
 Future<Response> newWay(
-  @RequestHeader.all() Map<String, String> allHeaders,  // ← TODOS los headers
-  @RequestHeader('Authorization') String auth,          // ← Headers específicos aún funcionan
+  @RequestHeader.all() Map<String, String> allHeaders,  // ← ALL headers
+  @RequestHeader('Authorization') String auth,          // ← Specific headers still work
 ) async {
-  // allHeaders contiene TODOS los headers HTTP
+  // allHeaders contains ALL HTTP headers
   final userAgent = allHeaders['user-agent'];
   final contentType = allHeaders['content-type'];
 }
 ```
 
-### 2. `@QueryParam.all()` - Todos los Query Parameters
+### 2. `@QueryParam.all()` - All Query Parameters
 
 ```dart
-/// ❌ ANTES - Solo parámetros específicos
+/// ❌ BEFORE - Only specific parameters
 @Get(path: '/search')
 Future<Response> oldSearch(
-  Request request,  // ← Necesario para query params
+  Request request,  // ← Necessary for query params
   @QueryParam('q') String query,
   @QueryParam('page') int page,
 ) async {
-  // Manual extraction para otros params
+  // Manual extraction for other params
   final allParams = request.url.queryParameters;
 }
 
-/// ✅ AHORA - Todos los query params automáticamente  
+/// ✅ NOW - All query params automatically  
 @Get(path: '/search')
 Future<Response> newSearch(
-  @QueryParam.all() Map<String, String> allQueryParams,  // ← TODOS los params
-  @QueryParam('q') String query,                         // ← Específicos aún funcionan
+  @QueryParam.all() Map<String, String> allQueryParams,  // ← ALL params
+  @QueryParam('q') String query,                         // ← Specific ones still work
 ) async {
-  // allQueryParams contiene TODOS los query parameters
+  // allQueryParams contains ALL query parameters
   final filters = allQueryParams.entries
     .where((entry) => entry.key.startsWith('filter_'))
     .toList();
 }
 ```
 
-## 🆕 Nuevas Anotaciones para Request Components
+## 🆕 New Annotations for Request Components
 
-### Información del Request HTTP
+### HTTP Request Information
 
 ```dart
 @Get(path: '/inspect')
@@ -71,7 +71,7 @@ Future<Response> inspectRequest(
   @RequestHost() String host,            // localhost, api.example.com
   @RequestPort() int port,               // 8080, 443
   @RequestScheme() String scheme,        // http, https
-  @RequestUrl() Uri fullUrl,             // URL completa como Uri
+  @RequestUrl() Uri fullUrl,             // Full URL as Uri
 ) async {
   return ApiKit.ok({
     'method': method,      // No request.method
@@ -84,46 +84,46 @@ Future<Response> inspectRequest(
 }
 ```
 
-### Context del Request
+### Request Context
 
 ```dart
-/// JWT endpoint SIN Request manual
+/// JWT endpoint WITHOUT manual Request
 @Get(path: '/profile')
 @JWTEndpoint([MyUserValidator()])
 Future<Response> getUserProfile(
-  @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload,  // JWT específico
-  @RequestContext.all() Map<String, dynamic> allContext,           // Todo el context
+  @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload,  // Specific JWT
+  @RequestContext.all() Map<String, dynamic> allContext,           // Entire context
 ) async {
-  // JWT disponible directamente, sin request.context['jwt_payload']
+  // JWT available directly, without request.context['jwt_payload']
   final userId = jwtPayload['user_id'];
   return ApiKit.ok({'user_id': userId}).toHttpResponse();
 }
 ```
 
-## 💡 Casos de Uso Completos
+## 💡 Complete Use Cases
 
-### Endpoint Completo SIN Request Manual
+### Complete Endpoint WITHOUT Manual Request
 
 ```dart
 @RestController(basePath: '/api/enhanced')
-class EnhancedController extends BaseController {
+class EnhancedController extends BaseController { 
   
   @Post(path: '/complete-example')
   @JWTEndpoint([MyValidator()])
   Future<Response> completeExample(
-    // ✅ Request body parsing automático
+    // ✅ Automatic request body parsing
     @RequestBody() Map<String, dynamic> body,
     
-    // ✅ TODOS los headers disponibles
+    // ✅ ALL headers available
     @RequestHeader.all() Map<String, String> allHeaders,
     
-    // ✅ TODOS los query params disponibles  
+    // ✅ ALL query params available  
     @QueryParam.all() Map<String, String> allQueryParams,
     
-    // ✅ JWT payload directo (sin manual extraction)
+    // ✅ Direct JWT payload (no manual extraction)
     @RequestContext('jwt_payload') Map<String, dynamic> jwt,
     
-    // ✅ Información del request directa
+    // ✅ Direct request information
     @RequestMethod() String method,
     @RequestPath() String path,
     @RequestUrl() Uri fullUrl,
@@ -131,7 +131,7 @@ class EnhancedController extends BaseController {
     // 🎉 NO Request request needed!
   ) async {
     
-    // Todo disponible directamente - sin extracciones manuales
+    // Everything available directly - no manual extractions
     final userId = jwt['user_id'];
     final authHeader = allHeaders['authorization'];
     final debugMode = allQueryParams['debug'] == 'true';
@@ -149,7 +149,7 @@ class EnhancedController extends BaseController {
 }
 ```
 
-### Inspección Completa de Request
+### Complete Request Inspection
 
 ```dart
 @Get(path: '/debug/request')
@@ -203,68 +203,68 @@ Future<Response> debugFullRequest(
 }
 ```
 
-## 🎯 Comparación: Antes vs Después
+## 🎯 Comparison: Before vs After
 
-### Endpoint JWT Típico
+### Typical JWT Endpoint
 
 ```dart
-/// ❌ ANTES - Verbose y con extracciones manuales
+/// ❌ BEFORE - Verbose and with manual extractions
 @Post(path: '/api/users')
 @JWTEndpoint([MyValidator()])
 Future<Response> createUserOld(
-  Request request,                                    // ← Requerido
-  @RequestBody() Map<String, dynamic> userData,       // ← Parseado pero necesito Request
+  Request request,                                    // ← Required
+  @RequestBody() Map<String, dynamic> userData,       // ← Parsed but I need Request
 ) async {
-  // Extracciones manuales
+  // Manual extractions
   final jwt = request.context['jwt_payload'] as Map<String, dynamic>;  // ← Manual
   final method = request.method;                                       // ← Manual
   final allHeaders = request.headers;                                  // ← Manual
   final allQueryParams = request.url.queryParameters;                 // ← Manual
   
   final currentUserId = jwt['user_id'];
-  // ... resto de lógica
+  // ... rest of the logic
 }
 
-/// ✅ DESPUÉS - Declarativo y directo
+/// ✅ AFTER - Declarative and direct
 @Post(path: '/api/users')
 @JWTEndpoint([MyValidator()])
 Future<Response> createUserNew(
-  @RequestBody() Map<String, dynamic> userData,                        // ← Body parseado
-  @RequestContext('jwt_payload') Map<String, dynamic> jwt,             // ← JWT directo
-  @RequestHeader.all() Map<String, String> allHeaders,                 // ← Todos los headers
-  @QueryParam.all() Map<String, String> allQueryParams,               // ← Todos los params
-  @RequestMethod() String method,                                      // ← Método directo
+  @RequestBody() Map<String, dynamic> userData,                        // ← Parsed body
+  @RequestContext('jwt_payload') Map<String, dynamic> jwt,             // ← Direct JWT
+  @RequestHeader.all() Map<String, String> allHeaders,                 // ← All headers
+  @QueryParam.all() Map<String, String> allQueryParams,               // ← All params
+  @RequestMethod() String method,                                      // ← Direct method
   // NO Request request needed! 🎉
 ) async {
-  // Acceso directo - sin extracciones manuales
+  // Direct access - no manual extractions
   final currentUserId = jwt['user_id'];
-  // ... resto de lógica
+  // ... rest of the logic
 }
 ```
 
-## 📚 Sintaxis Completa
+## 📚 Complete Syntax
 
-### RequestHeader Mejorado
+### Enhanced RequestHeader
 
 ```dart
-// Header específico (comportamiento actual)
+// Specific header (current behavior)
 @RequestHeader('Authorization') String authToken
 
-// NUEVO: Todos los headers
+// NEW: All headers
 @RequestHeader.all() Map<String, String> allHeaders
 ```
 
-### QueryParam Mejorado
+### Enhanced QueryParam
 
 ```dart
-// Query param específico (comportamiento actual)  
+// Specific query param (current behavior)  
 @QueryParam('page') int page
 
-// NUEVO: Todos los query parameters
+// NEW: All query parameters
 @QueryParam.all() Map<String, String> allQueryParams
 ```
 
-### Nuevas Anotaciones de Request
+### New Request Annotations
 
 ```dart
 @RequestMethod() String method          // HTTP method
@@ -278,68 +278,68 @@ Future<Response> createUserNew(
 @RequestContext.all() Map<String, dynamic> allContext  // All context
 ```
 
-## ✅ Ventajas del Nuevo Sistema
+## ✅ Advantages of the New System
 
-1. **Menos Boilerplate**: No necesitas `Request request` en la mayoría de casos
-2. **Más Declarativo**: Las anotaciones expresan exactamente qué necesitas
-3. **Type-Safe**: Parámetros tipados automáticamente
-4. **Mejor Testabilidad**: Parámetros inyectados son más fáciles de mockear
-5. **Consistencia**: Mismo patrón para todos los componentes del request
-6. **Compatibilidad**: El código existente sigue funcionando sin cambios
+1. **Less Boilerplate**: You don't need `Request request` in most cases
+2. **More Declarative**: Annotations express exactly what you need
+3. **Type-Safe**: Parameters are automatically typed
+4. **Better Testability**: Injected parameters are easier to mock
+5. **Consistency**: Same pattern for all request components
+6. **Compatibility**: Existing code continues to work without changes
 
-## 🔄 Migración
+## 🔄 Migration
 
-### Paso 1: Reemplazar Extracciones Manuales
+### Step 1: Replace Manual Extractions
 
 ```dart
-// Antes
+// Before
 final allHeaders = request.headers;
 final allQueryParams = request.url.queryParameters;
 final jwt = request.context['jwt_payload'];
 
-// Después - añadir parámetros de anotación
+// After - add annotation parameters
 @RequestHeader.all() Map<String, String> allHeaders,
 @QueryParam.all() Map<String, String> allQueryParams,
 @RequestContext('jwt_payload') Map<String, dynamic> jwt,
 ```
 
-### Paso 2: Eliminar Request Parameter
+### Step 2: Remove Request Parameter
 
 ```dart
-// Antes
+// Before
 Future<Response> endpoint(Request request, @RequestBody() Map data) async {
 
-// Después  
+// After  
 Future<Response> endpoint(@RequestBody() Map data) async {
 ```
 
-### Paso 3: Añadir Request Info Si Necesitas
+### Step 3: Add Request Info If You Need It
 
 ```dart
-// Antes
+// Before
 final method = request.method;
 final path = request.url.path;
 
-// Después
+// After
 @RequestMethod() String method,
 @RequestPath() String path,
 ```
 
-## 🎯 Cuándo Usar Cada Anotación
+## 🎯 When to Use Each Annotation
 
-| **Uso** | **Anotación** | **Ejemplo** |
-|---------|---------------|-------------|
-| **Header específico** | `@RequestHeader('key')` | `@RequestHeader('Authorization') String token` |
-| **Todos los headers** | `@RequestHeader.all()` | `@RequestHeader.all() Map<String, String> headers` |
-| **Query param específico** | `@QueryParam('key')` | `@QueryParam('page') int page` |
-| **Todos los query params** | `@QueryParam.all()` | `@QueryParam.all() Map<String, String> params` |
+| **Usage** | **Annotation** | **Example** |
+|---------------|---------------|-------------|
+| **Specific header** | `@RequestHeader('key')` | `@RequestHeader('Authorization') String token` |
+| **All headers** | `@RequestHeader.all()` | `@RequestHeader.all() Map<String, String> headers` |
+| **Specific query param** | `@QueryParam('key')` | `@QueryParam('page') int page` |
+| **All query params** | `@QueryParam.all()` | `@QueryParam.all() Map<String, String> params` |
 | **JWT payload** | `@RequestContext('jwt_payload')` | `@RequestContext('jwt_payload') Map jwt` |
-| **Todo el context** | `@RequestContext.all()` | `@RequestContext.all() Map context` |
-| **Método HTTP** | `@RequestMethod()` | `@RequestMethod() String method` |
-| **Path del request** | `@RequestPath()` | `@RequestPath() String path` |
-| **Info del host** | `@RequestHost()` | `@RequestHost() String host` |
-| **URL completa** | `@RequestUrl()` | `@RequestUrl() Uri url` |
+| **Entire context** | `@RequestContext.all()` | `@RequestContext.all() Map context` |
+| **HTTP method** | `@RequestMethod()` | `@RequestMethod() String method` |
+| **Request path** | `@RequestPath()` | `@RequestPath() String path` |
+| **Host info** | `@RequestHost()` | `@RequestHost() String host` |
+| **Full URL** | `@RequestUrl()` | `@RequestUrl() Uri url` |
 
 ---
 
-**🚀 Con estas mejoras, api_kit elimina la necesidad del parámetro `Request request` en la mayoría de casos, creando un código más limpio y declarativo!**
+**🚀 With these improvements, api_kit eliminates the need for the `Request request` parameter in most cases, creating cleaner and more declarative code!**

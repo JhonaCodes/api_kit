@@ -1,10 +1,10 @@
 // lib/annotation_data.dart
 
-/// Clase base para datos de anotaciones tipados
+/// Base class for typed annotation data
 abstract class AnnotationData {
   const AnnotationData();
 
-  /// Convierte el Map a una instancia tipada
+  /// Converts the Map to a typed instance
   static AnnotationData fromMap(
     String annotationType,
     Map<String, dynamic> map,
@@ -36,7 +36,7 @@ abstract class AnnotationData {
 
 // === HTTP METHOD DATA CLASSES ===
 
-/// Datos específicos para @Get
+/// Specific data for @Get
 class GetData extends AnnotationData {
   final String path;
   final String? description;
@@ -63,7 +63,7 @@ class GetData extends AnnotationData {
   String toString() => 'GetData(path: $path, description: $description)';
 }
 
-/// Datos específicos para @Post
+/// Specific data for @Post
 class PostData extends AnnotationData {
   final String path;
   final String? description;
@@ -90,7 +90,7 @@ class PostData extends AnnotationData {
   String toString() => 'PostData(path: $path, description: $description)';
 }
 
-/// Datos específicos para @Put
+/// Specific data for @Put
 class PutData extends AnnotationData {
   final String path;
   final String? description;
@@ -117,7 +117,7 @@ class PutData extends AnnotationData {
   String toString() => 'PutData(path: $path, description: $description)';
 }
 
-/// Datos específicos para @Patch
+/// Specific data for @Patch
 class PatchData extends AnnotationData {
   final String path;
   final String? description;
@@ -144,7 +144,7 @@ class PatchData extends AnnotationData {
   String toString() => 'PatchData(path: $path, description: $description)';
 }
 
-/// Datos específicos para @Delete
+/// Specific data for @Delete
 class DeleteData extends AnnotationData {
   final String path;
   final String? description;
@@ -173,7 +173,7 @@ class DeleteData extends AnnotationData {
 
 // === CONTROLLER DATA CLASSES ===
 
-/// Datos específicos para @RestController
+/// Specific data for @RestController
 class RestControllerData extends AnnotationData {
   final String basePath;
   final String? description;
@@ -201,7 +201,7 @@ class RestControllerData extends AnnotationData {
       'RestControllerData(basePath: $basePath, description: $description)';
 }
 
-/// Datos específicos para @Service
+/// Specific data for @Service
 class ServiceData extends AnnotationData {
   final String? name;
   final String? description;
@@ -219,7 +219,7 @@ class ServiceData extends AnnotationData {
   String toString() => 'ServiceData(name: $name, description: $description)';
 }
 
-/// Datos específicos para @Repository
+/// Specific data for @Repository
 class RepositoryData extends AnnotationData {
   final String? name;
   final String? description;
@@ -239,7 +239,7 @@ class RepositoryData extends AnnotationData {
 
 // === PARAMETER DATA CLASSES ===
 
-/// Datos específicos para @Param
+/// Specific data for @Param
 class ParamData extends AnnotationData {
   final String name;
   final bool required;
@@ -266,7 +266,7 @@ class ParamData extends AnnotationData {
   String toString() => 'ParamData(name: $name, required: $required)';
 }
 
-/// Datos específicos para @PathParam
+/// Specific data for @PathParam
 class PathParamData extends AnnotationData {
   final String name;
   final String? description;
@@ -284,7 +284,7 @@ class PathParamData extends AnnotationData {
   String toString() => 'PathParamData(name: $name)';
 }
 
-/// Datos específicos para @QueryParam
+/// Specific data for @QueryParam
 class QueryParamData extends AnnotationData {
   final String name;
   final bool required;
@@ -311,7 +311,7 @@ class QueryParamData extends AnnotationData {
   String toString() => 'QueryParamData(name: $name, required: $required)';
 }
 
-/// Datos específicos para @RequestBody
+/// Specific data for @RequestBody
 class RequestBodyData extends AnnotationData {
   final bool required;
   final String? description;
@@ -329,7 +329,7 @@ class RequestBodyData extends AnnotationData {
   String toString() => 'RequestBodyData(required: $required)';
 }
 
-/// Datos específicos para @RequestHeader
+/// Specific data for @RequestHeader
 class RequestHeaderData extends AnnotationData {
   final String name;
   final bool required;
@@ -356,13 +356,13 @@ class RequestHeaderData extends AnnotationData {
   String toString() => 'RequestHeaderData(name: $name, required: $required)';
 }
 
-/// Datos genéricos para anotaciones no específicas
+/// Generic data for non-specific annotations
 class GenericAnnotationData extends AnnotationData {
   final Map<String, dynamic> data;
 
   const GenericAnnotationData(this.data);
 
-  /// Acceso dinámico a propiedades
+  /// Dynamic access to properties
   dynamic operator [](String key) => data[key];
 
   @override

@@ -1,56 +1,56 @@
-# @RequestHeader - Anotación para Headers de Request
+# @RequestHeader - Annotation for Request Headers
 
-## 📋 Descripción
+## 📋 Description
 
-La anotación `@RequestHeader` se utiliza para capturar y validar headers HTTP de las peticiones entrantes. Permite extraer valores específicos de los headers y convertirlos automáticamente a parámetros de método.
+The `@RequestHeader` annotation is used to capture and validate HTTP headers from incoming requests. It allows extracting specific values from headers and automatically converting them to method parameters.
 
-## 🎯 Propósito
+## 🎯 Purpose
 
-- **Autenticación personalizada**: Capturar tokens, API keys, o headers de autenticación
-- **Metadatos de request**: Obtener información como User-Agent, Accept-Language, etc.
-- **Validación de origen**: Verificar headers de seguridad o identificación
-- **Configuración de respuesta**: Adaptar respuesta según headers del cliente
+- **Custom authentication**: Capture tokens, API keys, or authentication headers
+- **Request metadata**: Obtain information such as User-Agent, Accept-Language, etc.
+- **Origin validation**: Verify security or identification headers
+- **Response configuration**: Adapt the response according to client headers
 
-## 📝 Sintaxis
+## 📝 Syntax
 
-### Header Específico (Método Tradicional)
+### Specific Header (Traditional Method)
 ```dart
 @RequestHeader(
-  String name,                    // Nombre del header (OBLIGATORIO)
-  {bool required = false,         // Si el header es obligatorio
-   String? defaultValue,          // Valor por defecto si no se proporciona
-   String? description}           // Descripción del propósito del header
+  String name,                    // Header name (REQUIRED)
+  {bool required = false,         // If the header is mandatory
+   String? defaultValue,          // Default value if not provided
+   String? description}           // Description of the header's purpose
 )
 ```
 
-### 🆕 Todos los Headers (Método Enhanced)
+### 🆕 All Headers (Enhanced Method)
 ```dart
 @RequestHeader.all({
-  bool required = false,          // Si debe haber al menos un header
-  String? description             // Descripción de los headers
+  bool required = false,          // If at least one header must be present
+  String? description             // Description of the headers
 })
-// Retorna: Map<String, String> con TODOS los headers HTTP
+// Returns: Map<String, String> with ALL HTTP headers
 ```
 
-## 🔧 Parámetros
+## 🔧 Parameters
 
-### Para `@RequestHeader('name')`
-| Parámetro | Tipo | Obligatorio | Valor por Defecto | Descripción |
+### For `@RequestHeader('name')`
+| Parameter | Type | Required | Default Value | Description |
 |-----------|------|-------------|-------------------|-------------|
-| `name` | `String` | ✅ Sí | - | Nombre exacto del header HTTP (case-insensitive) |
-| `required` | `bool` | ❌ No | `false` | Si el header debe estar presente en la request |
-| `defaultValue` | `String?` | ❌ No | `null` | Valor usado cuando el header no está presente |
-| `description` | `String?` | ❌ No | `null` | Descripción del propósito y formato esperado |
+| `name` | `String` | ✅ Yes | - | Exact name of the HTTP header (case-insensitive) |
+| `required` | `bool` | ❌ No | `false` | If the header must be present in the request |
+| `defaultValue` | `String?` | ❌ No | `null` | Value used when the header is not present |
+| `description` | `String?` | ❌ No | `null` | Description of the purpose and expected format |
 
-### 🆕 Para `@RequestHeader.all()`
-| Parámetro | Tipo | Obligatorio | Valor por Defecto | Descripción |
+### 🆕 For `@RequestHeader.all()`
+| Parameter | Type | Required | Default Value | Description |
 |-----------|------|-------------|-------------------|-------------|
-| `required` | `bool` | ❌ No | `false` | Si debe haber al menos un header HTTP |
-| `description` | `String?` | ❌ No | `'All HTTP headers as Map<String, String>'` | Descripción de todos los headers |
+| `required` | `bool` | ❌ No | `false` | If there must be at least one HTTP header |
+| `description` | `String?` | ❌ No | `'All HTTP headers as Map<String, String>'` | Description of all headers |
 
-## 🚀 Ejemplos de Uso
+## 🚀 Usage Examples
 
-### Ejemplo Básico - Header de Autenticación (Método Tradicional)
+### Basic Example - Authentication Header (Traditional Method)
 ```dart
 @RestController(basePath: '/api/users')
 class UserController extends BaseController {
@@ -58,11 +58,11 @@ class UserController extends BaseController {
   @Get(path: '/profile')
   Future<Response> getUserProfile(
     Request request,
-    @RequestHeader('Authorization', required: true, description: 'Bearer token de autenticación') 
+    @RequestHeader('Authorization', required: true, description: 'Bearer authentication token') 
     String authHeader,
   ) async {
     
-    // Validar formato del header Authorization
+    // Validate Authorization header format
     if (!authHeader.startsWith('Bearer ')) {
       return Response.unauthorized(jsonEncode({
         'error': 'Invalid authorization header format',
@@ -71,9 +71,9 @@ class UserController extends BaseController {
       }));
     }
     
-    final token = authHeader.substring(7); // Remover "Bearer "
+    final token = authHeader.substring(7); // Remove "Bearer "
     
-    // Validar token (simplificado)
+    // Validate token (simplified)
     if (token.length < 10) {
       return Response.unauthorized(jsonEncode({
         'error': 'Invalid token',
@@ -92,21 +92,21 @@ class UserController extends BaseController {
 }
 ```
 
-### 🆕 Ejemplo Básico - TODOS los Headers (Método Enhanced)
+### 🆕 Basic Example - ALL Headers (Enhanced Method)
 ```dart
 @RestController(basePath: '/api/users')  
 class UserController extends BaseController {
   
   @Get(path: '/profile')
   Future<Response> getUserProfileEnhanced(
-    @RequestHeader.all() Map<String, String> allHeaders,    // 🆕 TODOS los headers
-    @RequestMethod() String method,                          // 🆕 Método HTTP directo
-    @RequestPath() String path,                             // 🆕 Path directo
-    @RequestHost() String host,                             // 🆕 Host directo
+    @RequestHeader.all() Map<String, String> allHeaders,    // 🆕 ALL headers
+    @RequestMethod() String method,                          // 🆕 Direct HTTP method
+    @RequestPath() String path,                             // 🆕 Direct path
+    @RequestHost() String host,                             // 🆕 Direct host
     // 🎉 NO Request request needed!
   ) async {
     
-    // Extraer header específico del Map
+    // Extract specific header from the Map
     final authHeader = allHeaders['authorization'];
     
     if (authHeader == null) {
@@ -119,7 +119,7 @@ class UserController extends BaseController {
       }));
     }
     
-    // Validar formato del header Authorization
+    // Validate Authorization header format
     if (!authHeader.startsWith('Bearer ')) {
       return Response.unauthorized(jsonEncode({
         'error': 'Invalid authorization header format',
@@ -130,7 +130,7 @@ class UserController extends BaseController {
     
     final token = authHeader.substring(7);
     
-    // Analizar otros headers automáticamente
+    // Analyze other headers automatically
     final userAgent = allHeaders['user-agent'] ?? 'unknown';
     final acceptLanguage = allHeaders['accept-language'] ?? 'en-US';
     final customHeaders = Map.fromEntries(
@@ -141,9 +141,9 @@ class UserController extends BaseController {
       'message': 'Enhanced user profile retrieved',
       'framework_improvement': 'No manual Request parameter needed!',
       'request_info': {
-        'method': method,              // Sin request.method
-        'path': path,                  // Sin request.url.path  
-        'host': host,                  // Sin request.url.host
+        'method': method,              // Without request.method
+        'path': path,                  // Without request.url.path  
+        'host': host,                  // Without request.url.host
       },
       'auth_info': {
         'token_valid': true,
@@ -168,10 +168,10 @@ class UserController extends BaseController {
 
 **Testing Commands:**
 ```bash
-# Header específico
+# Specific header
 curl -H "Authorization: Bearer abc123456789" http://localhost:8080/api/users/profile
 
-# Múltiples headers (🆕 Enhanced captura TODO)
+# Multiple headers (🆕 Enhanced captures EVERYTHING)
 curl -H "Authorization: Bearer abc123456789" \
      -H "User-Agent: MyApp/1.0" \
      -H "Accept-Language: es-ES,en;q=0.9" \
@@ -180,7 +180,7 @@ curl -H "Authorization: Bearer abc123456789" \
      http://localhost:8080/api/users/profile
 ```
 
-### Ejemplo de Múltiples Headers Requeridos (Tradicional)
+### Example of Multiple Required Headers (Traditional)
 ```dart
 @Get(path: '/secure-data')
 Future<Response> getSecureData(
@@ -190,7 +190,7 @@ Future<Response> getSecureData(
   @RequestHeader('User-Agent', required: false, defaultValue: 'Unknown') String userAgent,
 ) async {
   
-  // Validar API Key
+  // Validate API Key
   final validApiKeys = ['key123', 'key456', 'key789'];
   if (!validApiKeys.contains(apiKey)) {
     return Response.forbidden(jsonEncode({
@@ -199,7 +199,7 @@ Future<Response> getSecureData(
     }));
   }
   
-  // Validar versión del cliente
+  // Validate client version
   final versionRegex = RegExp(r'^\d+\.\d+\.\d+$');
   if (!versionRegex.hasMatch(clientVersion)) {
     return Response.badRequest(body: jsonEncode({
@@ -221,22 +221,22 @@ Future<Response> getSecureData(
 }
 ```
 
-### 🆕 Ejemplo de Múltiples Headers (Enhanced)
+### 🆕 Example of Multiple Headers (Enhanced)
 ```dart
 @Get(path: '/secure-data')
 Future<Response> getSecureDataEnhanced(
-  @RequestHeader.all() Map<String, String> allHeaders,     // 🆕 Todos los headers
-  @RequestMethod() String method,                          // 🆕 Método HTTP
-  @RequestUrl() Uri fullUrl,                              // 🆕 URL completa
+  @RequestHeader.all() Map<String, String> allHeaders,     // 🆕 All headers
+  @RequestMethod() String method,                          // 🆕 HTTP method
+  @RequestUrl() Uri fullUrl,                              // 🆕 Full URL
   // NO Request request needed! 🎉
 ) async {
   
-  // Extraer headers requeridos del Map
+  // Extract required headers from the Map
   final apiKey = allHeaders['x-api-key'];
   final clientVersion = allHeaders['x-client-version'];
   final userAgent = allHeaders['user-agent'] ?? 'Unknown';
   
-  // Validación de headers requeridos
+  // Validation of required headers
   final missingHeaders = <String>[];
   if (apiKey == null) missingHeaders.add('X-API-Key');
   if (clientVersion == null) missingHeaders.add('X-Client-Version');
@@ -254,7 +254,7 @@ Future<Response> getSecureDataEnhanced(
     }));
   }
   
-  // Validar API Key  
+  // Validate API Key  
   final validApiKeys = ['key123', 'key456', 'key789'];
   if (!validApiKeys.contains(apiKey)) {
     return Response.forbidden(jsonEncode({
@@ -263,7 +263,7 @@ Future<Response> getSecureDataEnhanced(
     }));
   }
   
-  // Validar versión del cliente
+  // Validate client version
   final versionRegex = RegExp(r'^\d+\.\d+\.\d+$');
   if (!versionRegex.hasMatch(clientVersion!)) {
     return Response.badRequest(body: jsonEncode({
@@ -273,7 +273,7 @@ Future<Response> getSecureDataEnhanced(
     }));
   }
   
-  // Analizar headers adicionales automáticamente
+  // Analyze additional headers automatically
   final securityHeaders = Map.fromEntries(
     allHeaders.entries.where((entry) => 
       ['authorization', 'x-api-key', 'x-csrf-token', 'x-request-id']
@@ -288,8 +288,8 @@ Future<Response> getSecureDataEnhanced(
     'message': 'Enhanced secure data retrieved',
     'framework_improvement': 'All headers captured automatically!',
     'request_info': {
-      'method': method,                 // Sin request.method
-      'full_url': fullUrl.toString(),   // Sin request.url
+      'method': method,                 // Without request.method
+      'full_url': fullUrl.toString(),   // Without request.url
     },
     'client_info': {
       'api_key_valid': true,
@@ -312,25 +312,25 @@ Future<Response> getSecureDataEnhanced(
 }
 ```
 
-### Content Negotiation con Enhanced Headers
+### Content Negotiation with Enhanced Headers
 ```dart
 @Get(path: '/content')
 Future<Response> getContentWithNegotiation(
-  @RequestHeader.all() Map<String, String> allHeaders,     // 🆕 Todos los headers
-  @QueryParam.all() Map<String, String> allQueryParams,    // 🆕 Todos los query params  
-  @RequestPath() String path,                              // 🆕 Path directo
+  @RequestHeader.all() Map<String, String> allHeaders,     // 🆕 All headers
+  @QueryParam.all() Map<String, String> allQueryParams,    // 🆕 All query params  
+  @RequestPath() String path,                              // 🆕 Direct path
 ) async {
   
-  // Content negotiation basado en headers
+  // Content negotiation based on headers
   final accept = allHeaders['accept'] ?? 'application/json';
   final acceptLanguage = allHeaders['accept-language'] ?? 'en-US';
   final acceptEncoding = allHeaders['accept-encoding'] ?? '';
   
-  // Determinar formato de respuesta
+  // Determine response format
   final responseFormat = accept.contains('application/xml') ? 'xml' :
                         accept.contains('text/plain') ? 'text' : 'json';
   
-  // Parsear idioma preferido
+  // Parse preferred language
   final languages = acceptLanguage.split(',').map((lang) {
     final parts = lang.trim().split(';');
     final code = parts[0].trim();
@@ -342,7 +342,7 @@ Future<Response> getContentWithNegotiation(
   languages.sort((a, b) => (b['quality'] as double).compareTo(a['quality'] as double));
   final preferredLanguage = languages.isNotEmpty ? languages.first['code'] as String : 'en-US';
   
-  // Contenido localizado
+  // Localized content
   final localizedContent = {
     'en-US': 'Welcome to our enhanced API',
     'es': 'Bienvenido a nuestra API mejorada',
@@ -353,7 +353,7 @@ Future<Response> getContentWithNegotiation(
   final message = localizedContent[preferredLanguage.split('-').first] ?? 
                   localizedContent['en-US']!;
   
-  // Respuesta según formato
+  // Response according to format
   final responseData = {
     'message': message,
     'content_negotiation': {
@@ -362,7 +362,7 @@ Future<Response> getContentWithNegotiation(
       'compression': acceptEncoding.contains('gzip') ? 'gzip' : 'none',
     },
     'request_analysis': {
-      'path': path,              // Sin request.url.path
+      'path': path,              // Without request.url.path
       'total_headers': allHeaders.length,
       'total_params': allQueryParams.length,
     },
@@ -374,7 +374,7 @@ Future<Response> getContentWithNegotiation(
     'data': ['item1', 'item2', 'item3'],
   };
   
-  // Retornar en el formato solicitado
+  // Return in the requested format
   if (responseFormat == 'xml') {
     return Response.ok(
       '<?xml version="1.0"?><response><message>$message</message></response>',
@@ -391,109 +391,109 @@ Future<Response> getContentWithNegotiation(
 }
 ```
 
-## 🎯 Casos de Uso Comunes
+## 🎯 Common Use Cases
 
-### 1. **Autenticación Personalizada**
+### 1. **Custom Authentication**
 ```dart
-// Tradicional
+// Traditional
 @RequestHeader('Authorization') String authToken,
 @RequestHeader('X-API-Key') String apiKey,
 
-// 🆕 Enhanced - captura todos los headers de auth
+// 🆕 Enhanced - captures all auth headers
 @RequestHeader.all() Map<String, String> allHeaders,
-// Permite: Authorization, X-API-Key, X-Auth-Token, Custom-Auth, etc.
+// Allows: Authorization, X-API-Key, X-Auth-Token, Custom-Auth, etc.
 ```
 
-### 2. **Información del Cliente**
+### 2. **Client Information**
 ```dart
-// Tradicional
+// Traditional
 @RequestHeader('User-Agent') String userAgent,
 @RequestHeader('Accept-Language') String language,
 
-// 🆕 Enhanced - información completa del cliente
+// 🆕 Enhanced - complete client information
 @RequestHeader.all() Map<String, String> allHeaders,
-// Permite: User-Agent, Accept-Language, Accept-Encoding, X-Forwarded-For, etc.
+// Allows: User-Agent, Accept-Language, Accept-Encoding, X-Forwarded-For, etc.
 ```
 
 ### 3. **Content Negotiation**
 ```dart
-// Tradicional
+// Traditional
 @RequestHeader('Accept') String accept,
 @RequestHeader('Accept-Language') String acceptLang,
 @RequestHeader('Accept-Encoding') String acceptEnc,
 
-// 🆕 Enhanced - negociación completa de contenido
+// 🆕 Enhanced - full content negotiation
 @RequestHeader.all() Map<String, String> allHeaders,
-// Permite: Accept, Accept-*, If-*, Cache-Control, etc.
+// Allows: Accept, Accept-*, If-*, Cache-Control, etc.
 ```
 
-### 4. **Headers de Seguridad**
+### 4. **Security Headers**
 ```dart
-// 🆕 Enhanced - análisis completo de seguridad
+// 🆕 Enhanced - full security analysis
 @RequestHeader.all() Map<String, String> allHeaders,
-// Permite: X-CSRF-Token, X-Forwarded-*, Origin, Referer, etc.
+// Allows: X-CSRF-Token, X-Forwarded-*, Origin, Referer, etc.
 ```
 
-## ⚡ Ventajas del Método Enhanced
+## ⚡ Advantages of the Enhanced Method
 
-### ✅ Beneficios
-1. **Flexibilidad Total**: Captura cualquier header sin definirlo previamente
-2. **Menos Boilerplate**: No necesitas `Request request`
-3. **Análisis Dinámico**: Permite headers que no conoces en desarrollo
-4. **Mejor Debugging**: Puedes ver todos los headers en logs
-5. **Content Negotiation**: Acceso completo para negociación de contenido
-6. **Análisis de Seguridad**: Acceso a todos los headers de seguridad
+### ✅ Benefits
+1. **Total Flexibility**: Capture any header without defining it beforehand
+2. **Less Boilerplate**: You don't need `Request request`
+3. **Dynamic Analysis**: Allows for headers you don't know at development time
+4. **Improved Debugging**: You can see all headers in logs
+5. **Content Negotiation**: Full access for content negotiation
+6. **Security Analysis**: Access to all security headers
 
-### ⚠️ Consideraciones
-1. **Case Sensitivity**: Los nombres de headers son case-insensitive (HTTP spec)
-2. **Validación Manual**: Debes validar presencia y valores manualmente
-3. **Documentación**: Los headers no están explícitos en la función
-4. **Type Safety**: Todos los valores vienen como String
+### ⚠️ Considerations
+1. **Case Sensitivity**: Header names are case-insensitive (HTTP spec)
+2. **Manual Validation**: You must validate presence and values manually
+3. **Documentation**: Headers are not explicit in the function
+4. **Type Safety**: All values come as String
 
-## 🔄 Migración de Tradicional a Enhanced
+## 🔄 Migration from Traditional to Enhanced
 
-### Paso 1: Reemplazar headers individuales
+### Step 1: Replace individual headers
 ```dart
-// Antes
+// Before
 @RequestHeader('Authorization') String auth,
 @RequestHeader('User-Agent') String userAgent,
 @RequestHeader('Accept') String accept,
 
-// Después
+// After
 @RequestHeader.all() Map<String, String> allHeaders,
 ```
 
-### Paso 2: Extraer headers del Map
+### Step 2: Extract headers from the Map
 ```dart
-// Extraer headers específicos (case-insensitive)
+// Extract specific headers (case-insensitive)
 final auth = allHeaders['authorization'];
 final userAgent = allHeaders['user-agent'] ?? 'unknown';
 final accept = allHeaders['accept'] ?? 'application/json';
 ```
 
-### Paso 3: Eliminar Request parameter
+### Step 3: Remove Request parameter
 ```dart
-// Antes  
+// Before  
 Future<Response> endpoint(Request request, @RequestHeader('x') String x) async {
 
-// Después
+// After
 Future<Response> endpoint(@RequestHeader.all() Map<String, String> headers) async {
 ```
 
-## 🎯 Cuándo Usar Cada Método
+## 🎯 When to Use Each Method
 
-| **Escenario** | **Método Tradicional** | **Método Enhanced** |
+| **Scenario** | **Traditional Method** | **Enhanced Method** | 
 |---------------|------------------------|-------------------|
-| **Headers conocidos** | ✅ Explícito y claro | ⚠️ Menos explícito |
-| **Content negotiation** | ❌ Limitado | ✅ Perfecto |
-| **Análisis de seguridad** | ❌ Headers limitados | ✅ Análisis completo |
-| **APIs públicas** | ✅ Documentación clara | ⚠️ Requiere docs extra |
-| **Debugging** | ❌ Headers limitados | ✅ Ve todos los headers |
-| **Prototipado** | ❌ Más código | ✅ Más flexible |
+| **Known headers** | ✅ Explicit and clear | ⚠️ Less explicit |
+| **Content negotiation** | ❌ Limited | ✅ Perfect |
+| **Security analysis** | ❌ Limited headers | ✅ Full analysis |
+| **Public APIs** | ✅ Clear documentation | ⚠️ Requires extra docs |
+| **Debugging** | ❌ Limited headers | ✅ See all headers |
+| **Prototyping** | ❌ More code | ✅ More flexible |
 
-## 🔗 Combinaciones con Otras Anotaciones
+## 🔗 Combinations with Other Annotations
 
-### Con Query Parameters Enhanced
+### With Enhanced Query Parameters
 ```dart
 @Get(path: '/search')
 Future<Response> searchWithFullContext(
@@ -501,11 +501,11 @@ Future<Response> searchWithFullContext(
   @QueryParam.all() Map<String, String> allQueryParams,
   @RequestMethod() String method,
 ) async {
-  // Acceso completo a headers, params y método
+  // Full access to headers, params, and method
 }
 ```
 
-### Con JWT Context
+### With JWT Context
 ```dart
 @Get(path: '/user-data')
 @JWTEndpoint([MyUserValidator()])
@@ -513,33 +513,33 @@ Future<Response> getUserDataWithHeaders(
   @RequestHeader.all() Map<String, String> allHeaders,
   @RequestContext('jwt_payload') Map<String, dynamic> jwt,
 ) async {
-  // Headers completos + JWT payload directo
+  // Complete headers + direct JWT payload
 }
 ```
 
-### Con Request Body
+### With Request Body
 ```dart
 @Post(path: '/upload')
 Future<Response> uploadWithMetadata(
   @RequestBody() Map<String, dynamic> fileData,
   @RequestHeader.all() Map<String, String> allHeaders,
 ) async {
-  // Body data + headers completos (Content-Type, Content-Length, etc.)
+  // Body data + complete headers (Content-Type, Content-Length, etc.)
 }
 ```
 
-### Ejemplo Completo Multi-Anotación
+### Complete Multi-Annotation Example
 ```dart
 @Post(path: '/comprehensive')
 @JWTEndpoint([MyUserValidator()])
 Future<Response> comprehensiveEndpoint(
   @RequestBody() Map<String, dynamic> data,                // Request body
-  @RequestHeader.all() Map<String, String> allHeaders,     // Todos los headers
-  @QueryParam.all() Map<String, String> allQueryParams,    // Todos los params
+  @RequestHeader.all() Map<String, String> allHeaders,     // All headers
+  @QueryParam.all() Map<String, String> allQueryParams,    // All params
   @RequestContext('jwt_payload') Map<String, dynamic> jwt, // JWT payload
   @RequestMethod() String method,                          // HTTP method
-  @RequestUrl() Uri fullUrl,                              // URL completa
-  // 🎉 Acceso completo a TODA la información del request sin manual Request!
+  @RequestUrl() Uri fullUrl,                              // Full URL
+  // 🎉 Full access to ALL request information without manual Request!
 ) async {
   
   return jsonResponse(jsonEncode({
@@ -559,4 +559,4 @@ Future<Response> comprehensiveEndpoint(
 
 ---
 
-**🚀 Con @RequestHeader.all(), tienes acceso completo a todos los headers HTTP sin necesidad de definirlos previamente, eliminando el parámetro Request manual y habilitando análisis dinámico de headers!**
+**🚀 With @RequestHeader.all(), you have full access to all HTTP headers without needing to define them beforehand, eliminating the manual Request parameter and enabling dynamic header analysis!**

@@ -1,11 +1,11 @@
 // lib/annotations/rest_annotations.dart
-// Punto de entrada principal para todas las anotaciones REST
+// Main entry point for all REST annotations
 
 // HTTP Methods
 export 'web/http_methods.dart';
 
-// Controllers y servicios
+// Controllers and services
 export 'web/controller.dart';
 
-// Parámetros
+// Parameters
 export 'params/params.dart';

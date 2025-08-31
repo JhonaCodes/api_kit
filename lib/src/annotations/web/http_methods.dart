@@ -1,6 +1,6 @@
 // lib/annotations/web/http_methods.dart
 
-/// Anotación para endpoints GET
+/// Annotation for GET endpoints
 final class Get {
   final String path;
   final String? description;
@@ -15,7 +15,7 @@ final class Get {
   });
 }
 
-/// Anotación para endpoints POST
+/// Annotation for POST endpoints
 final class Post {
   final String path;
   final String? description;
@@ -30,7 +30,7 @@ final class Post {
   });
 }
 
-/// Anotación para endpoints PUT
+/// Annotation for PUT endpoints
 final class Put {
   final String path;
   final String? description;
@@ -45,7 +45,7 @@ final class Put {
   });
 }
 
-/// Anotación para endpoints PATCH
+/// Annotation for PATCH endpoints
 final class Patch {
   final String path;
   final String? description;
@@ -60,7 +60,7 @@ final class Patch {
   });
 }
 
-/// Anotación para endpoints DELETE
+/// Annotation for DELETE endpoints
 final class Delete {
   final String path;
   final String? description;

@@ -1,59 +1,59 @@
-# @QueryParam - Anotación para Parámetros de Query
+# @QueryParam - Annotation for Query Parameters
 
-## 📋 Descripción
+## 📋 Description
 
-La anotación `@QueryParam` se utiliza para capturar parámetros de consulta (query parameters) de la URL. Permite extraer valores de la cadena de consulta después del `?` y convertirlos automáticamente a parámetros de método.
+The `@QueryParam` annotation is used to capture query parameters from the URL. It allows extracting values from the query string after the `?` and automatically converting them to method parameters.
 
-## 🎯 Propósito
+## 🎯 Purpose
 
-- **Filtrado de datos**: Aplicar filtros a listados y búsquedas (`?category=electronics&active=true`)
-- **Paginación**: Controlar página y cantidad de resultados (`?page=1&limit=10`)
-- **Configuración de respuesta**: Modificar el formato o contenido (`?format=json&include_metadata=true`)
-- **Parámetros opcionales**: Valores que pueden estar presentes o no
+- **Data filtering**: Apply filters to lists and searches (`?category=electronics&active=true`)
+- **Pagination**: Control page and number of results (`?page=1&limit=10`)
+- **Response configuration**: Modify the format or content (`?format=json&include_metadata=true`)
+- **Optional parameters**: Values that may or may not be present
 
-## 📝 Sintaxis
+## 📝 Syntax
 
-### Parámetro Específico (Método Tradicional)
+### Specific Parameter (Traditional Method)
 ```dart
 @QueryParam(
-  String name,                    // Nombre del parámetro en la query string (OBLIGATORIO)
-  {bool required = false,         // Si el parámetro es obligatorio
-   dynamic defaultValue,          // Valor por defecto si no se proporciona  
-   String? description}           // Descripción del parámetro
+  String name,                    // Name of the parameter in the query string (REQUIRED)
+  {bool required = false,         // If the parameter is mandatory
+   dynamic defaultValue,          // Default value if not provided  
+   String? description}           // Description of the parameter
 )
 ```
 
-### 🆕 Todos los Parámetros (Método Enhanced)
+### 🆕 All Parameters (Enhanced Method)
 ```dart
 @QueryParam.all({
-  bool required = false,          // Si los parámetros son obligatorios
-  String? description             // Descripción de los parámetros
+  bool required = false,          // If the parameters are mandatory
+  String? description             // Description of the parameters
 })
-// Retorna: Map<String, String> con TODOS los query parameters
+// Returns: Map<String, String> with ALL query parameters
 ```
 
-## 🔧 Parámetros
+## 🔧 Parameters
 
-### Para `@QueryParam('name')`
-| Parámetro | Tipo | Obligatorio | Valor por Defecto | Descripción |
+### For `@QueryParam('name')`
+| Parameter | Type | Required | Default Value | Description |
 |-----------|------|-------------|-------------------|-------------|
-| `name` | `String` | ✅ Sí | - | Nombre exacto del parámetro en la query string |
-| `required` | `bool` | ❌ No | `false` | Si el parámetro debe estar presente en la request |
-| `defaultValue` | `dynamic` | ❌ No | `null` | Valor usado cuando el parámetro no está presente |
-| `description` | `String?` | ❌ No | `null` | Descripción del propósito y formato esperado |
+| `name` | `String` | ✅ Yes | - | Exact name of the parameter in the query string |
+| `required` | `bool` | ❌ No | `false` | If the parameter must be present in the request |
+| `defaultValue` | `dynamic` | ❌ No | `null` | Value used when the parameter is not present |
+| `description` | `String?` | ❌ No | `null` | Description of the purpose and expected format |
 
-### 🆕 Para `@QueryParam.all()`
-| Parámetro | Tipo | Obligatorio | Valor por Defecto | Descripción |
+### 🆕 For `@QueryParam.all()`
+| Parameter | Type | Required | Default Value | Description |
 |-----------|------|-------------|-------------------|-------------|
-| `required` | `bool` | ❌ No | `false` | Si debe haber al menos un query parameter |
-| `description` | `String?` | ❌ No | `'All query parameters as Map<String, String>'` | Descripción de todos los parámetros |
+| `required` | `bool` | ❌ No | `false` | If there must be at least one query parameter |
+| `description` | `String?` | ❌ No | `'All query parameters as Map<String, String>'` | Description of all parameters |
 
-## 🚀 Ejemplos de Uso
+## 🚀 Usage Examples
 
-### Ejemplo Básico - Parámetros Opcionales (Método Tradicional)
+### Basic Example - Optional Parameters (Traditional Method)
 ```dart
 @RestController(basePath: '/api/products')
-class ProductController extends BaseController {
+class ProductController extends BaseController { 
   
   @Get(path: '/search')  // URL: /api/products/search
   Future<Response> searchProducts(
@@ -61,14 +61,14 @@ class ProductController extends BaseController {
     @QueryParam('q', required: false) String? searchQuery,
     @QueryParam('category', required: false) String? category,
     @QueryParam('active', defaultValue: true) bool activeOnly,
-  ) async {
+  ) async { 
     
     return jsonResponse(jsonEncode({
       'message': 'Product search executed',
       'search_params': {
-        'query': searchQuery,           // null si no se proporciona
-        'category': category,           // null si no se proporciona
-        'active_only': activeOnly,      // true por defecto
+        'query': searchQuery,           // null if not provided
+        'category': category,           // null if not provided
+        'active_only': activeOnly,      // true by default
       },
       'results': searchQuery != null ? [] : null
     }));
@@ -76,25 +76,25 @@ class ProductController extends BaseController {
 }
 ```
 
-### 🆕 Ejemplo Básico - TODOS los Parámetros (Método Enhanced)
+### 🆕 Basic Example - ALL Parameters (Enhanced Method)
 ```dart
 @RestController(basePath: '/api/products')
-class ProductController extends BaseController {
+class ProductController extends BaseController { 
   
   @Get(path: '/search')  // URL: /api/products/search
   Future<Response> searchProductsEnhanced(
-    @QueryParam.all() Map<String, String> allQueryParams,  // 🆕 TODOS los params
-    @RequestMethod() String method,                         // 🆕 Método HTTP directo
-    @RequestPath() String path,                            // 🆕 Path directo
+    @QueryParam.all() Map<String, String> allQueryParams,  // 🆕 ALL params
+    @RequestMethod() String method,                         // 🆕 Direct HTTP method
+    @RequestPath() String path,                            // 🆕 Direct path
     // 🎉 NO Request request needed!
-  ) async {
+  ) async { 
     
-    // Extraer parámetros específicos del Map
+    // Extract specific parameters from the Map
     final searchQuery = allQueryParams['q'];
     final category = allQueryParams['category'];
     final activeOnly = allQueryParams['active'] == 'true' || allQueryParams['active'] == null;
     
-    // Obtener todos los filtros dinámicos
+    // Get all dynamic filters
     final filters = allQueryParams.entries
       .where((entry) => entry.key.startsWith('filter_'))
       .map((entry) => '${entry.key}: ${entry.value}')
@@ -104,16 +104,16 @@ class ProductController extends BaseController {
       'message': 'Enhanced product search executed',
       'framework_improvement': 'No manual Request parameter needed!',
       'request_info': {
-        'method': method,              // Sin request.method
-        'path': path,                  // Sin request.url.path
+        'method': method,              // Without request.method
+        'path': path,                  // Without request.url.path
       },
       'search_params': {
         'query': searchQuery,
         'category': category, 
         'active_only': activeOnly,
         'total_params': allQueryParams.length,
-        'all_params': allQueryParams,      // Todos los parámetros disponibles
-        'dynamic_filters': filters,       // Filtros dinámicos detectados
+        'all_params': allQueryParams,      // All parameters available
+        'dynamic_filters': filters,       // Dynamic filters detected
       },
     }));
   }
@@ -122,27 +122,27 @@ class ProductController extends BaseController {
 
 **Testing URLs:**
 ```bash
-# Sin parámetros
+# No parameters
 curl http://localhost:8080/api/products/search
 
-# Con algunos parámetros
+# With some parameters
 curl "http://localhost:8080/api/products/search?q=laptop&category=electronics"
 
-# Con todos los parámetros + filtros dinámicos (🆕 Enhanced captura TODO)
+# With all parameters + dynamic filters (🆕 Enhanced captures EVERYTHING)
 curl "http://localhost:8080/api/products/search?q=gaming&category=electronics&active=false&filter_price_min=100&filter_brand=apple&debug=true"
 ```
 
-### Ejemplo con Parámetros Obligatorios (Tradicional)
+### Example with Required Parameters (Traditional)
 ```dart
 @Get(path: '/reports')
 Future<Response> generateReport(
   Request request,
-  @QueryParam('start_date', required: true, description: 'Fecha inicio en formato YYYY-MM-DD') String startDate,
-  @QueryParam('end_date', required: true, description: 'Fecha fin en formato YYYY-MM-DD') String endDate,
-  @QueryParam('format', defaultValue: 'json', description: 'Formato del reporte') String format,
-) async {
+  @QueryParam('start_date', required: true, description: 'Start date in YYYY-MM-DD format') String startDate,
+  @QueryParam('end_date', required: true, description: 'End date in YYYY-MM-DD format') String endDate,
+  @QueryParam('format', defaultValue: 'json', description: 'Report format') String format,
+) async { 
   
-  // Validar formato de fechas
+  // Validate date format
   DateTime? start, end;
   
   try {
@@ -170,22 +170,22 @@ Future<Response> generateReport(
 }
 ```
 
-### 🆕 Ejemplo con Parámetros Obligatorios (Enhanced)
+### 🆕 Example with Required Parameters (Enhanced)
 ```dart
 @Get(path: '/reports')
 Future<Response> generateReportEnhanced(
-  @QueryParam.all() Map<String, String> allQueryParams,     // 🆕 Todos los parámetros
-  @RequestMethod() String method,                            // 🆕 Método HTTP
-  @RequestUrl() Uri fullUrl,                                // 🆕 URL completa
+  @QueryParam.all() Map<String, String> allQueryParams,     // 🆕 All parameters
+  @RequestMethod() String method,                            // 🆕 HTTP method
+  @RequestUrl() Uri fullUrl,                                // 🆕 Full URL
   // NO Request request needed! 🎉
-) async {
+) async { 
   
-  // Extraer parámetros requeridos
+  // Extract required parameters
   final startDate = allQueryParams['start_date'];
   final endDate = allQueryParams['end_date'];
   final format = allQueryParams['format'] ?? 'json';
   
-  // Validación de parámetros requeridos
+  // Validation of required parameters
   if (startDate == null || endDate == null) {
     return Response.badRequest(body: jsonEncode({
       'error': 'Required parameters missing',
@@ -197,7 +197,7 @@ Future<Response> generateReportEnhanced(
     }));
   }
   
-  // Validar formato de fechas
+  // Validate date format
   DateTime? start, end;
   
   try {
@@ -213,7 +213,7 @@ Future<Response> generateReportEnhanced(
     }));
   }
   
-  // Extraer parámetros adicionales dinámicos
+  // Extract additional dynamic parameters
   final additionalParams = Map.fromEntries(
     allQueryParams.entries.where((entry) => 
       !['start_date', 'end_date', 'format'].contains(entry.key))
@@ -223,8 +223,8 @@ Future<Response> generateReportEnhanced(
     'message': 'Enhanced report generated successfully',
     'framework_improvement': 'All parameters captured automatically!',
     'request_info': {
-      'method': method,                 // Sin request.method
-      'full_url': fullUrl.toString(),   // Sin request.url
+      'method': method,                 // Without request.method
+      'full_url': fullUrl.toString(),   // Without request.url
     },
     'parameters': {
       'start_date': startDate,
@@ -233,35 +233,35 @@ Future<Response> generateReportEnhanced(
       'period_days': end.difference(start).inDays,
       'total_params': allQueryParams.length,
       'all_params': allQueryParams,
-      'additional_params': additionalParams,  // Parámetros adicionales capturados
+      'additional_params': additionalParams,  // Additional parameters captured
     }
   }));
 }
 ```
 
-### Paginación Completa con Enhanced Parameters
+### Complete Pagination with Enhanced Parameters
 ```dart
 @Get(path: '/list')
 Future<Response> getProductListEnhanced(
-  @QueryParam.all() Map<String, String> allQueryParams,     // 🆕 Todos los parámetros
-  @RequestHeader.all() Map<String, String> allHeaders,      // 🆕 Todos los headers
-  @RequestHost() String host,                               // 🆕 Host directo
-  @RequestPath() String path,                              // 🆕 Path directo
-) async {
+  @QueryParam.all() Map<String, String> allQueryParams,     // 🆕 All parameters
+  @RequestHeader.all() Map<String, String> allHeaders,      // 🆕 All headers
+  @RequestHost() String host,                               // 🆕 Direct host
+  @RequestPath() String path,                              // 🆕 Direct path
+) async { 
   
-  // Extraer parámetros de paginación
+  // Extract pagination parameters
   final page = int.tryParse(allQueryParams['page'] ?? '1') ?? 1;
   final limit = int.tryParse(allQueryParams['limit'] ?? '10') ?? 10;
   final sortBy = allQueryParams['sort_by'] ?? 'name';
   final sortOrder = allQueryParams['sort_order'] ?? 'asc';
   
-  // Extraer todos los filtros dinámicos
+  // Extract all dynamic filters
   final filters = Map.fromEntries(
     allQueryParams.entries.where((entry) => 
       !['page', 'limit', 'sort_by', 'sort_order'].contains(entry.key))
   );
   
-  // Simular datos paginados
+  // Simulate paginated data
   final totalItems = 1000;
   final totalPages = (totalItems / limit).ceil();
   final products = List.generate(limit, (index) => {
@@ -280,8 +280,8 @@ Future<Response> getProductListEnhanced(
       'Direct access to request components',
     ],
     'request_info': {
-      'host': host,              // Sin request.url.host
-      'path': path,              // Sin request.url.path
+      'host': host,              // Without request.url.host
+      'path': path,              // Without request.url.path
       'user_agent': allHeaders['user-agent'] ?? 'unknown',
     },
     'pagination': {
@@ -306,105 +306,105 @@ Future<Response> getProductListEnhanced(
 }
 ```
 
-## 🎯 Casos de Uso Comunes
+## 🎯 Common Use Cases
 
-### 1. **Búsqueda Básica**
+### 1. **Basic Search**
 ```dart
-// Tradicional
+// Traditional
 @QueryParam('q', required: false) String? query,
 
-// 🆕 Enhanced - captura búsquedas dinámicas
+// 🆕 Enhanced - captures dynamic searches
 @QueryParam.all() Map<String, String> allParams,
-// Permite: ?q=text&search_title=title&search_description=desc
+// Allows: ?q=text&search_title=title&search_description=desc
 ```
 
-### 2. **Paginación**
+### 2. **Pagination**
 ```dart
-// Tradicional
+// Traditional
 @QueryParam('page', defaultValue: 1) int page,
 @QueryParam('limit', defaultValue: 10) int limit,
 
-// 🆕 Enhanced - paginación + filtros dinámicos
+// 🆕 Enhanced - pagination + dynamic filters
 @QueryParam.all() Map<String, String> allParams,
-// Permite: ?page=1&limit=10&offset=20&filter_category=tech&filter_price_max=100
+// Allows: ?page=1&limit=10&offset=20&filter_category=tech&filter_price_max=100
 ```
 
-### 3. **Configuración de Respuesta**
+### 3. **Response Configuration**
 ```dart
-// Tradicional
+// Traditional
 @QueryParam('format', defaultValue: 'json') String format,
 @QueryParam('include_metadata', defaultValue: false) bool includeMeta,
 
-// 🆕 Enhanced - configuraciones dinámicas
+// 🆕 Enhanced - dynamic configurations
 @QueryParam.all() Map<String, String> allParams,
-// Permite: ?format=xml&include_metadata=true&include_stats=true&debug=true
+// Allows: ?format=xml&include_metadata=true&include_stats=true&debug=true
 ```
 
-### 4. **Filtros Complejos**
+### 4. **Complex Filters**
 ```dart
-// 🆕 Enhanced - filtros completamente dinámicos
+// 🆕 Enhanced - completely dynamic filters
 @QueryParam.all() Map<String, String> allParams,
-// Permite: ?filter_price_min=10&filter_price_max=100&filter_brand=apple&filter_condition=new
+// Allows: ?filter_price_min=10&filter_price_max=100&filter_brand=apple&filter_condition=new
 ```
 
-## ⚡ Ventajas del Método Enhanced
+## ⚡ Advantages of the Enhanced Method
 
-### ✅ Beneficios
-1. **Flexibilidad Total**: Captura cualquier parámetro sin definirlo previamente
-2. **Menos Boilerplate**: No necesitas `Request request` 
-3. **Filtros Dinámicos**: Permite filtros que no conoces en tiempo de desarrollo
-4. **Mejor Escalabilidad**: Fácil añadir nuevos parámetros sin cambiar código
-5. **Debugging Mejorado**: Puedes ver todos los parámetros en logs
+### ✅ Benefits
+1. **Total Flexibility**: Capture any parameter without defining it beforehand
+2. **Less Boilerplate**: You don't need `Request request` 
+3. **Dynamic Filters**: Allows filters you don't know at development time
+4. **Better Scalability**: Easy to add new parameters without changing code
+5. **Improved Debugging**: You can see all parameters in logs
 
-### ⚠️ Consideraciones
-1. **Validación Manual**: Debes validar tipos y valores manualmente
-2. **Documentación**: Los parámetros no están explícitos en la función
-3. **Type Safety**: Pierdes tipado automático (todo viene como String)
+### ⚠️ Considerations
+1. **Manual Validation**: You must validate types and values manually
+2. **Documentation**: Parameters are not explicit in the function
+3. **Type Safety**: You lose automatic typing (everything comes as a String)
 
-## 🔄 Migración de Tradicional a Enhanced
+## 🔄 Migration from Traditional to Enhanced
 
-### Paso 1: Reemplazar parámetros individuales
+### Step 1: Replace individual parameters
 ```dart
-// Antes
+// Before
 @QueryParam('page') int page,
 @QueryParam('limit') int limit,
 @QueryParam('category') String? category,
 
-// Después  
+// After  
 @QueryParam.all() Map<String, String> allQueryParams,
 ```
 
-### Paso 2: Extraer parámetros del Map
+### Step 2: Extract parameters from the Map
 ```dart
-// Extraer y convertir tipos
+// Extract and convert types
 final page = int.tryParse(allQueryParams['page'] ?? '1') ?? 1;
 final limit = int.tryParse(allQueryParams['limit'] ?? '10') ?? 10; 
 final category = allQueryParams['category'];
 ```
 
-### Paso 3: Eliminar Request parameter
+### Step 3: Remove Request parameter
 ```dart
-// Antes
+// Before
 Future<Response> endpoint(Request request, @QueryParam('x') int x) async {
 
-// Después
+// After
 Future<Response> endpoint(@QueryParam.all() Map<String, String> params) async {
 ```
 
-## 🎯 Cuándo Usar Cada Método
+## 🎯 When to Use Each Method
 
-| **Escenario** | **Método Tradicional** | **Método Enhanced** |
+| **Scenario** | **Traditional Method** | **Enhanced Method** |
 |---------------|------------------------|-------------------|
-| **API estable** | ✅ Mejor tipado | ❌ Menos explícito |
-| **Filtros dinámicos** | ❌ Limitado | ✅ Perfecto |
-| **Prototipado rápido** | ❌ Más código | ✅ Más flexible |
-| **APIs públicas** | ✅ Documentación clara | ⚠️ Requiere docs extra |
-| **Debugging** | ❌ Parámetros limitados | ✅ Ve todos los params |
-| **Type safety** | ✅ Tipado automático | ❌ Tipado manual |
+| **Stable API** | ✅ Better typing | ❌ Less explicit |
+| **Dynamic filters** | ❌ Limited | ✅ Perfect |
+| **Rapid prototyping** | ❌ More code | ✅ More flexible |
+| **Public APIs** | ✅ Clear documentation | ⚠️ Requires extra docs |
+| **Debugging** | ❌ Limited parameters | ✅ See all params |
+| **Type safety** | ✅ Automatic typing | ❌ Manual typing |
 
-## 🔗 Combinaciones con Otras Anotaciones
+## 🔗 Combinations with Other Annotations
 
-### Con Headers Enhanced
+### With Enhanced Headers
 ```dart
 @Get(path: '/search')
 Future<Response> searchWithHeaders(
@@ -412,11 +412,11 @@ Future<Response> searchWithHeaders(
   @RequestHeader.all() Map<String, String> allHeaders,
   @RequestMethod() String method,
 ) async {
-  // Tienes acceso completo a query params, headers y método
+  // You have full access to query params, headers, and method
 }
 ```
 
-### Con JWT
+### With JWT
 ```dart
 @Get(path: '/user-search')
 @JWTEndpoint([MyUserValidator()])
@@ -424,21 +424,21 @@ Future<Response> userSearch(
   @QueryParam.all() Map<String, String> allQueryParams,
   @RequestContext('jwt_payload') Map<String, dynamic> jwt,
 ) async {
-  // Búsqueda personalizada basada en usuario + parámetros dinámicos
+  // Custom search based on user + dynamic parameters
 }
 ```
 
-### Con Request Body
+### With Request Body
 ```dart
 @Post(path: '/advanced-search')
 Future<Response> advancedSearch(
   @RequestBody() Map<String, dynamic> searchCriteria,
   @QueryParam.all() Map<String, String> allQueryParams,
 ) async {
-  // Búsqueda compleja con criterios en body y parámetros en query
+  // Complex search with criteria in body and parameters in query
 }
 ```
 
 ---
 
-**🚀 Con @QueryParam.all(), tienes acceso completo a todos los parámetros de query sin necesidad de definirlos previamente, eliminando el parámetro Request manual y creando APIs más flexibles!**
+**🚀 With @QueryParam.all(), you have full access to all query parameters without needing to define them beforehand, eliminating the manual Request parameter and creating more flexible APIs!**

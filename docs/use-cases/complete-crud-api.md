@@ -1,18 +1,18 @@
-# Caso de Uso: API CRUD Completa con Autenticación
+# Use Case: Complete CRUD API with Authentication
 
-## 📋 Descripción
+## 📋 Description
 
-Este caso de uso demuestra cómo implementar una API CRUD (Create, Read, Update, Delete) completa para gestión de productos usando todas las anotaciones de `api_kit` con un sistema de autenticación JWT robusto.
+This use case demonstrates how to implement a complete CRUD (Create, Read, Update, Delete) API for product management using all the annotations of `api_kit` with a robust JWT authentication system.
 
-## 🎯 Objetivos del Caso de Uso
+## 🎯 Use Case Objectives
 
-- **CRUD Completo**: Implementar todas las operaciones básicas
-- **Autenticación multinivel**: Diferentes permisos para diferentes operaciones  
-- **Validación de datos**: Validación completa de entrada con mensajes claros
-- **Manejo de errores**: Respuestas consistentes para todos los casos de error
-- **Búsqueda y filtros**: Endpoints de consulta avanzada
+- **Complete CRUD**: Implement all basic operations
+- **Multi-level authentication**: Different permissions for different operations  
+- **Data validation**: Complete input validation with clear messages
+- **Error handling**: Consistent responses for all error cases
+- **Search and filters**: Advanced query endpoints
 
-## 🏗️ Arquitectura del Sistema
+## 🏗️ System Architecture
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -36,12 +36,12 @@ Este caso de uso demuestra cómo implementar una API CRUD (Create, Read, Update,
 └─────────────────────────────────────────────────┘
 ```
 
-## 🚀 Implementación Completa
+## 🚀 Complete Implementation
 
-### Validadores JWT Personalizados
+### Custom JWT Validators
 
 ```dart
-// Validador básico de usuario
+// Basic user validator
 class UserValidator extends JWTValidatorBase {
   const UserValidator();
   
@@ -65,7 +65,7 @@ class UserValidator extends JWTValidatorBase {
   String get defaultErrorMessage => 'Valid user authentication required';
 }
 
-// Validador de Manager
+// Manager validator
 class ManagerValidator extends JWTValidatorBase {
   const ManagerValidator();
   
@@ -88,7 +88,7 @@ class ManagerValidator extends JWTValidatorBase {
   String get defaultErrorMessage => 'Manager access required for product management';
 }
 
-// Validador de Admin
+// Admin validator
 class AdminValidator extends JWTValidatorBase {
   const AdminValidator();
   
@@ -108,7 +108,7 @@ class AdminValidator extends JWTValidatorBase {
   String get defaultErrorMessage => 'Administrator access required';
 }
 
-// Validador de horario de negocio
+// Business hours validator
 class BusinessHoursValidator extends JWTValidatorBase {
   const BusinessHoursValidator();
   
@@ -133,12 +133,12 @@ class BusinessHoursValidator extends JWTValidatorBase {
 }
 ```
 
-### Controller CRUD Completo
+### Complete CRUD Controller
 
 ```dart
 @RestController(
   basePath: '/api/products',
-  description: 'Sistema completo de gestión de productos con CRUD y autenticación multinivel',
+  description: 'Complete product management system with CRUD and multi-level authentication',
   tags: ['products', 'crud', 'inventory']
 )
 class ProductController extends BaseController {
@@ -147,30 +147,30 @@ class ProductController extends BaseController {
   // READ OPERATIONS (GET)
   // ========================================
   
-  /// Lista y búsqueda de productos - Endpoint público con filtros limitados
+  /// List and search products - Public endpoint with limited filters
   @Get(
     path: '/search',
-    description: 'Búsqueda pública de productos con filtros básicos'
+    description: 'Public product search with basic filters'
   )
   @JWTPublic()
   Future<Response> searchProductsPublic(
     Request request,
-    @QueryParam('q', required: false, description: 'Término de búsqueda') String? query,
-    @QueryParam('category', required: false, description: 'Filtrar por categoría') String? category,
-    @QueryParam('page', defaultValue: 1, description: 'Número de página') int page,
-    @QueryParam('limit', defaultValue: 20, description: 'Productos por página') int limit,
+    @QueryParam('q', required: false, description: 'Search term') String? query,
+    @QueryParam('category', required: false, description: 'Filter by category') String? category,
+    @QueryParam('page', defaultValue: 1, description: 'Page number') int page,
+    @QueryParam('limit', defaultValue: 20, description: 'Products per page') int limit,
   ) async {
     
-    // Validaciones básicas
+    // Basic validations
     if (page < 1 || limit < 1 || limit > 50) {
       return Response.badRequest(body: jsonEncode({
         'error': 'Invalid pagination parameters',
         'valid_page': 'page >= 1',
         'valid_limit': '1 <= limit <= 50 (public limit)'
-      }).toHttpResponse();
+      }).toHttpResponse());
     }
     
-    // Simular búsqueda pública (datos limitados)
+    // Simulate public search (limited data)
     final products = _generateMockProducts(query, category, page, limit, isPublic: true);
     
     return ApiKit.ok({
@@ -190,41 +190,41 @@ class ProductController extends BaseController {
     }).toHttpResponse();
   }
   
-  /// Lista completa de productos - Requiere autenticación de usuario
+  /// Complete product list - Requires user authentication
   @Get(
     path: '',
-    description: 'Lista completa de productos con filtros avanzados (requiere login)'
+    description: 'Complete product list with advanced filters (login required)'
   )
   @JWTEndpoint([UserValidator()])
   Future<Response> listProducts(
     Request request,
-    // Filtros básicos
+    // Basic filters
     @QueryParam('q', required: false) String? query,
     @QueryParam('category', required: false) String? category,
     @QueryParam('active', defaultValue: true) bool activeOnly,
     
-    // Filtros de precio
+    // Price filters
     @QueryParam('min_price', required: false) double? minPrice,
     @QueryParam('max_price', required: false) double? maxPrice,
     
-    // Paginación
+    // Pagination
     @QueryParam('page', defaultValue: 1) int page,
     @QueryParam('limit', defaultValue: 50) int limit,
     
-    // Ordenamiento
+    // Sorting
     @QueryParam('sort', defaultValue: 'name') String sortBy,
     @QueryParam('order', defaultValue: 'asc') String sortOrder,
     
-    // Opciones de respuesta
+    // Response options
     @QueryParam('include_stock', defaultValue: false) bool includeStock,
     @QueryParam('include_supplier', defaultValue: false) bool includeSupplier,
   ) async {
     
-    // Obtener información del usuario autenticado
+    // Get authenticated user information
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     final userId = jwtPayload['user_id'];
     
-    // Validaciones de parámetros
+    // Parameter validations
     final validationErrors = <String>[];
     
     if (page < 1) validationErrors.add('Page must be >= 1');
@@ -250,10 +250,10 @@ class ProductController extends BaseController {
       return Response.badRequest(body: jsonEncode({
         'error': 'Invalid query parameters',
         'validation_errors': validationErrors
-      }).toHttpResponse();
+      }).toHttpResponse());
     }
     
-    // Simular búsqueda completa
+    // Simulate full search
     final products = _generateMockProducts(query, category, page, limit, 
       activeOnly: activeOnly,
       minPrice: minPrice,
@@ -289,42 +289,42 @@ class ProductController extends BaseController {
     }).toHttpResponse();
   }
   
-  /// Obtener producto específico por ID
+  /// Get a specific product by ID
   @Get(
     path: '/{productId}',
-    description: 'Obtiene los detalles completos de un producto específico'
+    description: 'Gets the full details of a specific product'
   )
   @JWTEndpoint([UserValidator()])
   Future<Response> getProduct(
     Request request,
-    @PathParam('productId', description: 'ID único del producto') String productId,
+    @PathParam('productId', description: 'Unique product ID') String productId,
     @QueryParam('include_reviews', defaultValue: false) bool includeReviews,
     @QueryParam('include_related', defaultValue: false) bool includeRelated,
   ) async {
     
-    // Validar formato del ID
+    // Validate ID format
     if (!productId.startsWith('prod_') || productId.length < 10) {
       return Response.badRequest(body: jsonEncode({
         'error': 'Invalid product ID format',
         'expected_format': 'prod_<identifier>',
         'received': productId
-      }).toHttpResponse();
+      }).toHttpResponse());
     }
     
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     final userId = jwtPayload['user_id'];
     
-    // Simular obtención del producto
+    // Simulate getting the product
     final product = _getMockProduct(productId);
     if (product == null) {
       return Response.notFound(jsonEncode({
         'error': 'Product not found',
         'product_id': productId,
         'suggestion': 'Check the product ID or use the search endpoint'
-      }).toHttpResponse();
+      }).toHttpResponse());
     }
     
-    // Agregar información adicional según parámetros
+    // Add additional information based on parameters
     if (includeReviews) {
       product['reviews'] = _getMockReviews(productId);
     }
@@ -348,47 +348,47 @@ class ProductController extends BaseController {
   // CREATE OPERATION (POST)
   // ========================================
   
-  /// Crear nuevo producto - Requiere permisos de Manager
+  /// Create a new product - Requires Manager permissions
   @Post(
     path: '',
-    description: 'Crear un nuevo producto (requiere permisos de manager)',
+    description: 'Create a new product (requires manager permissions)',
     statusCode: 201
   )
   @JWTEndpoint([ManagerValidator(), BusinessHoursValidator()], requireAll: true)
   Future<Response> createProduct(
-    Request request, // ⚠️ Solo necesario para obtener JWT context (limitación actual)
+    Request request, // ⚠️ Only necessary to get JWT context (current limitation)
     @RequestHeader('Content-Type', required: true) String contentType,
     @RequestBody(
       required: true,
-      description: 'Datos completos del nuevo producto'
-    ) Map<String, dynamic> productData, // ✅ Ya parseado automáticamente por @RequestBody
+      description: 'Complete data for the new product'
+    ) Map<String, dynamic> productData, // ✅ Already parsed automatically by @RequestBody
   ) async {
     
-    // Validar Content-Type
+    // Validate Content-Type
     if (!contentType.contains('application/json')) {
       return Response.badRequest(body: jsonEncode({
         'error': 'Invalid Content-Type',
         'expected': 'application/json',
         'received': contentType
-      }).toHttpResponse();
+      }).toHttpResponse());
     }
     
-    // ⚠️ Limitación actual: JWT debe extraerse manualmente del Request
-    // TODO: En futuras versiones debería inyectarse automáticamente
+    // ⚠️ Current limitation: JWT must be manually extracted from the Request
+    // TODO: In future versions, it should be injected automatically
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     final managerId = jwtPayload['user_id'];
     
-    // Validaciones completas del producto
+    // Complete product validations
     final validationResult = _validateProductData(productData, isCreate: true);
     if (!validationResult['valid']) {
       return Response.badRequest(body: jsonEncode({
         'error': 'Product validation failed',
         'validation_errors': validationResult['errors'],
         'received_data': productData
-      }).toHttpResponse();
+      }).toHttpResponse());
     }
     
-    // Crear producto
+    // Create product
     final productId = 'prod_${DateTime.now().millisecondsSinceEpoch}';
     final newProduct = {
       'id': productId,
@@ -421,10 +421,10 @@ class ProductController extends BaseController {
   // UPDATE OPERATIONS (PUT & PATCH)
   // ========================================
   
-  /// Actualización completa del producto
+  /// Complete product update
   @Put(
     path: '/{productId}',
-    description: 'Actualización completa de un producto (requiere todos los campos)'
+    description: 'Complete update of a product (requires all fields)'
   )
   @JWTEndpoint([ManagerValidator()], requireAll: true)
   Future<Response> updateProductComplete(
@@ -437,25 +437,25 @@ class ProductController extends BaseController {
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     final managerId = jwtPayload['user_id'];
     
-    // Verificar que el producto existe
+    // Verify that the product exists
     if (!_productExists(productId)) {
       return Response.notFound(jsonEncode({
         'error': 'Product not found',
         'product_id': productId
-      }).toHttpResponse();
+      }).toHttpResponse());
     }
     
-    // Validar datos completos para PUT
+    // Validate complete data for PUT
     final validationResult = _validateProductData(productData, isCreate: false, isCompleteUpdate: true);
     if (!validationResult['valid']) {
       return Response.badRequest(body: jsonEncode({
         'error': 'Complete product data validation failed',
         'validation_errors': validationResult['errors'],
         'hint': 'PUT requires all fields. Use PATCH for partial updates.'
-      }).toHttpResponse();
+      }).toHttpResponse());
     }
     
-    // Actualizar producto completo
+    // Update complete product
     final updatedProduct = {
       'id': productId,
       ...productData,
@@ -477,10 +477,10 @@ class ProductController extends BaseController {
     }).toHttpResponse();
   }
   
-  /// Actualización parcial del producto
+  /// Partial product update
   @Patch(
     path: '/{productId}',
-    description: 'Actualización parcial de un producto (solo campos enviados)'
+    description: 'Partial update of a product (only sent fields)'
   )
   @JWTEndpoint([ManagerValidator()], requireAll: true)
   Future<Response> updateProductPartial(
@@ -493,32 +493,32 @@ class ProductController extends BaseController {
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     final managerId = jwtPayload['user_id'];
     
-    // Verificar que hay campos para actualizar
+    // Verify that there are fields to update
     if (updates.isEmpty) {
       return Response.badRequest(body: jsonEncode({
         'error': 'No fields to update',
         'hint': 'Include at least one field in the request body'
-      }).toHttpResponse();
+      }).toHttpResponse());
     }
     
-    // Verificar que el producto existe
+    // Verify that the product exists
     if (!_productExists(productId)) {
       return Response.notFound(jsonEncode({
         'error': 'Product not found',
         'product_id': productId
-      }).toHttpResponse();
+      }).toHttpResponse());
     }
     
-    // Validar campos enviados
+    // Validate sent fields
     final validationResult = _validateProductData(updates, isPartialUpdate: true, validateStock: validateStock);
     if (!validationResult['valid']) {
       return Response.badRequest(body: jsonEncode({
         'error': 'Partial update validation failed',
         'validation_errors': validationResult['errors']
-      }).toHttpResponse();
+      }).toHttpResponse());
     }
     
-    // Aplicar actualización parcial
+    // Apply partial update
     final updatedFields = updates.keys.toList();
     final patchedProduct = <String, dynamic>{
       'id': productId,
@@ -526,7 +526,7 @@ class ProductController extends BaseController {
       'updated_at': DateTime.now().toIso8601String(),
     };
     
-    // Solo incluir campos actualizados
+    // Only include updated fields
     for (final field in updatedFields) {
       patchedProduct[field] = updates[field];
     }
@@ -547,41 +547,41 @@ class ProductController extends BaseController {
   // DELETE OPERATION (DELETE)
   // ========================================
   
-  /// Eliminar producto - Requiere permisos de Admin
+  /// Delete product - Requires Admin permissions
   @Delete(
     path: '/{productId}',
-    description: 'Eliminar un producto del sistema (requiere admin)',
-    statusCode: 200 // Devolver información en lugar de 204
+    description: 'Delete a product from the system (requires admin)',
+    statusCode: 200 // Return information instead of 204
   )
   @JWTEndpoint([AdminValidator(), BusinessHoursValidator()], requireAll: true)
   Future<Response> deleteProduct(
     Request request,
     @PathParam('productId') String productId,
-    @QueryParam('force', defaultValue: false, description: 'Forzar eliminación aunque tenga dependencias') bool force,
-    @RequestHeader('X-Confirm-Delete', required: true, description: 'Confirmación de eliminación') String confirmHeader,
+    @QueryParam('force', defaultValue: false, description: 'Force deletion even if it has dependencies') bool force,
+    @RequestHeader('X-Confirm-Delete', required: true, description: 'Deletion confirmation') String confirmHeader,
   ) async {
     
-    // Validar confirmación
+    // Validate confirmation
     if (confirmHeader != 'CONFIRM_DELETE') {
       return Response.badRequest(body: jsonEncode({
         'error': 'Deletion confirmation required',
         'required_header': 'X-Confirm-Delete: CONFIRM_DELETE',
         'received': confirmHeader
-      }).toHttpResponse();
+      }).toHttpResponse());
     }
     
     final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
     final adminId = jwtPayload['user_id'];
     
-    // Verificar que el producto existe
+    // Verify that the product exists
     if (!_productExists(productId)) {
       return Response.notFound(jsonEncode({
         'error': 'Product not found',
         'product_id': productId
-      }).toHttpResponse();
+      }).toHttpResponse());
     }
     
-    // Verificar dependencias
+    // Check dependencies
     final dependencies = _checkProductDependencies(productId);
     if (dependencies.isNotEmpty && !force) {
       return Response(409, body: jsonEncode({ // Conflict
@@ -592,7 +592,7 @@ class ProductController extends BaseController {
       }), headers: {'Content-Type': 'application/json'});
     }
     
-    // Realizar eliminación
+    // Perform deletion
     final deletionRecord = {
       'product_id': productId,
       'deleted_by': adminId,
@@ -615,7 +615,7 @@ class ProductController extends BaseController {
   }
   
   // ========================================
-  // MÉTODOS DE AYUDA PRIVADOS
+  // PRIVATE HELPER METHODS
   // ========================================
   
   List<Map<String, dynamic>> _generateMockProducts(
@@ -644,7 +644,7 @@ class ProductController extends BaseController {
         'category': category ?? 'electronics',
       };
       
-      // Agregar campos detallados para usuarios autenticados
+      // Add detailed fields for authenticated users
       if (!isPublic) {
         product.addAll({
           'description': 'Detailed description for Product $productIndex',
@@ -672,7 +672,7 @@ class ProductController extends BaseController {
   }
   
   Map<String, dynamic>? _getMockProduct(String productId) {
-    // Simular búsqueda de producto
+    // Simulate product search
     if (!productId.startsWith('prod_')) return null;
     
     return {
@@ -731,7 +731,7 @@ class ProductController extends BaseController {
     
     final errors = <String>[];
     
-    // Campos requeridos para creación o actualización completa
+    // Required fields for creation or full update
     final requiredFields = ['name', 'price', 'category'];
     if (isCreate || isCompleteUpdate) {
       for (final field in requiredFields) {
@@ -741,7 +741,7 @@ class ProductController extends BaseController {
       }
     }
     
-    // Validar campos específicos si están presentes
+    // Validate specific fields if present
     if (data.containsKey('name')) {
       final name = data['name'] as String?;
       if (name == null || name.trim().isEmpty) {
@@ -789,12 +789,12 @@ class ProductController extends BaseController {
   }
   
   bool _productExists(String productId) {
-    // Simulación - en implementación real consultar base de datos
+    // Simulation - in a real implementation, query the database
     return productId.startsWith('prod_') && productId.length >= 10;
   }
   
   List<String> _checkProductDependencies(String productId) {
-    // Simulación - en implementación real consultar dependencias
+    // Simulation - in a real implementation, query dependencies
     if (productId == 'prod_123') {
       return ['active_orders', 'shopping_carts', 'wishlists'];
     }
@@ -803,16 +803,16 @@ class ProductController extends BaseController {
 }
 ```
 
-## 🔧 Configuración del Servidor
+## 🔧 Server Configuration
 
 ```dart
 void main() async {
   final server = ApiServer(config: ServerConfig.production());
   
-  // Configurar JWT
+  // Configure JWT
   server.configureJWTAuth(
     jwtSecret: 'your-256-bit-secret-key-for-products-api',
-    excludePaths: ['/api/products/search', '/health'], // Paths públicos
+    excludePaths: ['/api/products/search', '/health'], // Public paths
   );
   
   await server.start(
@@ -833,53 +833,57 @@ void main() async {
 }
 ```
 
-## 📊 Testing de la API
+## 📊 API Testing
 
-### 1. Búsqueda Pública (Sin Autenticación)
+### 1. Public Search (No Authentication)
 ```bash
-# Búsqueda básica
+# Basic search
 curl "http://localhost:8080/api/products/search?q=phone&category=electronics"
 
-# Con paginación
+# With pagination
 curl "http://localhost:8080/api/products/search?page=2&limit=10"
 ```
 
-### 2. Lista Completa (Requiere Autenticación)
+### 2. Full List (Authentication Required)
 ```bash
-# Lista con filtros avanzados
+# List with advanced filters
 curl -H "Authorization: Bearer <user_token>" \
      "http://localhost:8080/api/products?min_price=100&max_price=500&include_stock=true"
 ```
 
-### 3. Crear Producto (Requiere Manager)
+### 3. Create Product (Manager Required)
 ```bash
 curl -X POST \
      -H "Authorization: Bearer <manager_token>" \
      -H "Content-Type: application/json" \
-     -d '{
-       "name": "New Smartphone",
-       "description": "Latest model with advanced features",
-       "price": 699.99,
-       "category": "electronics",
-       "stock": 50,
-       "sku": "PHONE-2024-01"
-     }' \
+     -d 
+{
+  "name": "New Smartphone",
+  "description": "Latest model with advanced features",
+  "price": 699.99,
+  "category": "electronics",
+  "stock": 50,
+  "sku": "PHONE-2024-01"
+}
+ \
      "http://localhost:8080/api/products"
 ```
 
-### 4. Actualización Parcial (Manager)
+### 4. Partial Update (Manager)
 ```bash
 curl -X PATCH \
      -H "Authorization: Bearer <manager_token>" \
      -H "Content-Type: application/json" \
-     -d '{
-       "price": 649.99,
-       "stock": 75
-     }' \
+     -d 
+{
+  "price": 649.99,
+  "stock": 75
+}
+ \
      "http://localhost:8080/api/products/prod_123"
 ```
 
-### 5. Eliminación (Requiere Admin)
+### 5. Deletion (Admin Required)
 ```bash
 curl -X DELETE \
      -H "Authorization: Bearer <admin_token>" \
@@ -887,36 +891,36 @@ curl -X DELETE \
      "http://localhost:8080/api/products/prod_123?force=true"
 ```
 
-## 💡 Mejores Prácticas Implementadas
+## 💡 Best Practices Implemented
 
-### ✅ Seguridad
-- **Autenticación multinivel**: Diferentes permisos para diferentes operaciones
-- **Validación de horarios**: Operaciones críticas solo en horario de negocio
-- **Confirmación de eliminación**: Headers específicos para operaciones destructivas
-- **Validación de entrada**: Validación exhaustiva de todos los campos
+### ✅ Security
+- **Multi-level authentication**: Different permissions for different operations
+- **Time-based validation**: Critical operations only during business hours
+- **Deletion confirmation**: Specific headers for destructive operations
+- **Input validation**: Exhaustive validation of all fields
 
-### ✅ Usabilidad
-- **Endpoints públicos**: Búsqueda básica sin autenticación
-- **Filtros flexibles**: Múltiples opciones de filtrado y ordenamiento
-- **Paginación**: Para manejar grandes conjuntos de datos
-- **Información contextual**: Respuestas que incluyen información del usuario y contexto
+### ✅ Usability
+- **Public endpoints**: Basic search without authentication
+- **Flexible filters**: Multiple filtering and sorting options
+- **Pagination**: To handle large datasets
+- **Contextual information**: Responses that include user and context information
 
-### ✅ Mantenibilidad
-- **Validadores reutilizables**: Lógica de validación modular
-- **Separación de responsabilidades**: Métodos privados para lógica específica
-- **Documentación inline**: Descripción clara de cada endpoint
-- **Manejo de errores consistente**: Formato estándar de respuestas de error
+### ✅ Maintainability
+- **Reusable validators**: Modular validation logic
+- **Separation of concerns**: Private methods for specific logic
+- **Inline documentation**: Clear description of each endpoint
+- **Consistent error handling**: Standard format for error responses
 
-## 🎯 Casos de Uso Cubiertos
+## 🎯 Use Cases Covered
 
-1. **Cliente no autenticado**: Puede buscar productos con información básica
-2. **Usuario autenticado**: Puede ver detalles completos y usar filtros avanzados
-3. **Manager**: Puede crear y modificar productos
-4. **Admin**: Puede eliminar productos con confirmación
-5. **Restricciones de horario**: Operaciones críticas solo en horario de negocio
+1. **Unauthenticated client**: Can search for products with basic information
+2. **Authenticated user**: Can view full details and use advanced filters
+3. **Manager**: Can create and modify products
+4. **Admin**: Can delete products with confirmation
+5. **Time restrictions**: Critical operations only during business hours
 
-Este caso de uso demuestra una implementación completa y profesional usando todas las características de `api_kit` para crear una API robusta, segura y escalable.
+This use case demonstrates a complete and professional implementation using all the features of `api_kit` to create a robust, secure, and scalable API.
 
----
+--- 
 
-**Siguiente**: [API de E-commerce Completa](ecommerce-api.md) | **Anterior**: [Documentación de Anotaciones](../annotations/README.md)
+**Next**: [Complete E-commerce API](ecommerce-api.md) | **Previous**: [Annotation Documentation](../annotations/README.md)

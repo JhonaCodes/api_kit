@@ -41,7 +41,7 @@ Add this to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  api_kit: ^0.0.5
+  api_kit: ^0.1.0
 ```
 
 📚 **Need detailed setup help?** → [**Complete Getting Started Guide**](docs/getting-started.md)
@@ -50,7 +50,6 @@ dependencies:
 
 ```dart
 import 'dart:io';
-import 'package:shelf/shelf.dart';
 import 'package:api_kit/api_kit.dart';
 
 void main() async {
@@ -614,9 +613,9 @@ Consistent error handling with detailed information:
 - [`@Patch(path: '/path')`](docs/annotations/patch-annotation.md) - PATCH request handling
 
 ### JWT Authentication
-- [`@JWTPublic()`](docs/annotations/jwt-annotations.md#jwtpublic---endpoint-público) - Public endpoint (no JWT required)
-- [`@JWTController([validators], requireAll: bool)`](docs/annotations/jwt-annotations.md#jwtcontroller---validación-a-nivel-de-controller) - Controller-level protection
-- [`@JWTEndpoint([validators], requireAll: bool)`](docs/annotations/jwt-annotations.md#jwtendpoint---validación-específica-de-endpoint) - Endpoint-level protection
+- [`@JWTPublic()`](docs/annotations/jwt-annotations.md#jwtpublic---public-endpoint) - Public endpoint (no JWT required)
+- [`@JWTController([validators], requireAll: bool)`](docs/annotations/jwt-annotations.md#jwtcontroller---controller-level-validation) - Controller-level protection
+- [`@JWTEndpoint([validators], requireAll: bool)`](docs/annotations/jwt-annotations.md#jwtendpoint---endpoint-specific-validation) - Endpoint-level protection
 
 ### Controllers
 - [`@RestController(basePath: '/base/path')`](docs/annotations/restcontroller-annotation.md) - Define base path for controller

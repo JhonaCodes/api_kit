@@ -1,41 +1,41 @@
-# @Put - Anotación para Endpoints PUT
+# @Put - Annotation for PUT Endpoints
 
-## 📋 Descripción
+## 📋 Description
 
-La anotación `@Put` se utiliza para marcar métodos como endpoints que responden a peticiones HTTP PUT. Es la anotación estándar para operaciones de actualización completa de recursos existentes.
+The `@Put` annotation is used to mark methods as endpoints that respond to HTTP PUT requests. It is the standard annotation for full update operations of existing resources.
 
-## 🎯 Propósito
+## 🎯 Purpose
 
-- **Actualización completa**: Reemplazar completamente un recurso existente
-- **Operaciones idempotentes**: La misma operación produce el mismo resultado
-- **Modificación con ID**: Actualizar recursos identificados por un ID específico
-- **APIs de configuración**: Actualizar configuraciones o preferencias
+- **Full update**: Completely replace an existing resource
+- **Idempotent operations**: The same operation produces the same result
+- **Modification with ID**: Update resources identified by a specific ID
+- **Configuration APIs**: Update configurations or preferences
 
-## 📝 Sintaxis
+## 📝 Syntax
 
 ```dart
 @Put({
-  required String path,           // Ruta del endpoint (OBLIGATORIO)
-  String? description,           // Descripción del endpoint
-  int statusCode = 200,          // Código de respuesta por defecto (OK)
-  bool requiresAuth = true,      // Requiere autenticación por defecto
+  required String path,           // Endpoint path (REQUIRED)
+  String? description,           // Endpoint description
+  int statusCode = 200,          // Default response code (OK)
+  bool requiresAuth = true,      // Requires authentication by default
 })
 ```
 
-## 🔧 Parámetros
+## 🔧 Parameters
 
-| Parámetro | Tipo | Obligatorio | Valor por Defecto | Descripción |
+| Parameter | Type | Required | Default Value | Description |
 |-----------|------|-------------|-------------------|-------------|
-| `path` | `String` | ✅ Sí | - | Ruta relativa del endpoint (ej: `/users/{id}`, `/products/{id}`) |
-| `description` | `String?` | ❌ No | `null` | Descripción legible del propósito del endpoint |
-| `statusCode` | `int` | ❌ No | `200` | Código de estado HTTP de respuesta exitosa |
-| `requiresAuth` | `bool` | ❌ No | `true` | Indica si el endpoint requiere autenticación |
+| `path` | `String` | ✅ Yes | - | Relative path of the endpoint (e.g., `/users/{id}`, `/products/{id}`) |
+| `description` | `String?` | ❌ No | `null` | Readable description of the endpoint's purpose |
+| `statusCode` | `int` | ❌ No | `200` | HTTP status code for a successful response |
+| `requiresAuth` | `bool` | ❌ No | `true` | Indicates if the endpoint requires authentication |
 
-> **Nota**: PUT requiere autenticación por defecto (`requiresAuth = true`) ya que generalmente modifica recursos protegidos.
+> **Note**: PUT requires authentication by default (`requiresAuth = true`) as it generally modifies protected resources.
 
-## 🚀 Ejemplos de Uso
+## 🚀 Usage Examples
 
-### Ejemplo Básico
+### Basic Example
 
 #### Traditional Approach - Manual Body Parsing
 ```dart
@@ -51,7 +51,7 @@ class UserController extends BaseController {
     final body = await request.readAsString();
     final userData = jsonDecode(body);
     
-    // Simular actualización
+    // Simulate update
     final updatedUser = {
       'id': userId,
       'name': userData['name'],
@@ -98,23 +98,23 @@ class UserController extends BaseController {
 }
 ```
 
-### Ejemplo con RequestBody Tipado
+### Example with Typed RequestBody
 
 #### Traditional Approach - Manual JWT Extraction
 ```dart
 @Put(
   path: '/products/{productId}',
-  description: 'Actualiza completamente un producto existente'
+  description: 'Completely updates an existing product'
 )
 @JWTEndpoint([MyAdminValidator()])
 Future<Response> updateProduct(
   Request request,
-  @PathParam('productId', description: 'ID único del producto') String productId,
-  @RequestBody(required: true, description: 'Datos completos del producto') 
+  @PathParam('productId', description: 'Unique product ID') String productId,
+  @RequestBody(required: true, description: 'Complete product data') 
   Map<String, dynamic> productData,
 ) async {
   
-  // Validaciones obligatorias para PUT (debe incluir todos los campos)
+  // Mandatory validations for PUT (must include all fields)
   final requiredFields = ['name', 'price', 'description', 'category', 'stock'];
   final missingFields = <String>[];
   
@@ -133,7 +133,7 @@ Future<Response> updateProduct(
     }));
   }
   
-  // Validar tipos de datos
+  // Validate data types
   if (productData['price'] is! num || productData['price'] <= 0) {
     return Response.badRequest(body: jsonEncode({
       'error': 'Price must be a positive number',
@@ -145,7 +145,7 @@ Future<Response> updateProduct(
   final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
   final adminUser = jwtPayload['user_id'];
   
-  // Simular actualización completa
+  // Simulate full update
   final updatedProduct = {
     'id': productId,
     'name': productData['name'],
@@ -169,12 +169,12 @@ Future<Response> updateProduct(
 ```dart
 @Put(
   path: '/products/{productId}',
-  description: 'Actualiza completamente un producto existente'
+  description: 'Completely updates an existing product'
 )
 @JWTEndpoint([MyAdminValidator()])
 Future<Response> updateProductEnhanced(
-  @PathParam('productId', description: 'ID único del producto') String productId,
-  @RequestBody(required: true, description: 'Datos completos del producto') 
+  @PathParam('productId', description: 'Unique product ID') String productId,
+  @RequestBody(required: true, description: 'Complete product data') 
   Map<String, dynamic> productData,
   @RequestContext('jwt_payload') Map<String, dynamic> jwtPayload, // Direct JWT
   @RequestHeader.all() Map<String, String> headers,
@@ -182,7 +182,7 @@ Future<Response> updateProductEnhanced(
   @RequestHost() String host,
 ) async {
   
-  // Validaciones obligatorias para PUT (debe incluir todos los campos)
+  // Mandatory validations for PUT (must include all fields)
   final requiredFields = ['name', 'price', 'description', 'category', 'stock'];
   final missingFields = <String>[];
   
@@ -201,7 +201,7 @@ Future<Response> updateProductEnhanced(
     }));
   }
   
-  // Validar tipos de datos
+  // Validate data types
   if (productData['price'] is! num || productData['price'] <= 0) {
     return Response.badRequest(body: jsonEncode({
       'error': 'Price must be a positive number',
@@ -244,17 +244,17 @@ Future<Response> updateProductEnhanced(
 }
 ```
 
-### Ejemplo con Headers y Query Parameters
+### Example with Headers and Query Parameters
 ```dart
 @Put(
   path: '/stores/{storeId}/products/{productId}',
-  description: 'Actualiza producto con opciones avanzadas'
+  description: 'Updates a product with advanced options'
 )
 Future<Response> updateStoreProduct(
   Request request,
   // Path Parameters
-  @PathParam('storeId', description: 'ID de la tienda') String storeId,
-  @PathParam('productId', description: 'ID del producto') String productId,
+  @PathParam('storeId', description: 'Store ID') String storeId,
+  @PathParam('productId', description: 'Product ID') String productId,
   
   // Query Parameters
   @QueryParam('notify_users', defaultValue: false) bool notifyUsers,
@@ -270,7 +270,7 @@ Future<Response> updateStoreProduct(
   @RequestBody(required: true) Map<String, dynamic> productData,
 ) async {
   
-  // Validar que el store ID del path coincide con el header
+  // Validate that the store ID from the path matches the header
   if (storeId != storeIdHeader) {
     return Response.badRequest(body: jsonEncode({
       'error': 'Store ID mismatch',
@@ -279,7 +279,7 @@ Future<Response> updateStoreProduct(
     }));
   }
   
-  // Validar content type
+  // Validate content type
   if (!contentType.contains('application/json')) {
     return Response.badRequest(body: jsonEncode({
       'error': 'Content-Type must be application/json',
@@ -287,7 +287,7 @@ Future<Response> updateStoreProduct(
     }));
   }
   
-  // Validar autorización
+  // Validate authorization
   if (!authHeader.startsWith('Bearer ')) {
     return Response.unauthorized(jsonEncode({
       'error': 'Invalid authorization format',
@@ -295,11 +295,11 @@ Future<Response> updateStoreProduct(
     }));
   }
   
-  // Simular backup si está habilitado
+  // Simulate backup if enabled
   final actions = <String>[];
   if (createBackup) actions.add('backup_created');
   
-  // Actualización del producto
+  // Product update
   final updatedProduct = {
     'id': productId,
     'store_id': storeId,
@@ -311,7 +311,7 @@ Future<Response> updateStoreProduct(
     'status': publishImmediately ? 'published' : 'draft',
   };
   
-  // Acciones adicionales
+  // Additional actions
   if (publishImmediately) actions.add('published');
   if (notifyUsers && publishImmediately) actions.add('users_notified');
   
@@ -333,21 +333,21 @@ Future<Response> updateStoreProduct(
 }
 ```
 
-### Ejemplo de Configuración de Usuario
+### User Configuration Example
 ```dart
 @Put(
   path: '/users/{userId}/settings',
-  description: 'Actualiza completamente la configuración del usuario'
+  description: 'Completely updates the user\'s configuration'
 )
-@JWTEndpoint([MyUserValidator()]) // Solo el mismo usuario puede actualizar
+@JWTEndpoint([MyUserValidator()]) // Only the user themselves can update
 Future<Response> updateUserSettings(
   Request request,
   @PathParam('userId') String userId,
-  @RequestBody(required: true, description: 'Configuración completa del usuario') 
+  @RequestBody(required: true, description: 'Complete user configuration') 
   Map<String, dynamic> settings,
 ) async {
   
-  // Validar que el JWT corresponde al usuario
+  // Validate that the JWT corresponds to the user
   final jwtPayload = request.context['jwt_payload'] as Map<String, dynamic>;
   final tokenUserId = jwtPayload['user_id'];
   
@@ -359,7 +359,7 @@ Future<Response> updateUserSettings(
     }));
   }
   
-  // Configuraciones requeridas para PUT completo
+  // Required settings for a full PUT
   final requiredSettings = [
     'theme', 'language', 'notifications', 'privacy', 'preferences'
   ];
@@ -377,7 +377,7 @@ Future<Response> updateUserSettings(
     }));
   }
   
-  // Validar estructura de notificaciones
+  // Validate notification structure
   final notifications = settings['notifications'] as Map<String, dynamic>?;
   if (notifications == null || 
       !notifications.containsKey('email') || 
@@ -388,7 +388,7 @@ Future<Response> updateUserSettings(
     }));
   }
   
-  // Actualizar configuraciones
+  // Update settings
   final updatedSettings = {
     'user_id': userId,
     'theme': settings['theme'],
@@ -407,9 +407,9 @@ Future<Response> updateUserSettings(
 }
 ```
 
-## 🔗 Combinación con Otras Anotaciones
+## 🔗 Combination with Other Annotations
 
-### Con Múltiples Validadores
+### With Multiple Validators
 ```dart
 @Put(path: '/financial/accounts/{accountId}', requiresAuth: true)
 @JWTController([
@@ -422,37 +422,37 @@ Future<Response> updateFinancialAccount(
   @PathParam('accountId') String accountId,
   @RequestBody(required: true) Map<String, dynamic> accountData,
 ) async {
-  // Solo usuarios con clearance financiero nivel 3, en horas de negocio,
-  // y del departamento finance o admin pueden actualizar cuentas
+  // Only users with financial clearance level 3, during business hours,
+  // and from the finance or admin department can update accounts
   return jsonResponse(jsonEncode({
     'message': 'Financial account updated successfully'
   }));
 }
 ```
 
-## 💡 Mejores Prácticas
+## 💡 Best Practices
 
-### ✅ Hacer
-- **Requerir todos los campos**: PUT debe actualizar el recurso completo
-- **Validar IDs en el path**: Verificar que el recurso existe
-- **Usar idempotencia**: La misma petición produce el mismo resultado
-- **Incluir timestamps**: Campos de `updated_at` y `updated_by`
-- **Responder con el recurso actualizado**: Devolver el estado final
-- **Preferir Enhanced Parameters**: Para acceso completo sin Request parameter
-- **Combinar enfoques**: Traditional para validación, Enhanced para contexto completo
+### ✅ Do
+- **Require all fields**: PUT should update the entire resource
+- **Validate IDs in the path**: Verify that the resource exists
+- **Use idempotency**: The same request produces the same result
+- **Include timestamps**: `updated_at` and `updated_by` fields
+- **Respond with the updated resource**: Return the final state
+- **Prefer Enhanced Parameters**: For full access without the Request parameter
+- **Combine approaches**: Traditional for validation, Enhanced for context
 
-### ❌ Evitar
-- **Actualizaciones parciales**: Usar PATCH para eso
-- **Crear recursos**: Usar POST para creación
-- **Ignorar validaciones**: Siempre validar datos completos
-- **No verificar permisos**: Asegurarse de que el usuario puede modificar el recurso
-- **Request parameter redundante**: Usar Enhanced Parameters cuando sea posible
+### ❌ Don\'t
+- **Partial updates**: Use PATCH for that
+- **Create resources**: Use POST for creation
+- **Ignore validations**: Always validate complete data
+- **Not checking permissions**: Ensure the user can modify the resource
+- **Redundant Request parameter**: Use Enhanced Parameters when possible
 
-### 🎯 Recomendaciones Enhanced por Escenario
+### 🎯 Enhanced Recommendations by Scenario
 
-#### Para PUT con Validación Estricta
+#### For PUT with Strict Validation
 ```dart
-// ✅ Traditional - Validación automática de tipos
+// ✅ Traditional - Automatic type validation
 @Put(path: '/products/{id}')
 Future<Response> updateProduct(
   @PathParam('id') String id,
@@ -462,9 +462,9 @@ Future<Response> updateProduct(
 }
 ```
 
-#### Para PUT con Context Completo
+#### For PUT with Full Context
 ```dart
-// ✅ Enhanced - Acceso completo sin Request parameter
+// ✅ Enhanced - Full access without Request parameter
 @Put(path: '/products/{id}')
 Future<Response> updateProductEnhanced(
   @PathParam('id') String id,
@@ -477,9 +477,9 @@ Future<Response> updateProductEnhanced(
 }
 ```
 
-#### Para PUT con Opciones Dinámicas
+#### For PUT with Dynamic Options
 ```dart
-// ✅ Enhanced - Opciones de actualización flexibles
+// ✅ Enhanced - Flexible update options
 @Put(path: '/products/{id}')
 Future<Response> updateProductWithOptions(
   @PathParam('id') String id,
@@ -493,9 +493,9 @@ Future<Response> updateProductWithOptions(
 }
 ```
 
-#### Para PUT con Múltiples Validadores
+#### For PUT with Multiple Validators
 ```dart
-// ✅ Hybrid - Validación robusta + contexto enhanced
+// ✅ Hybrid - Robust validation + enhanced context
 @Put(path: '/sensitive/{id}')
 @JWTEndpoint([MyAdminValidator(), MyDepartmentValidator()])
 Future<Response> updateSensitiveData(
@@ -508,37 +508,37 @@ Future<Response> updateSensitiveData(
 }
 ```
 
-## 🔍 Diferencias con PATCH
+## 🔍 Differences with PATCH
 
-| Aspecto | PUT | PATCH |
-|---------|-----|--------|
-| **Propósito** | Actualización completa | Actualización parcial |
-| **Campos requeridos** | Todos los campos | Solo campos a modificar |
-| **Idempotencia** | Sí | Puede variar |
-| **Campos faltantes** | Se establecen como null/default | Se mantienen sin cambios |
-| **Uso típico** | Reemplazar recurso | Modificar algunos campos |
+| Aspect | PUT | PATCH |
+|---------|-----|--------|--------|
+| **Purpose** | Full update | Partial update |
+| **Required fields** | All fields | Only fields to modify |
+| **Idempotency** | Yes | May vary |
+| **Missing fields** | Are set to null/default | Are kept unchanged |
+| **Typical use** | Replace resource | Modify some fields |
 
-## 📊 Códigos de Respuesta Recomendados
+## 📊 Recommended Response Codes
 
-| Situación | Código | Descripción |
+| Situation | Code | Description |
 |-----------|---------|-------------|
-| Actualización exitosa | `200` | OK - Recurso actualizado |
-| Recurso no encontrado | `404` | Not Found - ID no existe |
-| Datos incompletos | `400` | Bad Request - Faltan campos requeridos |
-| Datos inválidos | `400` | Bad Request - Tipos o valores incorrectos |
-| Sin autorización | `401` | Unauthorized - Token JWT inválido |
-| Prohibido | `403` | Forbidden - Sin permisos de modificación |
-| Conflicto | `409` | Conflict - Conflicto de versiones |
-| Error del servidor | `500` | Internal Server Error |
+| Successful update | `200` | OK - Resource updated |
+| Resource not found | `404` | Not Found - ID does not exist |
+| Incomplete data | `400` | Bad Request - Missing required fields |
+| Invalid data | `400` | Bad Request - Incorrect types or values |
+| Unauthorized | `401` | Unauthorized - Invalid JWT token |
+| Forbidden | `403` | Forbidden - No modification permissions |
+| Conflict | `409` | Conflict - Version conflict |
+| Server error | `500` | Internal Server Error |
 
-## 🌐 URL Resultantes
+## 🌐 Resulting URLs
 
-Si tu controller tiene `basePath: '/api/v1'` y usas `@Put(path: '/users/{id}')`, la URL final será:
+If your controller has `basePath: '/api/v1'` and you use `@Put(path: '/users/{id}')`, the final URL will be:
 ```
 PUT http://localhost:8080/api/v1/users/{id}
 ```
 
-## 📋 Ejemplo de Request/Response
+## 📋 Request/Response Example
 
 ### Request
 ```http
@@ -587,6 +587,6 @@ Content-Type: application/json
 }
 ```
 
----
+--- 
 
-**Siguiente**: [Documentación de @Patch](patch-annotation.md) | **Anterior**: [Documentación de @Post](post-annotation.md)
+**Next**: [Documentation for @Patch](patch-annotation.md) | **Previous**: [Documentation for @Post](post-annotation.md)

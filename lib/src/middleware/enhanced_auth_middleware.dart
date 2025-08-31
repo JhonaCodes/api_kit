@@ -2,18 +2,18 @@ import 'dart:convert';
 import 'package:shelf/shelf.dart';
 import 'package:logger_rs/logger_rs.dart';
 
-/// Middleware de autenticación JWT mejorado
+/// Enhanced JWT authentication middleware
 ///
-/// Proporciona extracción, validación y procesamiento de JWT tokens
-/// desde el Authorization header de requests HTTP
+/// Provides extraction, validation, and processing of JWT tokens
+/// from the Authorization header of HTTP requests
 class EnhancedAuthMiddleware {
-  /// Middleware que extrae y valida JWT desde Authorization header
+  /// Middleware that extracts and validates JWT from Authorization header
   ///
-  /// [jwtSecret] - Clave secreta para validar la firma JWT
-  /// [excludePaths] - Paths que no requieren extracción JWT
+  /// [jwtSecret] - Secret key to validate the JWT signature
+  /// [excludePaths] - Paths that do not require JWT extraction
   ///
-  /// Extrae el JWT del header "Authorization: Bearer `<token>`",
-  /// lo valida y agrega el payload al contexto del request
+  /// Extracts the JWT from the "Authorization: Bearer `<token>`" header,
+  /// validates it, and adds the payload to the request context
   static Middleware jwtExtractor({
     required String jwtSecret,
     List<String> excludePaths = const [],
@@ -23,7 +23,7 @@ class EnhancedAuthMiddleware {
         final path = request.requestedUri.path;
         final requestId = request.context['request_id'] as String? ?? 'unknown';
 
-        // Saltar extracción para paths excluidos
+        // Skip extraction for excluded paths
         if (excludePaths.any((excludePath) => path.startsWith(excludePath))) {
           Log.d('[$requestId] JWT extraction skipped for excluded path: $path');
           return await innerHandler(request);
@@ -32,13 +32,13 @@ class EnhancedAuthMiddleware {
         try {
           Log.d('[$requestId] Extracting JWT from Authorization header');
 
-          // Obtener Authorization header
+          // Get Authorization header
           final authHeader = request.headers['authorization'];
 
           if (authHeader == null || !authHeader.startsWith('Bearer ')) {
             Log.d('[$requestId] No Bearer token found in Authorization header');
 
-            // Agregar contexto vacío para endpoints que no requieren JWT
+            // Add empty context for endpoints that do not require JWT
             final updatedRequest = request.change(
               context: {...request.context, 'jwt_payload': null},
             );
@@ -46,7 +46,7 @@ class EnhancedAuthMiddleware {
             return await innerHandler(updatedRequest);
           }
 
-          // Extraer token
+          // Extract token
           final token = authHeader.substring(7);
 
           if (token.isEmpty) {
@@ -54,7 +54,7 @@ class EnhancedAuthMiddleware {
             return _unauthorizedResponse('Invalid JWT token format', requestId);
           }
 
-          // Validar y decodificar JWT
+          // Validate and decode JWT
           final jwtPayload = await _validateAndDecodeJWT(token, jwtSecret);
 
           if (jwtPayload == null) {
@@ -69,7 +69,7 @@ class EnhancedAuthMiddleware {
             '[$requestId] JWT validated successfully for user: ${jwtPayload['user_id'] ?? 'unknown'}',
           );
 
-          // Agregar payload JWT al contexto del request
+          // Add JWT payload to the request context
           final updatedRequest = request.change(
             context: {
               ...request.context,
@@ -106,16 +106,16 @@ class EnhancedAuthMiddleware {
     };
   }
 
-  /// Middleware para verificar tokens en blacklist
+  /// Middleware to check tokens in blacklist
   ///
-  /// [blacklistedTokens] - Set de tokens revocados/blacklisteados
+  /// [blacklistedTokens] - Set of revoked/blacklisted tokens
   static Middleware tokenBlacklist({required Set<String> blacklistedTokens}) {
     return (Handler innerHandler) {
       return (Request request) async {
         final requestId = request.context['request_id'] as String? ?? 'unknown';
 
         try {
-          // Obtener token del contexto
+          // Get token from context
           final authHeader = request.headers['authorization'];
           if (authHeader != null && authHeader.startsWith('Bearer ')) {
             final token = authHeader.substring(7);
@@ -151,7 +151,7 @@ class EnhancedAuthMiddleware {
     };
   }
 
-  /// Middleware para logging de accesos JWT
+  /// Middleware for JWT access logging
   static Middleware jwtAccessLogger() {
     return (Handler innerHandler) {
       return (Request request) async {
@@ -175,28 +175,28 @@ class EnhancedAuthMiddleware {
     };
   }
 
-  /// Valida y decodifica un JWT usando el formato estándar
+  /// Validates and decodes a JWT using the standard format
   ///
-  /// [token] - Token JWT a validar
-  /// [secret] - Clave secreta para verificar la firma
+  /// [token] - JWT token to validate
+  /// [secret] - Secret key to verify the signature
   ///
-  /// Para producción, integrar con una librería JWT real como dart_jsonwebtoken
+  /// For production, integrate with a real JWT library like dart_jsonwebtoken
   static Future<Map<String, dynamic>?> _validateAndDecodeJWT(
     String token,
     String secret,
   ) async {
     try {
-      // Verificar formato JWT básico (header.payload.signature)
+      // Verify basic JWT format (header.payload.signature)
       final parts = token.split('.');
       if (parts.length != 3) {
         Log.w('Invalid JWT format: expected 3 parts, got ${parts.length}');
         return null;
       }
 
-      // Decodificar payload (parte central)
+      // Decode payload (central part)
       final payloadPart = parts[1];
 
-      // Agregar padding si es necesario para base64
+      // Add padding if necessary for base64
       String normalizedPayload = payloadPart;
       while (normalizedPayload.length % 4 != 0) {
         normalizedPayload += '=';
@@ -206,7 +206,7 @@ class EnhancedAuthMiddleware {
       final payloadJson = utf8.decode(decodedBytes);
       final payload = jsonDecode(payloadJson) as Map<String, dynamic>;
 
-      // Verificar expiración
+      // Check expiration
       final exp = payload['exp'] as int?;
       if (exp != null) {
         final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
@@ -216,7 +216,7 @@ class EnhancedAuthMiddleware {
         }
       }
 
-      // Verificar issued at
+      // Check issued at
       final iat = payload['iat'] as int?;
       if (iat != null) {
         final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
@@ -226,8 +226,8 @@ class EnhancedAuthMiddleware {
         }
       }
 
-      // NOTA: En implementación real, verificar signature con el secret
-      // usando una librería como dart_jsonwebtoken:
+      // NOTE: In a real implementation, verify the signature with the secret
+      // using a library like dart_jsonwebtoken:
       //
       // final isValidSignature = await _verifySignature(parts, secret);
       // if (!isValidSignature) return null;
@@ -240,7 +240,7 @@ class EnhancedAuthMiddleware {
     }
   }
 
-  /// Respuesta de error para autenticación fallida
+  /// Error response for failed authentication
   static Response _unauthorizedResponse(String message, String requestId) {
     return Response(
       401,
